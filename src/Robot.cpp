@@ -138,9 +138,9 @@ private:
 		bool RightStickLimit2 = DiIn9.Get();
 
 		//high gear & low gear controls
-		if (IO.DS.DriveStick.GetRawButton(5))
+		if (IO.DS.DriveStick->GetRawButton(5))
 			driveSolenoid->Set(true);			// High gear press LH bumper
-		if (IO.DS.DriveStick.GetRawButton(6))
+		if (IO.DS.DriveStick->GetRawButton(6))
 			driveSolenoid->Set(false);			// Low gear press RH bumper
 
 		//  Rumble code
@@ -153,13 +153,13 @@ private:
 			LHThr = 0.5;
 		Joystick::RumbleType Vibrate;				// define Vibrate variable
 		Vibrate = Joystick::kLeftRumble;		// set Vibrate to Left
-		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);  	// Set Left Rumble to RH Trigger
+		IO.DS.DriveStick->SetRumble(Vibrate, LHThr);  	// Set Left Rumble to RH Trigger
 		Vibrate = Joystick::kRightRumble;		// set vibrate to Right
-		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);// Set Right Rumble to RH Trigger
+		IO.DS.DriveStick->SetRumble(Vibrate, LHThr);// Set Right Rumble to RH Trigger
 
 		//drive controls
-		double SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1; // get Yaxis value (forward)
-		double SpeedRotate = IO.DS.DriveStick.GetRawAxis(4) * -1; // get Xaxis value (turn)
+		double SpeedLinear = IO.DS.DriveStick->GetRawAxis(1) * 1; // get Yaxis value (forward)
+		double SpeedRotate = IO.DS.DriveStick->GetRawAxis(4) * -1; // get Xaxis value (turn)
 
 		// Set dead band for X and Y axis
 		if (fabs(SpeedLinear) < Deadband)
@@ -172,7 +172,7 @@ private:
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
 		//drive
-		if (IO.DS.DriveStick.GetRawButton(4)) {
+		if (IO.DS.DriveStick->GetRawButton(4)) {
 			//boiler auto back up when y button pushed
 			if (!driveButtonYPrev) {
 				EncoderRight.Reset();
@@ -192,40 +192,40 @@ private:
 		 */
 
 		//A Button to extend (Solenoid On)
-		Abutton->Set(IO.DS.OperatorStick.GetRawButton(1));
+		Abutton->Set(IO.DS.OperatorStick->GetRawButton(1));
 
 		//B Button to extend (Solenoid On)
-		Bbutton->Set(IO.DS.OperatorStick.GetRawButton(2));
+		Bbutton->Set(IO.DS.OperatorStick->GetRawButton(2));
 
 		//if Left Bumper button pressed, extend (Solenoid On)
-		if (IO.DS.OperatorStick.GetRawButton(5)) {
+		if (IO.DS.OperatorStick->GetRawButton(5)) {
 			intakeDeployed = true;
 			IntakeButton->Set(intakeDeployed);
 		}
 
 		//else Right Bumper pressed, retract (Solenoid Off)
-		else if (IO.DS.OperatorStick.GetRawButton(6)) {
+		else if (IO.DS.OperatorStick->GetRawButton(6)) {
 			intakeDeployed = false;
 			IntakeButton->Set(intakeDeployed);
 		}
 	//if 'X' button pressed, extend (Solenoid On)
-		if (IO.DS.OperatorStick.GetRawButton(3)) {
+		if (IO.DS.OperatorStick->GetRawButton(3)) {
 			XYDeployed = true;
 			XYbutton->Set(XYDeployed);
 		}
 
 		//else 'Y' button pressed, retract (Solenoid Off)
-		else if (IO.DS.OperatorStick.GetRawButton(4)) {
+		else if (IO.DS.OperatorStick->GetRawButton(4)) {
 			XYDeployed = false;
 			XYbutton->Set(XYDeployed);
 		}
 
 		//dpad POV stuff
-		if (IO.DS.OperatorStick.GetPOV(0) == 0) {
+		if (IO.DS.OperatorStick->GetPOV(0) == 0) {
 			Dpad1.Set(DPadSpeed);
 			Dpad2.Set(DPadSpeed);
 		}
-		else if (IO.DS.OperatorStick.GetPOV(0) == 180) {
+		else if (IO.DS.OperatorStick->GetPOV(0) == 180) {
 			Dpad1.Set(-DPadSpeed);
 			Dpad2.Set(-DPadSpeed);
 		} else {
@@ -233,7 +233,7 @@ private:
 			Dpad2.Set(0.0);
 		}
 
-		double RightSpeed = IO.DS.OperatorStick.GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
+		double RightSpeed = IO.DS.OperatorStick->GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
 
 		if (fabs(RightSpeed) < Deadband){
 					RightSpeed = 0.0;

@@ -10,8 +10,8 @@ public:
 
 	// Driver's Station Stuff
 	struct structDS{
-		Joystick DriveStick;
-		Joystick OperatorStick;
+		Joystick *DriveStick;
+		Joystick *OperatorStick;
 	};
 	structDS DS;
 
