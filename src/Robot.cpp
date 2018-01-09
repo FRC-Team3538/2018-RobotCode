@@ -16,14 +16,18 @@
 #include <opencv2/core/core.hpp>
 
 class Robot: public frc::IterativeRobot {
+
+	// Robot Hardware Setup
+	RJ_RobotMap IO;
+
 	DifferentialDrive Adrive;
-	frc::LiveWindow* lw = LiveWindow::GetInstance();
+
 	frc::SendableChooser<std::string> chooseDriveEncoder;
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	std::string encoderSelected;
-	Joystick Drivestick;
-	Joystick OperatorStick;
+
+
 	VictorSP DriveLeft0;
 	VictorSP DriveLeft1;
 	VictorSP DriveLeft2;
@@ -34,6 +38,7 @@ class Robot: public frc::IterativeRobot {
 	VictorSP Dpad2;
 	VictorSP RightStick1;
 	VictorSP RightStick2;
+
 	Timer EncoderCheckTimer;
 	Encoder EncoderLeft;
 	Encoder EncoderRight;
@@ -65,7 +70,7 @@ class Robot: public frc::IterativeRobot {
 
 public:
 	Robot() :
-			Adrive(DriveLeft0, DriveRight0), Drivestick(0), OperatorStick(1), DriveLeft0(
+			Adrive(DriveLeft0, DriveRight0),  DriveLeft0(
 					0), DriveLeft1(1), DriveLeft2(2), DriveRight0(3), DriveRight1(
 					4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
@@ -75,6 +80,7 @@ public:
 
 private:
 	void RobotInit() {
+
 		chooseDriveEncoder.AddDefault(LH_Encoder, LH_Encoder);
 		chooseDriveEncoder.AddObject(RH_Encoder, RH_Encoder);
 		frc::SmartDashboard::PutData("Encoder", &chooseDriveEncoder);
@@ -93,12 +99,8 @@ private:
 		EncoderLeft.SetDistancePerPulse(98.0 / 3125.0 * 4.0);
 		EncoderRight.SetDistancePerPulse(98.0 / 3125.0 * 4.0);
 
-		// test
-		RJ_RobotMap testmap;
-
-
 		//drive command averaging filter
-		OutputX = 0, OutputY = testmap.testfun(5);
+		OutputX = 0, OutputY = 0;
 
 		//variable that chooses which encoder robot is reading for autonomous mode
 		useRightEncoder = true;
@@ -136,9 +138,9 @@ private:
 		bool RightStickLimit2 = DiIn9.Get();
 
 		//high gear & low gear controls
-		if (Drivestick.GetRawButton(5))
+		if (IO.DS.DriveStick.GetRawButton(5))
 			driveSolenoid->Set(true);			// High gear press LH bumper
-		if (Drivestick.GetRawButton(6))
+		if (IO.DS.DriveStick.GetRawButton(6))
 			driveSolenoid->Set(false);			// Low gear press RH bumper
 
 		//  Rumble code
@@ -151,13 +153,13 @@ private:
 			LHThr = 0.5;
 		Joystick::RumbleType Vibrate;				// define Vibrate variable
 		Vibrate = Joystick::kLeftRumble;		// set Vibrate to Left
-		Drivestick.SetRumble(Vibrate, LHThr);  	// Set Left Rumble to RH Trigger
+		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);  	// Set Left Rumble to RH Trigger
 		Vibrate = Joystick::kRightRumble;		// set vibrate to Right
-		Drivestick.SetRumble(Vibrate, LHThr);// Set Right Rumble to RH Trigger
+		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);// Set Right Rumble to RH Trigger
 
 		//drive controls
-		double SpeedLinear = Drivestick.GetRawAxis(1) * 1; // get Yaxis value (forward)
-		double SpeedRotate = Drivestick.GetRawAxis(4) * -1; // get Xaxis value (turn)
+		double SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1; // get Yaxis value (forward)
+		double SpeedRotate = IO.DS.DriveStick.GetRawAxis(4) * -1; // get Xaxis value (turn)
 
 		// Set dead band for X and Y axis
 		if (fabs(SpeedLinear) < Deadband)
@@ -170,7 +172,7 @@ private:
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
 		//drive
-		if (Drivestick.GetRawButton(4)) {
+		if (IO.DS.DriveStick.GetRawButton(4)) {
 			//boiler auto back up when y button pushed
 			if (!driveButtonYPrev) {
 				EncoderRight.Reset();
@@ -190,40 +192,40 @@ private:
 		 */
 
 		//A Button to extend (Solenoid On)
-		Abutton->Set(OperatorStick.GetRawButton(1));
+		Abutton->Set(IO.DS.OperatorStick.GetRawButton(1));
 
 		//B Button to extend (Solenoid On)
-		Bbutton->Set(OperatorStick.GetRawButton(2));
+		Bbutton->Set(IO.DS.OperatorStick.GetRawButton(2));
 
 		//if Left Bumper button pressed, extend (Solenoid On)
-		if (OperatorStick.GetRawButton(5)) {
+		if (IO.DS.OperatorStick.GetRawButton(5)) {
 			intakeDeployed = true;
 			IntakeButton->Set(intakeDeployed);
 		}
 
 		//else Right Bumper pressed, retract (Solenoid Off)
-		else if (OperatorStick.GetRawButton(6)) {
+		else if (IO.DS.OperatorStick.GetRawButton(6)) {
 			intakeDeployed = false;
 			IntakeButton->Set(intakeDeployed);
 		}
 	//if 'X' button pressed, extend (Solenoid On)
-		if (OperatorStick.GetRawButton(3)) {
+		if (IO.DS.OperatorStick.GetRawButton(3)) {
 			XYDeployed = true;
 			XYbutton->Set(XYDeployed);
 		}
 
 		//else 'Y' button pressed, retract (Solenoid Off)
-		else if (OperatorStick.GetRawButton(4)) {
+		else if (IO.DS.OperatorStick.GetRawButton(4)) {
 			XYDeployed = false;
 			XYbutton->Set(XYDeployed);
 		}
 
 		//dpad POV stuff
-		if (OperatorStick.GetPOV(0) == 0) {
+		if (IO.DS.OperatorStick.GetPOV(0) == 0) {
 			Dpad1.Set(DPadSpeed);
 			Dpad2.Set(DPadSpeed);
 		}
-		else if (OperatorStick.GetPOV(0) == 180) {
+		else if (IO.DS.OperatorStick.GetPOV(0) == 180) {
 			Dpad1.Set(-DPadSpeed);
 			Dpad2.Set(-DPadSpeed);
 		} else {
@@ -231,7 +233,7 @@ private:
 			Dpad2.Set(0.0);
 		}
 
-		double RightSpeed = OperatorStick.GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
+		double RightSpeed = IO.DS.OperatorStick.GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
 
 		if (fabs(RightSpeed) < Deadband){
 					RightSpeed = 0.0;

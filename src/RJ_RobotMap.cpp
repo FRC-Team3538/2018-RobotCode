@@ -1,7 +1,8 @@
 #include "RJ_RobotMap.h"
 
 
-int RJ_RobotMap::testfun(int input){
-	return input + testdata;
+RJ_RobotMap::RJ_RobotMap(){
+	DS.DriveStick = new Joystick(0);
+	DS.OperatorStick = new Joystick(1);
 }
 
