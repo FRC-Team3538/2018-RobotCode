@@ -5,6 +5,9 @@
 #include "WPILib.h"
 #include "math.h"
 
+// And So It Begins...
+#include "RJ_RobotMap.h"
+
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
 #include <SmartDashboard/SendableChooser.h>
@@ -13,7 +16,7 @@
 #include <opencv2/core/core.hpp>
 
 class Robot: public frc::IterativeRobot {
-	RobotDrive Adrive;
+	DifferentialDrive Adrive;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooseDriveEncoder;
 	const std::string RH_Encoder = "RH_Encoder";
@@ -90,11 +93,17 @@ private:
 		EncoderLeft.SetDistancePerPulse(98.0 / 3125.0 * 4.0);
 		EncoderRight.SetDistancePerPulse(98.0 / 3125.0 * 4.0);
 
+		// test
+		RJ_RobotMap testmap;
+
+
 		//drive command averaging filter
-		OutputX = 0, OutputY = 0;
+		OutputX = 0, OutputY = testmap.testfun(5);
 
 		//variable that chooses which encoder robot is reading for autonomous mode
 		useRightEncoder = true;
+
+
 	}
 
 	void TeleopInit() {
