@@ -1,9 +1,11 @@
+//2018-RobotCode
 #include <iostream>
 #include <memory>
 #include <string>
-//#include "AHRS.h"
+#include "AHRS.h"
 #include "WPILib.h"
 #include "math.h"
+#include "Encoder.h"
 
 #include <IterativeRobot.h>
 #include <LiveWindow/LiveWindow.h>
@@ -12,13 +14,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
+
 class Robot: public frc::IterativeRobot {
 	RobotDrive Adrive;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> chooseDriveEncoder;
+	frc::SendableChooser<std::string> chooseAutonSelector, chooseDriveEncoder,
+				chooseKicker, chooseShooter;
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
-	std::string encoderSelected;
+	std::string autoSelected, encoderSelected;
 	Joystick Drivestick;
 	Joystick OperatorStick;
 	VictorSP DriveLeft0;
@@ -31,12 +35,19 @@ class Robot: public frc::IterativeRobot {
 	VictorSP Dpad2;
 	VictorSP RightStick1;
 	VictorSP RightStick2;
+	Timer AutonTimer;
 	Timer EncoderCheckTimer;
 	Encoder EncoderLeft;
 	Encoder EncoderRight;
 
 	float OutputX, OutputY;
 	DigitalInput DiIn8, DiIn9;
+
+	AHRS *ahrs;
+//tells us what state we are in in each auto mode
+	int modeState;bool AutonOverride;
+	int AutoVal;
+	int isWaiting = 0;			/////***** Divide this into 2 variables.
 
 
 	// create pdp variable
@@ -60,13 +71,15 @@ class Robot: public frc::IterativeRobot {
 	bool shooterOn = false;
 
 
+
 public:
 	Robot() :
 			Adrive(DriveLeft0, DriveRight0), Drivestick(0), OperatorStick(1), DriveLeft0(
 					0), DriveLeft1(1), DriveLeft2(2), DriveRight0(3), DriveRight1(
 					4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
-					0), DiIn8(8), DiIn9(9)  {
+					0), DiIn8(8), DiIn9(9), ahrs(0), modeState(0), AutonOverride(
+					0), AutoVal(0) {
 
 	}
 
@@ -97,6 +110,37 @@ private:
 		useRightEncoder = true;
 	}
 
+	void AutonomousInit() override {
+			modeState = 1;
+			isWaiting = 0;							/////***** Rename this.
+
+			AutonTimer.Reset();
+			AutonTimer.Start();
+			EncoderCheckTimer.Reset();
+			EncoderCheckTimer.Start();
+
+			// Encoder based auton
+			resetEncoder();
+
+			// Turn off drive motors
+			DriveLeft0.Set(0);
+			DriveLeft1.Set(0);
+			DriveLeft2.Set(0);
+			DriveRight0.Set(0);
+			DriveRight1.Set(0);
+			DriveRight2.Set(0);
+
+			//zeros the navX
+			if (ahrs) {
+				ahrs->ZeroYaw();
+			}
+
+			//forces robot into low gear
+			driveSolenoid->Set(false);
+
+		}
+
+
 	void TeleopInit() {
 		OutputX = 0, OutputY = 0;
 
@@ -114,10 +158,19 @@ private:
 		encoderSelected = chooseDriveEncoder.GetSelected();
 		useRightEncoder = (encoderSelected == RH_Encoder);
 
+		// Select Auto Program
+		autoSelected = chooseAutonSelector.GetSelected();
+
 	}
 
 	void DisabledPeriodic() {
 
+	}
+
+	void AutonomousPeriodic() {
+		stopMotors();
+
+		//SmartDashboardUpdate();
 	}
 
 	void TeleopPeriodic() {
@@ -267,29 +320,11 @@ private:
 		return 1;
 	}
 
-	//------------- Start Code for Running Encoders --------------
-	double readEncoder() {
-		double usableEncoderData;
-		double r = EncoderRight.GetDistance();
-		double l = EncoderLeft.GetDistance();
-		//If a encoder is disabled switch l or r to each other.
-		if (l > 0) {
-			usableEncoderData = fmax(r, l);
-		} else if (l == 0) {
-			usableEncoderData = r;
-		} else {
-			usableEncoderData = fmin(r, l);
-		}
-		return usableEncoderData;
-	}
-
 	void resetEncoder() {
-		EncoderLeft.Reset();
-		EncoderRight.Reset();
-		EncoderCheckTimer.Reset();
+			EncoderLeft.Reset();
+			EncoderRight.Reset();
+			EncoderCheckTimer.Reset();
 	}
-	//------------- End Code for Running Encoders --------------------
-
 
 private:
 
