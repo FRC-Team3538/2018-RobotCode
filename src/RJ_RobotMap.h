@@ -14,10 +14,10 @@ public:
 		Joystick* OperatorStick;
 
 		frc::SendableChooser<std::string> chooseAutoProgram;
-		const std::string sAuto0 = "Auto 0";
-		const std::string sAuto1 = "Auto 1";
-		const std::string sAuto2 = "Auto 2";
-		const std::string sAuto3 = "Auto 3";
+		const std::string sAuto0 = "No_Auto";
+		const std::string sAuto1 = "Auto_1";
+		const std::string sAuto2 = "Auto_2";
+		const std::string sAuto3 = "Auto_3";
 	};
 	structDS DS;
 

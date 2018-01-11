@@ -6,11 +6,15 @@
 
 // And So It Begins...
 #include "RJ_RobotMap.h"
+#include "RJ_Auto.h"
 
 class Robot: public frc::IterativeRobot {
 
 	// Robot Hardware Setup
 	RJ_RobotMap IO;
+
+	// Autonomous Programs
+	RJ_Auto AutoProgram;
 
 	// Built-In Drive code for teleop
 	DifferentialDrive Adrive;
@@ -28,7 +32,7 @@ class Robot: public frc::IterativeRobot {
 	DigitalInput DiIn8, DiIn9;
 
 	// create pdp variable
-	PowerDistributionPanel *pdp = new PowerDistributionPanel();
+	//PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
 	// Solenoids
 	Solenoid *XYbutton = new Solenoid(4);
@@ -43,7 +47,8 @@ class Robot: public frc::IterativeRobot {
 
 public:
 	Robot() :
-			Adrive(*IO.DriveBase.MotorLeft[0], *IO.DriveBase.MotorRight[0]), Dpad1(
+		AutoProgram(&IO),
+		Adrive(*IO.DriveBase.MotorLeft[0], *IO.DriveBase.MotorRight[0]), Dpad1(
 					8), Dpad2(9), RightStick1(6), RightStick2(7), DiIn8(8), DiIn9(
 					9) {
 		// NOP
@@ -89,7 +94,8 @@ private:
 
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
-		double driveCurrent = pdp->GetTotalCurrent();	// Get total current
+		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
+		double driveCurrent = 0;
 
 		// rumble if current to high
 		double LHThr = 0.0;		// Define value for rumble
@@ -232,15 +238,14 @@ private:
 	//------------- End Code for Running Encoders --------------------
 
 
-	void AutoPeriodic() {
-		// Select and auto program from
-		if (IO.DS.chooseAutoProgram.GetSelected() == IO.DS.sAuto0) {
-			// Default Auto Program
-		}
-		if (IO.DS.chooseAutoProgram.GetSelected() == IO.DS.sAuto0) {
-			// Auto Program #1
-		}
+	void AutonomousInit() {
+		AutoProgram.Initalize();
 	}
+
+	void AutonomousPeriodic() {
+		AutoProgram.Periodic();
+	}
+
 
 
 }
