@@ -2,7 +2,6 @@
 #include <memory>
 #include <string>
 //#include "AHRS.h"
-#include "math.h"
 
 // And So It Begins...
 #include "RJ_RobotMap.h"
@@ -91,20 +90,8 @@ class Robot: public frc::IterativeRobot {
 		OutputY = (0.8 * OutputY) + (0.2 * SpeedLinear);
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
-		//drive
-		if (IO.DS.DriveStick.GetRawButton(4)) {
-			//boiler auto back up when y button pushed
-			if (!driveButtonYPrev) {
-				resetEncoder();
-				//	ahrs->ZeroYaw();
-				driveButtonYPrev = true;
-			}
-			//forward(autoBackupDistance);
-		} else {
-			//manual control
-			driveButtonYPrev = false;
-			Adrive.ArcadeDrive(OutputY, OutputX, true);
-		}
+		// Drive Code
+		Adrive.ArcadeDrive(OutputY, OutputX, true);
 
 
 		/*
@@ -166,39 +153,6 @@ class Robot: public frc::IterativeRobot {
 
 	}
 
-	void motorSpeed(double left, double right) {
-		IO.DriveBase.MotorsLeft.Set(left);
-		IO.DriveBase.MotorsRight.Set(right);
-	}
-
-	int stopMotors() {
-		motorSpeed(0, 0);
-		return 1;
-	}
-
-	//------------- Start Code for Running Encoders --------------
-	double readEncoder() {
-
-		double usableEncoderData;
-		double l = IO.DriveBase.EncoderLeft.GetDistance();
-		double r = IO.DriveBase.EncoderRight.GetDistance();
-
-		//If a encoder is disabled switch l or r to each other.
-		if (l > 0) {
-			usableEncoderData = fmax(r, l);
-		} else if (l == 0) {
-			usableEncoderData = r;
-		} else {
-			usableEncoderData = fmin(r, l);
-		}
-		return usableEncoderData;
-	}
-
-	void resetEncoder() {
-		IO.DriveBase.EncoderLeft.Reset();
-		IO.DriveBase.EncoderRight.Reset();
-	}
-	//------------- End Code for Running Encoders --------------------
 
 	void AutonomousInit() {
 		AutoProgram.Initalize();

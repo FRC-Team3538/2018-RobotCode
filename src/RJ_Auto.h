@@ -4,6 +4,7 @@
 
 #include "RJ_RobotMap.h"
 
+
 class RJ_Auto {
 
 private:
@@ -11,8 +12,8 @@ private:
 	RJ_RobotMap* IO;
 
 	// State Variables
-	int Step;
-	Timer StepTimer;
+	int m_Step = 0;
+	Timer m_StepTimer;
 
 public:
 	// Default Constructor
@@ -22,10 +23,16 @@ public:
 	void Initalize();
 	void Periodic();
 
-
 private:
-	//Auto Programs
+	// encoder helpers
+	double readEncoder();
+	void resetEncoder();
+
+	//
+	// Auto Programs
+	//
 	void Program1();
+	void Program2();
 
 };
 
