@@ -1,4 +1,3 @@
-
 #ifndef _RJ_ROBOTMAP_H_
 #define _RJ_ROBOTMAP_H_
 
@@ -9,9 +8,10 @@ class RJ_RobotMap {
 public:
 
 	// Driver's Station
-	struct structDS{
-		Joystick* DriveStick;
-		Joystick* OperatorStick;
+	struct structDS {
+		// TODO: Change to xbox controller datatype
+		Joystick DriveStick { 0 };
+		Joystick OperatorStick { 1 };
 
 		frc::SendableChooser<std::string> chooseAutoProgram;
 		const std::string sAuto0 = "No_Auto";
@@ -21,23 +21,51 @@ public:
 	};
 	structDS DS;
 
-
 	// Drive Base
-	struct structDriveBase{
-		VictorSP* MotorLeft[3];
-		VictorSP* MotorRight[3];
-		Encoder* EncoderLeft;
-		Encoder* EncoderRight;
-		Solenoid* SolenoidShifter;
+	struct structDriveBase {
+		// Left Motors
+		VictorSP L1 { 0 };
+		VictorSP L2 { 1 };
+		VictorSP L3 { 2 };
+		SpeedControllerGroup MotorsLeft { L1, L2, L3 };
+
+		// Right Motors
+		VictorSP R1 { 3 };
+		VictorSP R2 { 4 };
+		VictorSP R3 { 5 };
+		SpeedControllerGroup MotorsRight { R1, R2, R3 };
+
+		// Drive Base Encoders
+		Encoder EncoderLeft { 0, 1 };
+		Encoder EncoderRight { 2, 3 };
+
+		// Shifting Solenoid
+		Solenoid SolenoidShifter { 0 };
 	};
 	structDriveBase DriveBase;
 
+
+	// Default junk for testing
+	struct structTesing {
+		VictorSP RightStick1 { 6 };
+		VictorSP RightStick2 { 7 };
+		VictorSP Dpad1 { 8 };
+		VictorSP Dpad2 { 9 };
+
+		// Solenoids
+		Solenoid IntakeButton { 1 };
+		Solenoid Abutton { 2 };
+		Solenoid Bbutton { 3 };
+		Solenoid XYbutton { 4 };
+
+		// Limit Switches
+		DigitalInput DiIn8{8}, DiIn9{9};
+	};
+	structTesing TestJunk;
 
 	// Default Constructor
 	RJ_RobotMap();
 
 };
-
-
 
 #endif
