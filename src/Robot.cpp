@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-//#include "AHRS.h"
+#include "math.h"
 
 // And So It Begins...
 #include "RJ_RobotMap.h"
@@ -37,6 +37,7 @@ class Robot: public frc::IterativeRobot {
 
 	void RobotPeriodic() {
 		// Update Smart Dash
+		IO.NavXDebugger();
 	}
 
 	void DisabledPeriodic() {

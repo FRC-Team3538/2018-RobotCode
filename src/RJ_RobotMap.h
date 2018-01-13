@@ -2,6 +2,7 @@
 #define _RJ_ROBOTMAP_H_
 
 #include "WPILib.h"
+#include "AHRS.h"
 
 class RJ_RobotMap {
 
@@ -13,11 +14,13 @@ public:
 		Joystick DriveStick { 0 };
 		Joystick OperatorStick { 1 };
 
-		frc::SendableChooser<std::string> chooseAutoProgram;
+		SendableChooser<std::string> chooseAutoProgram;
 		const std::string sAuto0 = "No_Auto";
 		const std::string sAuto1 = "Auto_1";
 		const std::string sAuto2 = "Auto_2";
 		const std::string sAuto3 = "Auto_3";
+
+
 	};
 	structDS DS;
 
@@ -41,6 +44,9 @@ public:
 
 		// Shifting Solenoid
 		Solenoid SolenoidShifter { 0 };
+
+		// NavX MXP board (Gryo)
+		AHRS ahrs {SerialPort::kMXP};
 	};
 	structDriveBase DriveBase;
 
@@ -65,6 +71,9 @@ public:
 
 	// Default Constructor
 	RJ_RobotMap();
+
+	// Send all of the NavX data to the SmartDashboard
+	void NavXDebugger();
 
 };
 
