@@ -14,12 +14,36 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
+// Time forward: go forward for 0.75 seconds.
+#define RED_2_CASE2_FWD (71.0)
+#define RED_2_CASE3_TIME (1.0)
+#define RED_2_CASE3_LSPEED (-0.2)
+#define RED_2_CASE3_RSPEED (-0.2)
+//linear calibrations
+// tolerance in inches
+#define LINEAR_TOLERANCE (0.2)
+// This is the gain for using the encoders to set the distance
+//		while going straight.
+#define KP_LINEAR (0.27)
+// This is the gain for using the gyroscope to go straight
+#define KP_ROTATION (0.017)
+#define LINEAR_SETTLING_TIME (0.1)
+#define LINEAR_MAX_DRIVE_SPEED (0.75)
+
+//turning calibrations
+#define ROTATIONAL_TOLERANCE (1.0)
+// This is the gain for turning using the gyroscope
+#define ERROR_GAIN (-0.05)
+#define ROTATIONAL_SETTLING_TIME (0.5)
+
+//encoder max drive time
+#define MAX_DRIVE_TIME (3.0)
 
 class Robot: public frc::IterativeRobot {
 	RobotDrive Adrive;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooseAutonSelector, chooseDriveEncoder,
-				chooseKicker, chooseShooter;
+			chooseKicker, chooseShooter;
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	std::string autoSelected, encoderSelected;
@@ -45,10 +69,10 @@ class Robot: public frc::IterativeRobot {
 
 	AHRS *ahrs;
 //tells us what state we are in in each auto mode
-	int modeState;bool AutonOverride;
+	int modeState;
+	bool AutonOverride;
 	int AutoVal;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
-
 
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
@@ -60,8 +84,6 @@ class Robot: public frc::IterativeRobot {
 	Solenoid *Abutton = new Solenoid(2);
 	Solenoid *IntakeButton = new Solenoid(1);
 
-
-
 	bool useRightEncoder = false;
 	bool driveRightTriggerPrev = false;
 	bool driveButtonYPrev = false;
@@ -69,8 +91,6 @@ class Robot: public frc::IterativeRobot {
 	bool intakeDeployed = false;
 	bool XYDeployed = false;
 	bool shooterOn = false;
-
-
 
 public:
 	Robot() :
@@ -111,35 +131,34 @@ private:
 	}
 
 	void AutonomousInit() override {
-			modeState = 1;
-			isWaiting = 0;							/////***** Rename this.
+		modeState = 1;
+		isWaiting = 0;							/////***** Rename this.
 
-			AutonTimer.Reset();
-			AutonTimer.Start();
-			EncoderCheckTimer.Reset();
-			EncoderCheckTimer.Start();
+		AutonTimer.Reset();
+		AutonTimer.Start();
+		EncoderCheckTimer.Reset();
+		EncoderCheckTimer.Start();
 
-			// Encoder based auton
-			resetEncoder();
+		// Encoder based auton
+		resetEncoder();
 
-			// Turn off drive motors
-			DriveLeft0.Set(0);
-			DriveLeft1.Set(0);
-			DriveLeft2.Set(0);
-			DriveRight0.Set(0);
-			DriveRight1.Set(0);
-			DriveRight2.Set(0);
+		// Turn off drive motors
+		DriveLeft0.Set(0);
+		DriveLeft1.Set(0);
+		DriveLeft2.Set(0);
+		DriveRight0.Set(0);
+		DriveRight1.Set(0);
+		DriveRight2.Set(0);
 
-			//zeros the navX
-			if (ahrs) {
-				ahrs->ZeroYaw();
-			}
-
-			//forces robot into low gear
-			driveSolenoid->Set(false);
-
+		//zeros the navX
+		if (ahrs) {
+			ahrs->ZeroYaw();
 		}
 
+		//forces robot into low gear
+		driveSolenoid->Set(false);
+
+	}
 
 	void TeleopInit() {
 		OutputX = 0, OutputY = 0;
@@ -152,7 +171,6 @@ private:
 		DriveLeft2.Set(DriveLeft0.Get());
 		DriveRight1.Set(DriveRight0.Get());
 		DriveRight2.Set(DriveRight0.Get());
-
 
 		// Encoder Selection for autotools
 		encoderSelected = chooseDriveEncoder.GetSelected();
@@ -168,9 +186,7 @@ private:
 	}
 
 	void AutonomousPeriodic() {
-		stopMotors();
-
-		//SmartDashboardUpdate();
+		autoForward();
 	}
 
 	void TeleopPeriodic() {
@@ -250,7 +266,7 @@ private:
 			intakeDeployed = false;
 			IntakeButton->Set(intakeDeployed);
 		}
-	//if 'X' button pressed, extend (Solenoid On)
+		//if 'X' button pressed, extend (Solenoid On)
 		if (OperatorStick.GetRawButton(3)) {
 			XYDeployed = true;
 			XYbutton->Set(XYDeployed);
@@ -266,8 +282,7 @@ private:
 		if (OperatorStick.GetPOV(0) == 0) {
 			Dpad1.Set(DPadSpeed);
 			Dpad2.Set(DPadSpeed);
-		}
-		else if (OperatorStick.GetPOV(0) == 180) {
+		} else if (OperatorStick.GetPOV(0) == 180) {
 			Dpad1.Set(-DPadSpeed);
 			Dpad2.Set(-DPadSpeed);
 		} else {
@@ -277,32 +292,115 @@ private:
 
 		double RightSpeed = OperatorStick.GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
 
-		if (fabs(RightSpeed) < Deadband){
-					RightSpeed = 0.0;
-		}
-		else if (RightSpeed > Deadband and !RightStickLimit1)
+		if (fabs(RightSpeed) < Deadband) {
+			RightSpeed = 0.0;
+		} else if (RightSpeed > Deadband and !RightStickLimit1)
 			RightSpeed = 0.0;
 		else if (RightSpeed < Deadband and !RightStickLimit2)
 			RightSpeed = 0.0;
 
-	//	if (OperatorStick.GetRawAxis(2) > 0.5) {
-	//		RightSpeed = 1.0;
-	//	} else if (OperatorStick.GetRawAxis(3) > 0.5) {
-	//		RightSpeed = -1.0;
-	//	}
-	//	else if (OperatorStick.GetRawAxis(4) < Deadband)
-	//		RightSpeed = 0.0;
+		//	if (OperatorStick.GetRawAxis(2) > 0.5) {
+		//		RightSpeed = 1.0;
+		//	} else if (OperatorStick.GetRawAxis(3) > 0.5) {
+		//		RightSpeed = -1.0;
+		//	}
+		//	else if (OperatorStick.GetRawAxis(4) < Deadband)
+		//		RightSpeed = 0.0;
 
 		RightStick1.Set(RightSpeed);
 		RightStick2.Set(RightSpeed);
 
-
 	}
 
-// These are the state numbers for each part of autoBlue1
-//		These are here so we can easily add states.
-// 		State 1 is always the first one to run.
-//		Always have an "end" state.
+	int forward(double targetDistance) {
+		double encoderDistance = readEncoder();
+		double encoderError = encoderDistance - targetDistance;
+		double driveCommandLinear = encoderError * KP_LINEAR;
+		//limits max drive speed
+		if (driveCommandLinear > LINEAR_MAX_DRIVE_SPEED) {
+			driveCommandLinear = LINEAR_MAX_DRIVE_SPEED;
+		} else if (driveCommandLinear < -1 * LINEAR_MAX_DRIVE_SPEED) { /////***** "-1" is a "magic number." At least put a clear comment in here.
+			driveCommandLinear = -1 * LINEAR_MAX_DRIVE_SPEED;
+		}
+		//gyro values that make the robot drive straight
+		double gyroAngle = ahrs->GetAngle();
+		double driveCommandRotation = gyroAngle * KP_ROTATION;
+		//encdoer check
+		if (EncoderCheckTimer.Get() > MAX_DRIVE_TIME) {
+			motorSpeed(0.0, 0.0);
+			DriverStation::ReportError(
+					"(forward) Encoder Max Drive Time Exceeded");
+		} else {
+			//calculates and sets motor speeds
+			motorSpeed(driveCommandLinear + driveCommandRotation,
+					driveCommandLinear - driveCommandRotation);
+		}
+		//routine helps prevent the robot from overshooting the distance
+		if (isWaiting == 0) {
+			if (abs(encoderError) < LINEAR_TOLERANCE) {
+				isWaiting = 1;
+				AutonTimer.Reset();
+			}
+		}
+		//timed wait
+		else {
+			float currentTime = AutonTimer.Get();
+			if (abs(encoderError) > LINEAR_TOLERANCE) {
+				isWaiting = 0;
+			} else if (currentTime > LINEAR_SETTLING_TIME) {
+				isWaiting = 0;
+				return 1;
+			}
+		}
+		return 0;
+	}
+
+	//need to change signs!!!
+	int timedDrive(double driveTime, double leftMotorSpeed,
+			double rightMotorSpeed) {
+		float currentTime = AutonTimer.Get();
+		if (currentTime < driveTime) {
+			motorSpeed(leftMotorSpeed, rightMotorSpeed);
+		} else {
+			stopMotors();
+			return 1;
+		}
+		return 0;
+	}
+
+#define AR2_INIT 1
+#define AR2_FWD 2
+#define AR2_TIMED 3
+#define AR2_END 4
+	void autoForward(void) {
+		//change to timed drive
+		//puts gear on front of airship
+		switch (modeState) {
+		case AR2_INIT:
+			// This uses state 1 for initialization.
+			// This keeps the initialization and the code all in one place.
+			ahrs->ZeroYaw();
+			resetEncoder();
+			modeState = AR2_FWD;
+			break;
+		case AR2_FWD:
+			if (forward(RED_2_CASE2_FWD)) {
+				AutonTimer.Reset();
+				modeState = AR2_TIMED;
+			}
+			break;
+		case AR2_TIMED:
+			if (timedDrive(RED_2_CASE2_FWD, RED_2_CASE3_LSPEED,
+			RED_2_CASE3_RSPEED)) {
+				AutonTimer.Reset();
+				modeState = AR2_END;
+			}
+			break;
+		default:
+			stopMotors();
+		}
+		return;
+	}
 
 	void motorSpeed(double leftMotor, double rightMotor) {
 		DriveLeft0.Set(leftMotor * -1);
@@ -320,14 +418,31 @@ private:
 		return 1;
 	}
 
-	void resetEncoder() {
-			EncoderLeft.Reset();
-			EncoderRight.Reset();
-			EncoderCheckTimer.Reset();
+	//------------- Start Code for Running Encoders --------------
+	double readEncoder() {
+		double usableEncoderData;
+		double r = EncoderRight.GetDistance();
+		double l = EncoderLeft.GetDistance();
+		//If a encoder is disabled switch l or r to each other.
+		if (l > 0) {
+			usableEncoderData = fmax(r, l);
+		} else if (l == 0) {
+			usableEncoderData = r;
+		} else {
+			usableEncoderData = fmin(r, l);
+		}
+		return usableEncoderData;
 	}
 
-private:
+	void resetEncoder() {
+		EncoderLeft.Reset();
+		EncoderRight.Reset();
+		EncoderCheckTimer.Reset();
+	}
+	//------------- End Code for Running Encoders --------------------
 
+
+private:
 
 }
 ;
