@@ -279,7 +279,7 @@ private:
 		if (fabs(SpeedRotate) < Control_Deadband)
 			SpeedRotate = 0.0;
 
-		if (driveSolenoid->Get()) {
+		if (!driveSolenoid->Get()) {
 
 			if (LowDriveChooser == DriveDefault)
 				DriveState = caseDriveDefault;
