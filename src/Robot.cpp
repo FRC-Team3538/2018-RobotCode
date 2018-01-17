@@ -47,22 +47,14 @@ class Robot: public frc::IterativeRobot {
 			chooseHighDriveSens, chooseHighTurnSens;
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
-	const std::string LowDriveDefault = "Standard";
-	const std::string LowDrive1 = "Sens_x^2";
-	const std::string LowDrive2 = "Sens_x^3";
-	const std::string LowDrive3 = "Sens_x^5";
-	const std::string LowTurnDefault = "Standard";
-	const std::string LowTurn1 = "Sens_x^2";
-	const std::string LowTurn2 = "Sens_x^3";
-	const std::string LowTurn3 = "Sens_x^5";
-	const std::string HighDriveDefault = "Standard";
-	const std::string HighDrive1 = "Sens_x^2";
-	const std::string HighDrive2 = "Sens_x^3";
-	const std::string HighDrive3 = "Sens_x^5";
-	const std::string HighTurnDefault = "Standard";
-	const std::string HighTurn1 = "Sens_x^2";
-	const std::string HighTurn2 = "Sens_x^3";
-	const std::string HighTurn3 = "Sens_x^5";
+	const std::string DriveDefault = "Standard";
+	const std::string Drive1 = "Sens_x^2";
+	const std::string Drive2 = "Sens_x^3";
+	const std::string Drive3 = "Sens_x^5";
+	const std::string TurnDefault = "Standard";
+	const std::string Turn1 = "Sens_x^2";
+	const std::string Turn2 = "Sens_x^3";
+	const std::string Turn3 = "Sens_x^5";
 	std::string autoSelected, encoderSelected, LowDriveChooser, LowTurnChooser,
 			HighDriveChooser, HighTurnChooser;
 	Joystick Drivestick;
@@ -88,7 +80,7 @@ class Robot: public frc::IterativeRobot {
 
 	AHRS *ahrs;
 //tells us what state we are in in each auto mode
-	int modeState, LowDriveState, LowTurnState, HighDriveState, HighTurnState;
+	int modeState, DriveState, TurnState;
 	bool AutonOverride;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
 
@@ -117,8 +109,7 @@ public:
 					4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
 					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(
-			NULL), modeState(0), LowDriveState(0), LowTurnState(0), HighDriveState(
-					0), HighTurnState(0), AutonOverride(0) {
+			NULL), modeState(0), DriveState(0), TurnState(0), AutonOverride(0) {
 
 	}
 
@@ -128,28 +119,28 @@ private:
 		chooseDriveEncoder.AddObject(RH_Encoder, RH_Encoder);
 		frc::SmartDashboard::PutData("Encoder", &chooseDriveEncoder);
 
-		chooseLowTurnSens.AddDefault(LowTurnDefault, LowTurnDefault);
-		chooseLowTurnSens.AddObject(LowTurn1, LowTurn1);
-		chooseLowTurnSens.AddObject(LowTurn2, LowTurn2);
-		chooseLowTurnSens.AddObject(LowTurn3, LowTurn3);
+		chooseLowTurnSens.AddDefault(TurnDefault, TurnDefault);
+		chooseLowTurnSens.AddObject(Turn1, Turn1);
+		chooseLowTurnSens.AddObject(Turn2, Turn2);
+		chooseLowTurnSens.AddObject(Turn3, Turn3);
 		frc::SmartDashboard::PutData("LowTurnSens", &chooseLowTurnSens);
 
-		chooseLowDriveSens.AddDefault(LowDriveDefault, LowDriveDefault);
-		chooseLowDriveSens.AddObject(LowDrive1, LowDrive1);
-		chooseLowDriveSens.AddObject(LowDrive2, LowDrive2);
-		chooseLowDriveSens.AddObject(LowDrive3, LowDrive3);
+		chooseLowDriveSens.AddDefault(DriveDefault, DriveDefault);
+		chooseLowDriveSens.AddObject(Drive1, Drive1);
+		chooseLowDriveSens.AddObject(Drive2, Drive2);
+		chooseLowDriveSens.AddObject(Drive3, Drive3);
 		frc::SmartDashboard::PutData("LowDriveSens", &chooseLowDriveSens);
 
-		chooseHighTurnSens.AddDefault(HighTurnDefault, HighTurnDefault);
-		chooseHighTurnSens.AddObject(HighTurn1, HighTurn1);
-		chooseHighTurnSens.AddObject(HighTurn2, HighTurn2);
-		chooseHighTurnSens.AddObject(HighTurn3, HighTurn3);
+		chooseHighTurnSens.AddDefault(TurnDefault, TurnDefault);
+		chooseHighTurnSens.AddObject(Turn1, Turn1);
+		chooseHighTurnSens.AddObject(Turn2, Turn2);
+		chooseHighTurnSens.AddObject(Turn3, Turn3);
 		frc::SmartDashboard::PutData("HighTurnSens", &chooseHighTurnSens);
 
-		chooseHighDriveSens.AddDefault(HighDriveDefault, HighDriveDefault);
-		chooseHighDriveSens.AddObject(HighDrive1, HighDrive1);
-		chooseHighDriveSens.AddObject(HighDrive2, HighDrive2);
-		chooseHighDriveSens.AddObject(HighDrive3, HighDrive3);
+		chooseHighDriveSens.AddDefault(DriveDefault, DriveDefault);
+		chooseHighDriveSens.AddObject(Drive1, Drive1);
+		chooseHighDriveSens.AddObject(Drive2, Drive2);
+		chooseHighDriveSens.AddObject(Drive3, Drive3);
 		frc::SmartDashboard::PutData("HighDriveSens", &chooseHighDriveSens);
 
 		//turn off shifter solenoids
@@ -252,6 +243,8 @@ private:
 		double DPadSpeed = 1.0;
 		bool RightStickLimit1 = DiIn8.Get();
 		bool RightStickLimit2 = DiIn9.Get();
+		std::string DriveDebug = "";
+		std::string TurnDebug = "";
 
 		//high gear & low gear controls
 		if (Drivestick.GetRawButton(6))
@@ -288,215 +281,143 @@ private:
 
 		if (driveSolenoid->Get()) {
 
-			if (LowDriveChooser == LowDriveDefault)
-				LowDriveState = caseDriveDefault;
-			else if (LowDriveChooser == LowDrive1)
-				LowDriveState = caseDrive1;
-			else if (LowDriveChooser == LowDrive2)
-				LowDriveState = caseDrive2;
-			else if (LowDriveChooser == LowDrive3)
-				LowDriveState = caseDrive3;
+			if (LowDriveChooser == DriveDefault)
+				DriveState = caseDriveDefault;
+			else if (LowDriveChooser == Drive1)
+				DriveState = caseDrive1;
+			else if (LowDriveChooser == Drive2)
+				DriveState = caseDrive2;
+			else if (LowDriveChooser == Drive3)
+				DriveState = caseDrive3;
 			else
-				LowDriveState = 0;
+				DriveState = 0;
 
-			switch (LowDriveState) {
-			case caseDriveDefault:
-				// Set control to out of box functionality
-				OutputY = SpeedLinear;
-				break;
-			case caseDrive1:
-				// Set  control response curve  to square input
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband
-							+ (Gain * (SpeedLinear * SpeedLinear));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband
-							+ (-Gain * (SpeedLinear * SpeedLinear));
-				else
-					OutputY = 0;
-
-				break;
-			case caseDrive2:
-				// Set  control response curve  to cubed input
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
-				else
-					OutputY = 0;
-
-				break;
-			case caseDrive3:
-				// Set control response curve to input^5
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 5));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 5));
-				else
-					OutputY = 0;
-
-				break;
-			default:
-				OutputY = 0;
-
-			}
-
-			if (LowTurnChooser == LowTurnDefault)
-				LowTurnState = caseDriveDefault;
-			else if (LowTurnChooser == LowTurn1)
-				LowTurnState = caseDrive1;
-			else if (LowTurnChooser == LowTurn2)
-				LowTurnState = caseDrive2;
-			else if (LowTurnChooser == LowTurn3)
-				LowTurnState = caseDrive3;
+			if (LowTurnChooser == TurnDefault)
+				TurnState = caseDriveDefault;
+			else if (LowTurnChooser == Turn1)
+				TurnState = caseDrive1;
+			else if (LowTurnChooser == Turn2)
+				TurnState = caseDrive2;
+			else if (LowTurnChooser == Turn3)
+				TurnState = caseDrive3;
 			else
-				LowTurnState = 0;
+				TurnState = 0;
 
-			switch (LowTurnState) {
-			case caseDriveDefault:
-				// Set control to out of box functionality
-				OutputX = SpeedRotate;
-				break;
-			case caseDrive1:
-				// Set  control response curve  to square input
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband
-							+ (Gain * (SpeedRotate * SpeedRotate));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband
-							+ (-Gain * (SpeedRotate * SpeedRotate));
-				else
-					OutputX = 0;
-				break;
-			case caseDrive2:
-				// Set  control response curve  to cubed input
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 3));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 3));
-				else
-					OutputX = 0;
-				break;
-			case caseDrive3:
-				// Set control response curve to input^5
-
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 5));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 5));
-				else
-					OutputX = 0;
-				break;
-			default:
-				OutputX = 0;
-			}
 		} else {
 
-			if (HighDriveChooser == HighDriveDefault)
-				HighDriveState = caseDriveDefault;
-			else if (HighDriveChooser == HighDrive1)
-				HighDriveState = caseDrive1;
-			else if (HighDriveChooser == HighDrive2)
-				HighDriveState = caseDrive2;
-			else if (HighDriveChooser == HighDrive3)
-				HighDriveState = caseDrive3;
+			if (HighDriveChooser == DriveDefault)
+				DriveState = caseDriveDefault;
+			else if (HighDriveChooser == Drive1)
+				DriveState = caseDrive1;
+			else if (HighDriveChooser == Drive2)
+				DriveState = caseDrive2;
+			else if (HighDriveChooser == Drive3)
+				DriveState = caseDrive3;
 			else
-				HighDriveState = 0;
+				DriveState = 0;
 
-			switch (HighDriveState) {
-			case caseDriveDefault:
-				// Set control to out of box functionality
-				OutputY = SpeedLinear;
-				printf("Running %f/n", OutputY);
-				break;
-			case caseDrive1:
-				// Set  control response curve  to square input
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband
-							+ (Gain * (SpeedLinear * SpeedLinear));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband
-							+ (-Gain * (SpeedLinear * SpeedLinear));
-				else
-					OutputY = 0;
-
-				break;
-			case caseDrive2:
-				// Set  control response curve  to cubed input
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
-				else
-					OutputY = 0;
-
-				break;
-			case caseDrive3:
-				// Set control response curve to input^5
-				if (SpeedLinear > Control_Deadband)
-					OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 5));
-				else if (SpeedLinear < -Control_Deadband)
-					OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 5));
-				else
-					OutputY = 0;
-
-				break;
-			default:
-				OutputY = 0;
-
-			}
-
-			if (HighTurnChooser == HighTurnDefault)
-				HighTurnState = caseDriveDefault;
-			else if (HighTurnChooser == HighTurn1)
-				HighTurnState = caseDrive1;
-			else if (HighTurnChooser == HighTurn2)
-				HighTurnState = caseDrive2;
-			else if (HighTurnChooser == HighTurn3)
-				HighTurnState = caseDrive3;
+			if (HighTurnChooser == TurnDefault)
+				TurnState = caseDriveDefault;
+			else if (HighTurnChooser == Turn1)
+				TurnState = caseDrive1;
+			else if (HighTurnChooser == Turn2)
+				TurnState = caseDrive2;
+			else if (HighTurnChooser == Turn3)
+				TurnState = caseDrive3;
 			else
-				HighTurnState = 0;
-
-			switch (HighTurnState) {
-			case caseDriveDefault:
-				// Set control to out of box functionality
-				OutputX = SpeedRotate;
-				break;
-			case caseDrive1:
-				// Set  control response curve  to square input
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband
-							+ (Gain * (SpeedRotate * SpeedRotate));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband
-							+ (-Gain * (SpeedRotate * SpeedRotate));
-				else
-					OutputX = 0;
-				break;
-			case caseDrive2:
-				// Set  control response curve  to cubed input
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 3));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 3));
-				else
-					OutputX = 0;
-				break;
-			case caseDrive3:
-				// Set control response curve to input^5
-
-				if (SpeedRotate > Control_Deadband)
-					OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 5));
-				else if (SpeedRotate < -Control_Deadband)
-					OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 5));
-				else
-					OutputX = 0;
-				break;
-			default:
-				OutputX = 0;
-			}
+				TurnState = 0;
 		}
 
+		switch (DriveState) {
+		case caseDriveDefault:
+			// Set control to out of box functionality
+			OutputY = SpeedLinear;
+			DriveDebug = TurnDefault;
+			break;
+		case caseDrive1:
+			// Set  control response curve  to square input
+			DriveDebug = Turn1;
+			if (SpeedLinear > Control_Deadband)
+				OutputY = Drive_Deadband + (Gain * (SpeedLinear * SpeedLinear));
+			else if (SpeedLinear < -Control_Deadband)
+				OutputY = -Drive_Deadband
+						+ (-Gain * (SpeedLinear * SpeedLinear));
+			else
+				OutputY = 0;
+
+			break;
+		case caseDrive2:
+			// Set  control response curve  to cubed input
+			DriveDebug = Turn2;
+			if (SpeedLinear > Control_Deadband)
+				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else if (SpeedLinear < -Control_Deadband)
+				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else
+				OutputY = 0;
+
+			break;
+		case caseDrive3:
+			// Set control response curve to input^5
+			DriveDebug = Turn3;
+			if (SpeedLinear > Control_Deadband)
+				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 5));
+			else if (SpeedLinear < -Control_Deadband)
+				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 5));
+			else
+				OutputY = 0;
+
+			break;
+		default:
+			DriveDebug = "Not Set";
+			OutputY = 0;
+
+		}
+
+		switch (TurnState) {
+		case caseDriveDefault:
+			// Set control to out of box functionality
+			OutputX = SpeedRotate;
+			TurnDebug = TurnDefault;
+			break;
+		case caseDrive1:
+			// Set  control response curve  to square input
+			TurnDebug = Turn1;
+			if (SpeedRotate > Control_Deadband)
+				OutputX = Drive_Deadband + (Gain * (SpeedRotate * SpeedRotate));
+			else if (SpeedRotate < -Control_Deadband)
+				OutputX = -Drive_Deadband
+						+ (-Gain * (SpeedRotate * SpeedRotate));
+			else
+				OutputX = 0;
+			break;
+		case caseDrive2:
+			// Set  control response curve  to cubed input
+			TurnDebug = Turn2;
+			if (SpeedRotate > Control_Deadband)
+				OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 3));
+			else if (SpeedRotate < -Control_Deadband)
+				OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 3));
+			else
+				OutputX = 0;
+			break;
+		case caseDrive3:
+			// Set control response curve to input^5
+			TurnDebug = Turn3;
+			if (SpeedRotate > Control_Deadband)
+				OutputX = Drive_Deadband + (Gain * pow(SpeedRotate, 5));
+			else if (SpeedRotate < -Control_Deadband)
+				OutputX = -Drive_Deadband + (Gain * pow(SpeedRotate, 5));
+			else
+				OutputX = 0;
+			break;
+		default:
+			OutputX = 0;
+			TurnDebug = "Not Set";
+		}
+
+		SmartDashboard::PutString("Drive response curve", DriveDebug);
+		SmartDashboard::PutString("Turn response curve", TurnDebug);
 		SmartDashboard::PutNumber("SpeedLinear", SpeedLinear);
 		SmartDashboard::PutNumber("SpeedRotate", SpeedRotate);
 
@@ -578,16 +499,15 @@ private:
 		else if (RightSpeed < Control_Deadband and !RightStickLimit2)
 			RightSpeed = 0.0;
 
-//			if (OperatorStick.GetRawAxis(2) > 0.5) {
-//				RightSpeed = 1.0;
-//			} else if (OperatorStick.GetRawAxis(3) > 0.5) {
-//				RightSpeed = -1.0;
-//			}
-//			else if (OperatorStick.GetRawAxis(4) < Control_Deadband)
-//				RightSpeed = 0.0;
-
-		RightStick1.Set(RightSpeed);
-		RightStick2.Set(RightSpeed);
+//		if (OperatorStick.GetRawAxis(2) > 0.5) {
+//			RightSpeed = 1.0;
+//		} else if (OperatorStick.GetRawAxis(3) > 0.5) {
+//			RightSpeed = -1.0;
+//		} else if (OperatorStick.GetRawAxis(4) < Control_Deadband)
+//			RightSpeed = 0.0;
+//
+//		RightStick1.Set(RightSpeed);
+//		RightStick2.Set(RightSpeed);
 
 	}
 
