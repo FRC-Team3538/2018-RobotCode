@@ -42,9 +42,16 @@
 class Robot: public frc::IterativeRobot {
 	DifferentialDrive Adrive;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
-	frc::SendableChooser<std::string> chooseAutonSelector, chooseDriveEncoder,
+	frc::SendableChooser<std::string> chooseAutonSelector, chooseAutoDelay, chooseDriveEncoder,
 			chooseKicker, chooseShooter, chooseLowDriveSens, chooseLowTurnSens,
 			chooseHighDriveSens, chooseHighTurnSens;
+	const std::string AutoDelayOff = "No Delay";
+	const std::string AutoDelay1 = "3 second delay";
+	const std::string AutoDelay2 = "5 second delay";
+	const std::string AutoOff = "No Auto Mode";
+	const std::string AutoLeft = "Left Position";
+	const std::string AutoCenter = "Center Position";
+	const std::string AutoRight = "Right Position";
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	const std::string DriveDefault = "Standard";
@@ -55,8 +62,8 @@ class Robot: public frc::IterativeRobot {
 	const std::string Turn1 = "Sens_x^2";
 	const std::string Turn2 = "Sens_x^3";
 	const std::string Turn3 = "Sens_x^5";
-	std::string autoSelected, encoderSelected, LowDriveChooser, LowTurnChooser,
-			HighDriveChooser, HighTurnChooser;
+	std::string autoSelected, autoDelay, encoderSelected, LowDriveChooser, LowTurnChooser,
+			HighDriveChooser, HighTurnChooser, gameData;
 	Joystick Drivestick;
 	Joystick OperatorStick;
 	VictorSP DriveLeft0;
@@ -80,8 +87,8 @@ class Robot: public frc::IterativeRobot {
 
 	AHRS *ahrs;
 //tells us what state we are in in each auto mode
-	int modeState, DriveState, TurnState;
-	bool AutonOverride;
+	int modeState, DriveState, TurnState, ScaleState, NearSwitch, FarSwitch, AutoSpot;
+	bool AutonOverride, AutoDelayActive;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
 
 	// create pdp variable
@@ -108,13 +115,25 @@ public:
 					0), DriveLeft1(1), DriveLeft2(2), DriveRight0(3), DriveRight1(
 					4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
-					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(
-			NULL), modeState(0), DriveState(0), TurnState(0), AutonOverride(0) {
+					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(NULL),
+					modeState(0), DriveState(0), TurnState(0), ScaleState(0), NearSwitch(0),
+					FarSwitch(0), AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
 
 	}
 
 private:
 	void RobotInit() {
+		chooseAutonSelector.AddDefault(AutoOff, AutoOff);
+		chooseAutonSelector.AddObject(AutoLeft, AutoLeft);
+		chooseAutonSelector.AddObject(AutoCenter, AutoCenter);
+		chooseAutonSelector.AddObject(AutoRight, AutoRight);
+		frc::SmartDashboard::PutData("Auto Selector", &chooseAutonSelector);
+
+		chooseAutoDelay.AddDefault(AutoDelayOff, AutoDelayOff);
+		chooseAutoDelay.AddObject(AutoDelay1, AutoDelay1);
+		chooseAutoDelay.AddObject(AutoDelay2, AutoDelay2);
+		frc::SmartDashboard::PutData("Auto Delay",&chooseAutoDelay);
+
 		chooseDriveEncoder.AddDefault(LH_Encoder, LH_Encoder);
 		chooseDriveEncoder.AddObject(RH_Encoder, RH_Encoder);
 		frc::SmartDashboard::PutData("Encoder", &chooseDriveEncoder);
@@ -166,7 +185,8 @@ private:
 
 	void AutonomousInit() override {
 		modeState = 1;
-		isWaiting = 0;							/////***** Rename this.
+		isWaiting = 0;	/////***** Rename this.
+		AutoDelayActive = false;
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
@@ -192,6 +212,10 @@ private:
 		//forces robot into low gear
 		driveSolenoid->Set(false);
 
+		//Read switch and scale game data
+		gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+
+
 	}
 
 	void TeleopInit() {
@@ -216,6 +240,7 @@ private:
 
 		// Select Auto Program
 		autoSelected = chooseAutonSelector.GetSelected();
+		autoDelay = chooseAutoDelay.GetSelected();
 
 		LowTurnChooser = chooseLowTurnSens.GetSelected();
 		LowDriveChooser = chooseLowDriveSens.GetSelected();
@@ -227,7 +252,55 @@ private:
 
 	}
 
+#define NoAuto 0
+#define SpotLeft 1
+#define SpotCenter 2
+#define SpotRight 3
+#define caseLeft 1
+#define caseRight 2
 	void AutonomousPeriodic() {
+
+		// Set near switch game state
+		if(gameData[0] == 'L')
+			NearSwitch = caseLeft;
+		 else
+			NearSwitch = caseRight;
+		// Set far switch game state
+		if(gameData[2] == 'L')
+			ScaleState = caseLeft;
+		 else
+			ScaleState = caseRight;
+		// Set Scale game state
+		if(gameData[3] == 'L')
+			FarSwitch = caseLeft;
+		 else
+			FarSwitch = caseRight;
+
+		if(autoSelected==AutoLeft)
+			AutoSpot=SpotLeft;
+		else if (autoSelected==AutoCenter)
+			AutoSpot=SpotCenter;
+		else if (autoSelected==AutoRight)
+			AutoSpot=SpotRight;
+		else
+			AutoSpot=NoAuto;
+
+		if (autoDelay == AutoDelay1 and AutonTimer.Get()< 3){
+			AutoDelayActive = true;
+		}
+		switch(AutoSpot);
+		case SpotLeft:
+
+			break;
+		case SpotCenter:
+
+			break;
+		case SpotRight:
+
+			break;
+		default:
+
+
 		autoForward();
 	}
 
