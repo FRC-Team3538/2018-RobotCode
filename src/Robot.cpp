@@ -270,7 +270,7 @@ private:
 		if (autoDelay == AutoDelay1 and AutonTimer.Get()< 3){
 			AutoDelayActive = true;
 		}
-		else if (autoDelay == AutoDelay1 and AutonTimer.Get()< 5){
+		else if (autoDelay == AutoDelay2 and AutonTimer.Get()< 5){
 			AutoDelayActive = true;
 		}
 		else if (AutoDelayActive){
