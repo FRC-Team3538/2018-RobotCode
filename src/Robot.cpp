@@ -49,9 +49,9 @@ class Robot: public frc::IterativeRobot {
 	const std::string AutoDelay1 = "3 second delay";
 	const std::string AutoDelay2 = "5 second delay";
 	const std::string AutoOff = "No Auto Mode";
-	const std::string AutoLeft = "Left Position";
-	const std::string AutoCenter = "Center Position";
-	const std::string AutoRight = "Right Position";
+	const std::string AutoLeftSpot = "Left Position Switch";
+	const std::string AutoCenterSpot = "Center Position";
+	const std::string AutoRightSpot = "Right Position Switch";
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	const std::string DriveDefault = "Standard";
@@ -87,7 +87,7 @@ class Robot: public frc::IterativeRobot {
 
 	AHRS *ahrs;
 //tells us what state we are in in each auto mode
-	int modeState, DriveState, TurnState, ScaleState, NearSwitch, FarSwitch, AutoSpot;
+	int modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot;
 	bool AutonOverride, AutoDelayActive;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
 
@@ -117,16 +117,16 @@ public:
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
 					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(NULL),
 					modeState(0), DriveState(0), TurnState(0), ScaleState(0), NearSwitch(0),
-					FarSwitch(0), AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
+					AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
 
 	}
 
 private:
 	void RobotInit() {
 		chooseAutonSelector.AddDefault(AutoOff, AutoOff);
-		chooseAutonSelector.AddObject(AutoLeft, AutoLeft);
-		chooseAutonSelector.AddObject(AutoCenter, AutoCenter);
-		chooseAutonSelector.AddObject(AutoRight, AutoRight);
+		chooseAutonSelector.AddObject(AutoLeftSpot, AutoLeftSpot);
+		chooseAutonSelector.AddObject(AutoCenterSpot, AutoCenterSpot);
+		chooseAutonSelector.AddObject(AutoRightSpot, AutoRightSpot);
 		frc::SmartDashboard::PutData("Auto Selector", &chooseAutonSelector);
 
 		chooseAutoDelay.AddDefault(AutoDelayOff, AutoDelayOff);
@@ -252,10 +252,6 @@ private:
 
 	}
 
-#define NoAuto 0
-#define SpotLeft 1
-#define SpotCenter 2
-#define SpotRight 3
 #define caseLeft 1
 #define caseRight 2
 	void AutonomousPeriodic() {
@@ -266,43 +262,85 @@ private:
 		 else
 			NearSwitch = caseRight;
 		// Set far switch game state
-		if(gameData[2] == 'L')
+		if(gameData[1] == 'L')
 			ScaleState = caseLeft;
 		 else
 			ScaleState = caseRight;
-		// Set Scale game state
-		if(gameData[3] == 'L')
-			FarSwitch = caseLeft;
-		 else
-			FarSwitch = caseRight;
-
-		if(autoSelected==AutoLeft)
-			AutoSpot=SpotLeft;
-		else if (autoSelected==AutoCenter)
-			AutoSpot=SpotCenter;
-		else if (autoSelected==AutoRight)
-			AutoSpot=SpotRight;
-		else
-			AutoSpot=NoAuto;
 
 		if (autoDelay == AutoDelay1 and AutonTimer.Get()< 3){
 			AutoDelayActive = true;
 		}
-		switch(AutoSpot);
-		case SpotLeft:
+		else if (autoDelay == AutoDelay1 and AutonTimer.Get()< 5){
+			AutoDelayActive = true;
+		}
+		else if (AutoDelayActive){
+			AutoDelayActive=false;
+			AutonTimer.Reset();
+		}
 
+		if(autoSelected==AutoLeftSpot and !AutoDelayActive)
+			AutoLeftSwitch(NearSwitch);
+		else if (autoSelected==AutoCenterSpot and !AutoDelayActive)
+			AutoCenter(NearSwitch);
+		else if (autoSelected==AutoRightSpot and !AutoDelayActive)
+			AutoRightSwitch(NearSwitch);
+
+
+	}
+
+
+	void AutoLeftSwitch(int LeftMode){
+
+		switch(LeftMode){
+		case caseLeft:
+			stopMotors();
 			break;
-		case SpotCenter:
-
-			break;
-		case SpotRight:
-
+		case caseRight:
+			stopMotors();
 			break;
 		default:
+			stopMotors();
+		}
+		}
 
+		void AutoRightSwitch(int RightMode){
 
-		autoForward();
-	}
+			switch(RightMode){
+			case caseLeft:
+				stopMotors();
+				break;
+			case caseRight:
+				stopMotors();
+				break;
+			default:
+				stopMotors();
+			}
+
+		}
+
+		void AutoCenter(int CenterMode){
+
+			switch(CenterMode){
+			case caseLeft:
+				timedDrive(0.5,0.5,0.5);
+				autonTurn(90);
+				timedDrive(0.25,0.5,0.5);
+				autonTurn(-90);
+				timedDrive(0.25,0.5,0.5);
+				break;
+			case caseRight:
+				timedDrive(0.5,0.5,0.5);
+				autonTurn(-90);
+				timedDrive(0.25,0.5,0.5);
+				autonTurn(-90);
+				timedDrive(0.25,0.5,0.5);
+				break;
+			default:
+				stopMotors();
+			}
+
+		}
+
 
 #define caseDriveDefault 1
 #define caseDrive1 2
@@ -640,39 +678,51 @@ private:
 		return 0;
 	}
 
-#define AR2_INIT 1
-#define AR2_FWD 2
-#define AR2_TIMED 3
-#define AR2_END 4
-	void autoForward(void) {
-		//change to timed drive
-		//puts gear on front of airship
-		switch (modeState) {
-		case AR2_INIT:
-			// This uses state 1 for initialization.
-			// This keeps the initialization and the code all in one place.
-			ahrs->ZeroYaw();
-			resetEncoder();
-			modeState = AR2_FWD;
-			break;
-		case AR2_FWD:
-			if (forward(RED_2_CASE2_FWD)) {
-				AutonTimer.Reset();
-				modeState = AR2_TIMED;
+
+
+	int autonTurn(float targetYaw) {
+
+			float currentYaw = ahrs->GetAngle();
+			float yawError = currentYaw - targetYaw;
+			//value that determines drive output
+			float autoTurnValue = yawError * ERROR_GAIN;
+
+			//if the robot is getting motor outputs but not actually moving, default motor outputs to 0.15
+			if((yawError * ERROR_GAIN) < 0.15 and (yawError * ERROR_GAIN) > 0.03){
+				autoTurnValue = 0.15;
+			} else if((yawError * ERROR_GAIN) > -0.15 and (yawError * ERROR_GAIN) < -0.03){
+				autoTurnValue = -0.15;
 			}
-			break;
-		case AR2_TIMED:
-			if (timedDrive(RED_2_CASE2_FWD, RED_2_CASE3_LSPEED,
-			RED_2_CASE3_RSPEED)) {
-				AutonTimer.Reset();
-				modeState = AR2_END;
+
+			motorSpeed(-1 * autoTurnValue, autoTurnValue);
+
+			//turn until within tolerance
+
+			if (isWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
+				if (abs(yawError) < ROTATIONAL_TOLERANCE) {
+					isWaiting = 1;
+					AutonTimer.Reset();
+				}
 			}
-			break;
-		default:
-			stopMotors();
+
+			//timed wait
+
+			else {
+				float currentTime = AutonTimer.Get();
+				//if overshoot, then keep turning
+				if (abs(yawError) > ROTATIONAL_TOLERANCE) {
+					isWaiting = 0;					/////***** Rename
+				} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
+					isWaiting = 0;					/////***** Rename
+					return 1;
+				}
+			}
+
+			return 0;
+
 		}
-		return;
-	}
+
+
 
 	void motorSpeed(double leftMotor, double rightMotor) {
 		DriveLeft0.Set(leftMotor * -1);
