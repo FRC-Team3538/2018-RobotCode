@@ -46,12 +46,12 @@ class Robot: public frc::IterativeRobot {
 			chooseKicker, chooseShooter, chooseLowDriveSens, chooseLowTurnSens,
 			chooseHighDriveSens, chooseHighTurnSens;
 	const std::string AutoDelayOff = "No Delay";
-	const std::string AutoDelay1 = "3 second delay";
-	const std::string AutoDelay2 = "5 second delay";
+	const std::string AutoDelay1 = "3s delay";
+	const std::string AutoDelay2 = "5s delay";
 	const std::string AutoOff = "No Auto Mode";
-	const std::string AutoLeftSpot = "Left Position Switch";
-	const std::string AutoCenterSpot = "Center Position";
-	const std::string AutoRightSpot = "Right Position Switch";
+	const std::string AutoLeftSpot = "Left Switch";
+	const std::string AutoCenterSpot = "Center";
+	const std::string AutoRightSpot = "Right Switch";
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	const std::string DriveDefault = "Standard";
@@ -87,7 +87,7 @@ class Robot: public frc::IterativeRobot {
 
 	AHRS *ahrs;
 //tells us what state we are in in each auto mode
-	int modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot;
+	int modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot, LeftMode;
 	bool AutonOverride, AutoDelayActive;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
 
@@ -117,7 +117,7 @@ public:
 					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
 					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(NULL),
 					modeState(0), DriveState(0), TurnState(0), ScaleState(0), NearSwitch(0),
-					AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
+					AutoSpot(0), LeftMode(0), AutonOverride(0), AutoDelayActive(0) {
 
 	}
 
@@ -181,12 +181,49 @@ private:
 
 		//variable that chooses which encoder robot is reading for autonomous mode
 		useRightEncoder = true;
+
+		//from NAVX mxp data monitor example
+
+		try { /////***** Let's do this differently.  We want Auton to fail gracefully, not just abort. Remember Ariane 5
+
+			/* Communicate w/navX MXP via the MXP SPI Bus.                                       */
+
+			/* Alternatively:  I2C::Port::kMXP, SerialPort::Port::kMXP or SerialPort::Port::kUSB */
+
+			/* See http://navx-mxp.kauailabs.com/guidance/selecting-an-interface/ for details.   */
+
+			ahrs = new AHRS(SPI::Port::kMXP, 200);
+
+			ahrs->Reset();
+
+		} catch (std::exception ex) {
+
+			std::string err_string = "Error instantiating navX MXP:  ";
+
+			err_string += ex.what();
+
+			DriverStation::ReportError(err_string.c_str());
+
+		}
+
+		// This gives the NAVX time to reset.
+
+		// It takes about 0.5 seconds for the reset to complete.
+
+		// RobotInit runs well before the autonomous mode starts,
+
+		//		so there is plenty of time.
+
+		Wait(1);
+
 	}
 
 	void AutonomousInit() override {
 		modeState = 1;
+		LeftMode = 1;
 		isWaiting = 0;	/////***** Rename this.
 		AutoDelayActive = false;
+
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
@@ -204,16 +241,19 @@ private:
 		DriveRight1.Set(0);
 		DriveRight2.Set(0);
 
-		//zeros the navX
-		if (ahrs) {
-			ahrs->ZeroYaw();
-		}
-
 		//forces robot into low gear
 		driveSolenoid->Set(false);
 
 		//Read switch and scale game data
 		gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+		autoDelay = chooseAutoDelay.GetSelected();
+
+		if (ahrs) {
+
+			ahrs->ZeroYaw();
+			Wait(0.5);
+		}
+
 
 
 	}
@@ -240,12 +280,14 @@ private:
 
 		// Select Auto Program
 		autoSelected = chooseAutonSelector.GetSelected();
-		autoDelay = chooseAutoDelay.GetSelected();
+
 
 		LowTurnChooser = chooseLowTurnSens.GetSelected();
 		LowDriveChooser = chooseLowDriveSens.GetSelected();
 		HighTurnChooser = chooseHighTurnSens.GetSelected();
 		HighDriveChooser = chooseHighDriveSens.GetSelected();
+		SmartDashboard::PutNumber("AutonTimer", AutonTimer.Get());
+		SmartDashboard::PutNumber("modeState", modeState);
 	}
 
 	void DisabledPeriodic() {
@@ -257,6 +299,7 @@ private:
 	void AutonomousPeriodic() {
 
 		// Set near switch game state
+		SmartDashboard::PutString("gameData", gameData);
 		if(gameData[0] == 'L')
 			NearSwitch = caseLeft;
 		 else
@@ -275,41 +318,98 @@ private:
 		}
 		else if (AutoDelayActive){
 			AutoDelayActive=false;
+			autoDelay=AutoDelayOff;
 			AutonTimer.Reset();
 		}
 
-		if(autoSelected==AutoLeftSpot and !AutoDelayActive)
-			AutoLeftSwitch(NearSwitch);
+		if(autoSelected==AutoLeftSpot and NearSwitch==caseLeft and !AutoDelayActive){
+			AutoLeftSwitchLeft();
+		}
+		else if(autoSelected==AutoLeftSpot and NearSwitch==caseRight and !AutoDelayActive){
+			AutoLeftSwitchRight();
+		}
 		else if (autoSelected==AutoCenterSpot and !AutoDelayActive)
-			AutoCenter(NearSwitch);
-		else if (autoSelected==AutoRightSpot and !AutoDelayActive)
-			AutoRightSwitch(NearSwitch);
+			AutoCenter();
+		else if (autoSelected==AutoRightSpot and NearSwitch==caseLeft  and !AutoDelayActive)
+			AutoRightSwitchLeft();
+		else if (autoSelected==AutoRightSpot and NearSwitch==caseRight  and !AutoDelayActive)
+			AutoRightSwitchRight();
 
 
 	}
 
 
-	void AutoLeftSwitch(int LeftMode){
+	void AutoLeftSwitchLeft(void){
 
-		switch(LeftMode){
-		case caseLeft:
-			stopMotors();
+		switch(modeState){
+		case 1:
+			if(timedDrive(1,0.5,0.5)){
+				modeState=2;
+				AutonTimer.Reset();}
 			break;
-		case caseRight:
+		case 2:
+			if(timedDrive(1,-0.5,-0.5)){
+				modeState=3;
+				AutonTimer.Reset();}
+			break;
+		case 3:
+			AutonTimer.Reset();
+			AutonTimer.Stop();
 			stopMotors();
 			break;
 		default:
 			stopMotors();
 		}
+		return;
+	}
+
+
+void AutoLeftSwitchRight(void){
+
+		switch(modeState){
+		case 1:
+			if(timedDrive(1,-0.5,-0.5)){
+				modeState=2;
+				AutonTimer.Reset();}
+			break;
+		case 2:
+			if(timedDrive(1,0.5,0.5)){
+				modeState=3;
+				AutonTimer.Reset();}
+			break;
+		case 3:
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+			break;
+		default:
+			stopMotors();
+
 		}
+		return;
+	}
 
-		void AutoRightSwitch(int RightMode){
+		void AutoRightSwitchLeft(void){
 
-			switch(RightMode){
-			case caseLeft:
+			switch(modeState){
+			case 1:
 				stopMotors();
 				break;
-			case caseRight:
+			case 2:
+				stopMotors();
+				break;
+			default:
+				stopMotors();
+			}
+
+		}
+		void AutoRightSwitchRight(void){
+
+			switch(modeState){
+			case 1:
+				stopMotors();
+				break;
+			case 2:
 				stopMotors();
 				break;
 			default:
@@ -318,13 +418,13 @@ private:
 
 		}
 
-		void AutoCenter(int CenterMode){
+		void AutoCenter(void){
 
-			switch(CenterMode){
-			case caseLeft:
+
+			if (NearSwitch==caseLeft){
 				switch(modeState){
 				case 1:
-					if(timedDrive(0.5,0.5,0.5)){
+					if(timedDrive(1.0,0.5,0.5)){
 						modeState=2;
 						AutonTimer.Reset();}
 					break;
@@ -334,24 +434,33 @@ private:
 						AutonTimer.Reset();}
 					break;
 				case 3:
-					if(timedDrive(0.25,0.5,0.5)){
+					if(timedDrive(0.5,0.5,0.5)){
 						modeState=4;
 						AutonTimer.Reset();}
 					break;
 				case 4:
-					if(autonTurn(-90)){
+					if(autonTurn(0)){
 						modeState=5;
 						AutonTimer.Reset();}
 					break;
 				case 5:
-					if(timedDrive(0.25,0.5,0.5)){
-						AutonTimer.Reset();}
+					if(timedDrive(0.5,0.5,0.5)){
+						AutonTimer.Reset();
+						modeState=6;}
+					break;
+				case 6:
+					AutonTimer.Reset();
+					AutonTimer.Stop();
+					stopMotors();
+					break;
+				default:
+					stopMotors();
 				}
-				break;
-			case caseRight:
+			}
+			else if (NearSwitch==caseRight){
 				switch(modeState){
 				case 1:
-					if(timedDrive(0.5,0.5,0.5)){
+					if(timedDrive(1,0.5,0.5)){
 						modeState=2;
 						AutonTimer.Reset();}
 					break;
@@ -361,24 +470,31 @@ private:
 						AutonTimer.Reset();}
 					break;
 				case 3:
-					if(timedDrive(0.25,0.5,0.5)){
+					if(timedDrive(0.5,0.5,0.5)){
 						modeState=4;
 						AutonTimer.Reset();}
 					break;
 				case 4:
-					if(autonTurn(90)){
+					if(autonTurn(0)){
 						modeState=5;
 						AutonTimer.Reset();}
 					break;
 				case 5:
-					if(timedDrive(0.25,0.5,0.5)){
-						AutonTimer.Reset();}
-				}
-				break;
-			default:
-				stopMotors();
+					if(timedDrive(0.5,0.5,0.5)){
+						AutonTimer.Reset();
+						modeState=6;}
+					break;
+				case 6:
+					AutonTimer.Reset();
+					AutonTimer.Stop();
+					stopMotors();
+					break;
+				default:
+					stopMotors();
 
+				}
 			}
+			return;
 		}
 
 
@@ -713,9 +829,9 @@ private:
 			motorSpeed(leftMotorSpeed, rightMotorSpeed);
 		} else {
 			stopMotors();
-			return 1;
+			return true;
 		}
-		return 0;
+		return false;
 	}
 
 
@@ -754,11 +870,11 @@ private:
 					isWaiting = 0;					/////***** Rename
 				} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
 					isWaiting = 0;					/////***** Rename
-					return 1;
+					return true;
 				}
 			}
 
-			return 0;
+			return false;
 
 		}
 
