@@ -322,23 +322,63 @@ private:
 
 			switch(CenterMode){
 			case caseLeft:
-				timedDrive(0.5,0.5,0.5);
-				autonTurn(90);
-				timedDrive(0.25,0.5,0.5);
-				autonTurn(-90);
-				timedDrive(0.25,0.5,0.5);
+				switch(modeState){
+				case 1:
+					if(timedDrive(0.5,0.5,0.5)){
+						modeState=2;
+						AutonTimer.Reset();}
+					break;
+				case 2:
+					if(autonTurn(90)){
+						modeState=3;
+						AutonTimer.Reset();}
+					break;
+				case 3:
+					if(timedDrive(0.25,0.5,0.5)){
+						modeState=4;
+						AutonTimer.Reset();}
+					break;
+				case 4:
+					if(autonTurn(-90)){
+						modeState=5;
+						AutonTimer.Reset();}
+					break;
+				case 5:
+					if(timedDrive(0.25,0.5,0.5)){
+						AutonTimer.Reset();}
+				}
 				break;
 			case caseRight:
-				timedDrive(0.5,0.5,0.5);
-				autonTurn(-90);
-				timedDrive(0.25,0.5,0.5);
-				autonTurn(-90);
-				timedDrive(0.25,0.5,0.5);
+				switch(modeState){
+				case 1:
+					if(timedDrive(0.5,0.5,0.5)){
+						modeState=2;
+						AutonTimer.Reset();}
+					break;
+				case 2:
+					if(autonTurn(-90)){
+						modeState=3;
+						AutonTimer.Reset();}
+					break;
+				case 3:
+					if(timedDrive(0.25,0.5,0.5)){
+						modeState=4;
+						AutonTimer.Reset();}
+					break;
+				case 4:
+					if(autonTurn(90)){
+						modeState=5;
+						AutonTimer.Reset();}
+					break;
+				case 5:
+					if(timedDrive(0.25,0.5,0.5)){
+						AutonTimer.Reset();}
+				}
 				break;
 			default:
 				stopMotors();
-			}
 
+			}
 		}
 
 
@@ -666,7 +706,7 @@ private:
 	}
 
 	//need to change signs!!!
-	int timedDrive(double driveTime, double leftMotorSpeed,
+	bool timedDrive(double driveTime, double leftMotorSpeed,
 			double rightMotorSpeed) {
 		float currentTime = AutonTimer.Get();
 		if (currentTime < driveTime) {
@@ -680,7 +720,7 @@ private:
 
 
 
-	int autonTurn(float targetYaw) {
+	bool autonTurn(float targetYaw) {
 
 			float currentYaw = ahrs->GetAngle();
 			float yawError = currentYaw - targetYaw;
