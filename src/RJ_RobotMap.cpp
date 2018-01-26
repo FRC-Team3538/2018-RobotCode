@@ -31,6 +31,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoProgram.AddObject(DS.sAuto3, DS.sAuto3);
 	frc::SmartDashboard::PutData("Auto Mode", &DS.chooseAutoProgram);
 
+	DS.chooseAutoDelay.AddDefault(DS.sAutoDelay0, DS.sAuto0);
+	DS.chooseAutoDelay.AddObject(DS.sAutoDelay3, DS.sAutoDelay3);
+	DS.chooseAutoDelay.AddObject(DS.sAutoDelay5, DS.sAutoDelay5);
+	frc::SmartDashboard::PutData("Auto Mode Delay", &DS.chooseAutoDelay);
+
 }
 
 

@@ -4,6 +4,16 @@
 #include "WPILib.h"
 #include "AHRS.h"
 
+#include "math.h"
+#include "Encoder.h"
+
+#include <IterativeRobot.h>
+#include <LiveWindow/LiveWindow.h>
+#include <SmartDashboard/SendableChooser.h>
+#include <SmartDashboard/SmartDashboard.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+
 class RJ_RobotMap {
 
 public:
@@ -19,6 +29,14 @@ public:
 		const std::string sAuto1 = "Auto_1";
 		const std::string sAuto2 = "Auto_2";
 		const std::string sAuto3 = "Auto_3";
+
+		SendableChooser<std::string> chooseAutoDelay;
+		const std::string sAutoDelayOff= "No_Delay";
+		const std::string sAutoDelay3 = "3 Seconds";
+		const std::string sAutoDelay5 = "5 Seconds";
+
+
+
 
 
 	};
@@ -46,13 +64,50 @@ public:
 		Solenoid SolenoidShifter { 0 };
 
 		// NavX MXP board (Gryo)
+		//AHRS *ahrs;
 		AHRS ahrs {SerialPort::kMXP};
+
+		//Rest of the robot
+
+		//Elevator
+		VictorSP Elevator1 { 6 };
+		VictorSP Elevator2 { 7 };
+
+		//Elevator Sensing Package
+		Encoder EncoderElevator { 4, 5 };
+		DigitalInput SwitchElevatorLower { 8 };
+		DigitalInput SwitchElevatorUpper { 9 };
+		AnalogInput PotentiometerElevator { 0 };
+
+
+		//Wrist
+		VictorSP Wrist1 { 8 };
+
+		// Wrist Sensing Package
+		Encoder EncoderWrist { 6, 7};
+		DigitalInput SwitchWrist1 { 10 };
+		DigitalInput SwitchWrist2 { 11 };
+		AnalogInput PotentiometerWrist { 1 };
+
+		//Claw
+		VictorSP Claw1 { 9 };
+		VictorSP Claw2 { 10 };
+		DoubleSolenoid ClawClamp { 1, 2 };
+
+		//LED Control
+		Relay LED0 { 0 };
+		Relay LED1 { 1 };
+		Relay LED2 { 2 };
+		Relay LED3 { 3 };
+
+
 	};
 	structDriveBase DriveBase;
 
 
+
 	// Default junk for testing
-	struct structTesing {
+	struct structTesting {
 		VictorSP RightStick1 { 6 };
 		VictorSP RightStick2 { 7 };
 		VictorSP Dpad1 { 8 };
@@ -67,7 +122,7 @@ public:
 		// Limit Switches
 		DigitalInput DiIn8{8}, DiIn9{9};
 	};
-	structTesing TestJunk;
+	structTesting TestJunk;
 
 	// Default Constructor
 	RJ_RobotMap();

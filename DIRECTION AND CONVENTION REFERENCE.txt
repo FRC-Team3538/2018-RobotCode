@@ -1,0 +1,28 @@
+To Drive the robot forward: 
+Lmotor = -1
+Rmotor = 1
+
+To turn the robot clockwise:
+Lmotor = 1
+Rmotor = 1
+
+To turn the robot counterclockwise: 
+Lmotor = -1
+Rmotor = 1
+
+Elevator convention: 
+When raising the elevator: 
+ElevatorMotor1 = 1
+ElevatorMotor2 = -1
+ElevatorEncoder = Increasing in a positive direction
+
+When lowering the elevator: 
+ElevatorMotor1 = -1
+ElevatorMotor2 = 1
+ElevatorEncoder = Decreasing in a negative direction until 0
+
+Wrist convention: 
+When looking at the side of the elevator with the wrist mounted 
+To rotate wrist to right position (Position 1):
+WristMotor = 1
+Encoder = Increasing in a positive direction
