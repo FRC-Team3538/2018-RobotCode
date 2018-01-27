@@ -40,6 +40,10 @@ public:
 		const std::string AutoCenterSpot = "Center";
 		const std::string AutoRightSpot = "Right";
 
+		SendableChooser<std::string> chooseDriveEncoder;
+		const std::string  EncoderLeft  = "Left_Encoder";
+		const std::string EncoderRight = "Right_Encoder";
+
 	};
 	structDS DS;
 
@@ -66,7 +70,7 @@ public:
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;
-		AHRS ahrs { SerialPort::kMXP };
+		AHRS ahrs { SPI::Port::kMXP, 200 };
 
 		//Rest of the robot
 
@@ -118,6 +122,9 @@ public:
 
 		// Limit Switches
 		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
+
+		//Encoder Init
+		bool useRightEncoder = false;
 	};
 	structTesting TestJunk;
 
