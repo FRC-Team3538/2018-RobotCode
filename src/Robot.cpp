@@ -109,8 +109,8 @@ class Robot: public frc::TimedRobot {
 		double DeadbandOperatorLY = 0.11;
 
 		//Elevator manual drive
-		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper();
-		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower();
+		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper.Get();
+		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
 		double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
 		double ElevatorOutput;
 
@@ -124,8 +124,9 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.Elevator1.Set(ElevatorOutput);
 		IO.DriveBase.Elevator2.Set(-ElevatorOutput);
 
+
 		// Claw control
-		IO.DS.OperatorStick.GetBumper()
+		//IO.DS.OperatorStick.GetBumper();
 
 		//A Button to extend (Solenoid On)
 		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
@@ -501,7 +502,9 @@ class Robot: public frc::TimedRobot {
 	int forward(double targetDistance) {
 		//put all encoder stuff in same place
 		double encoderDistance;
-		if (IO.TestJunk.useRightEncoder)
+		bool useRightEncoder = true;
+
+		if (useRightEncoder)
 			encoderDistance = IO.DriveBase.EncoderRight.GetDistance();
 		else
 			encoderDistance = IO.DriveBase.EncoderLeft.GetDistance();
