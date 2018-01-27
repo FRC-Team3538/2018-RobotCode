@@ -31,13 +31,14 @@ public:
 		const std::string sAuto3 = "Auto_3";
 
 		SendableChooser<std::string> chooseAutoDelay;
-		const std::string sAutoDelayOff= "No_Delay";
+		const std::string sAutoDelayOff = "No_Delay";
 		const std::string sAutoDelay3 = "3 Seconds";
 		const std::string sAutoDelay5 = "5 Seconds";
 
-
-
-
+		SendableChooser<std::string> chooseAutoSelected;
+		const std::string AutoLeftSpot = "Left";
+		const std::string AutoCenterSpot = "Center";
+		const std::string AutoRightSpot = "Right";
 
 	};
 	structDS DS;
@@ -65,7 +66,7 @@ public:
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;
-		AHRS ahrs {SerialPort::kMXP};
+		AHRS ahrs { SerialPort::kMXP };
 
 		//Rest of the robot
 
@@ -79,12 +80,11 @@ public:
 		DigitalInput SwitchElevatorUpper { 9 };
 		AnalogInput PotentiometerElevator { 0 };
 
-
 		//Wrist
 		VictorSP Wrist1 { 8 };
 
 		// Wrist Sensing Package
-		Encoder EncoderWrist { 6, 7};
+		Encoder EncoderWrist { 6, 7 };
 		DigitalInput SwitchWrist1 { 10 };
 		DigitalInput SwitchWrist2 { 11 };
 		AnalogInput PotentiometerWrist { 1 };
@@ -100,11 +100,8 @@ public:
 		Relay LED2 { 2 };
 		Relay LED3 { 3 };
 
-
 	};
 	structDriveBase DriveBase;
-
-
 
 	// Default junk for testing
 	struct structTesting {
@@ -120,7 +117,7 @@ public:
 		Solenoid XYbutton { 4 };
 
 		// Limit Switches
-		DigitalInput DiIn8{8}, DiIn9{9};
+		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
 	};
 	structTesting TestJunk;
 

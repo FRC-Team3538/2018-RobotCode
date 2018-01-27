@@ -28,7 +28,6 @@ class Robot: public frc::TimedRobot {
 	bool XYDeployed = false;
 
 	//Autonomous Variables
-	int modeState;
 	int isWaiting = 0;
 	Timer AutonTimer;
 	std::string gameData, autoDelay, autoSelected;
@@ -181,14 +180,14 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.MotorsRight.Set(0);
 
 		//zeros the navX
-		if (ahrs) {
+		if (IO.DriveBase.ahrs) {
 			ahrs->ZeroYaw();
 		}
 		//forces robot into low gear
 		IO.DriveBase.SolenoidShifter.Set(false);
 
 		//makes sure claw clamps shut
-		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward)
+		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
 
 
 
@@ -227,17 +226,17 @@ class Robot: public frc::TimedRobot {
 					AutonTimer.Reset();
 				}
 
-				if(autoSelected==AutoLeftSpot and NearSwitch==caseLeft and !AutoDelayActive){
+				if(autoSelected == IO.DS.AutoLeftSpot and NearSwitch==caseLeft and !AutoDelayActive){
 					AutoLeftSwitchLeft();
 				}
-				else if(autoSelected==AutoLeftSpot and NearSwitch==caseRight and !AutoDelayActive){
+				else if(autoSelected == IO.DS.AutoLeftSpot and NearSwitch==caseRight and !AutoDelayActive){
 					AutoLeftSwitchRight();
 				}
-				else if (autoSelected==AutoCenterSpot and !AutoDelayActive)
+				else if (autoSelected == IO.DS.AutoCenterSpot and !AutoDelayActive)
 					AutoCenter();
-				else if (autoSelected==AutoRightSpot and NearSwitch==caseLeft  and !AutoDelayActive)
+				else if (autoSelected== IO.DS.AutoRightSpot and NearSwitch==caseLeft  and !AutoDelayActive)
 					AutoRightSwitchLeft();
-				else if (autoSelected==AutoRightSpot and NearSwitch==caseRight  and !AutoDelayActive)
+				else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch==caseRight  and !AutoDelayActive)
 					AutoRightSwitchRight();
 
 
