@@ -24,6 +24,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	// Smart Dashboard
 	//
 
+	//Encoder Selecter
+	DS.chooseDriveEncoder.AddDefault(DS.EncoderRight, "Right Encoder");
+	DS.chooseDriveEncoder.AddObject(DS.EncoderLeft, "Left Encoder");
+	frc::SmartDashboard::PutData("DriveEncoder", &DS.chooseDriveEncoder);
+
 	// Auto Program Chooser
 	DS.chooseAutoProgram.AddDefault(DS.sAuto0, DS.sAuto0);
 	DS.chooseAutoProgram.AddObject(DS.sAuto1, DS.sAuto1);

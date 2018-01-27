@@ -44,6 +44,10 @@ public:
 		const std::string AutoCenterSpot = "Center";
 		const std::string AutoRightSpot = "Right";
 
+		SendableChooser<std::string> chooseDriveEncoder;
+		const std::string  EncoderLeft  = "Left_Encoder";
+		const std::string EncoderRight = "Right_Encoder";
+
 	};
 	structDS DS;
 
@@ -70,7 +74,7 @@ public:
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;
-		AHRS ahrs { SerialPort::kMXP };
+		AHRS ahrs { SPI::Port::kMXP, 200 };
 
 		//Rest of the robot
 
@@ -109,6 +113,29 @@ public:
 	};
 	structDriveBase DriveBase;
 
+<<<<<<< HEAD
+=======
+	// Default junk for testing
+	struct structTesting {
+		VictorSP RightStick1 { 6 };
+		VictorSP RightStick2 { 7 };
+		VictorSP Dpad1 { 8 };
+		VictorSP Dpad2 { 9 };
+
+		// Solenoids
+		Solenoid IntakeButton { 1 };
+		Solenoid Abutton { 2 };
+		Solenoid Bbutton { 3 };
+		Solenoid XYbutton { 4 };
+
+		// Limit Switches
+		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
+
+		//Encoder Init
+		bool useRightEncoder = false;
+	};
+	structTesting TestJunk;
+>>>>>>> 9ab91a17542b926622efae5de3ec8c43b0a7f2d6
 
 	// Default Constructor
 	RJ_RobotMap();

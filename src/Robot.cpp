@@ -6,12 +6,10 @@
 // And So It Begins...
 #include "RJ_RobotMap.h"
 
-
 class Robot: public frc::TimedRobot {
 
 	// Robot Hardware Setup
 	RJ_RobotMap IO;
-
 
 	// Built-In Drive code for teleop
 	DifferentialDrive Adrive { IO.DriveBase.MotorsLeft, IO.DriveBase.MotorsRight };
@@ -30,11 +28,10 @@ class Robot: public frc::TimedRobot {
 	//Autonomous Variables
 	int isWaiting = 0;
 	Timer AutonTimer;
-	std::string gameData, autoDelay, autoSelected;
-	int modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot, LeftMode;
+	std::string gameData, autoDelay, autoSelected, DriveEncoder;
+	int AutoVal, modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot,
+			LeftMode;
 	bool AutonOverride, AutoDelayActive;
-
-
 
 	void RobotInit() {
 		//disable drive watchdogs
@@ -68,10 +65,10 @@ class Robot: public frc::TimedRobot {
 
 		//high gear & low gear controls
 		if (IO.DS.DriveStick.GetRawButton(5))
-			IO.DriveBase.SolenoidShifter.Set(true);// High gear press LH bumper
+			IO.DriveBase.SolenoidShifter.Set(true); // High gear press LH bumper
 
 		if (IO.DS.DriveStick.GetRawButton(6))
-			IO.DriveBase.SolenoidShifter.Set(false);// Low gear press RH bumper
+			IO.DriveBase.SolenoidShifter.Set(false); // Low gear press RH bumper
 
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
@@ -86,7 +83,7 @@ class Robot: public frc::TimedRobot {
 		Vibrate = Joystick::kLeftRumble;		// set Vibrate to Left
 		IO.DS.DriveStick.SetRumble(Vibrate, LHThr); // Set Left Rumble to RH Trigger
 		Vibrate = Joystick::kRightRumble;		// set vibrate to Right
-		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);// Set Right Rumble to RH Trigger
+		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);	// Set Right Rumble to RH Trigger
 
 		//drive controls
 		double SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1; // get Yaxis value (forward)
@@ -104,7 +101,6 @@ class Robot: public frc::TimedRobot {
 
 		// Drive Code
 		Adrive.ArcadeDrive(OutputY, OutputX, true);
-
 
 		/*
 		 * MANIP CODE
@@ -175,7 +171,6 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-
 	void AutonomousInit() {
 		//AutoProgram.Initalize();
 
@@ -193,19 +188,13 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.MotorsRight.Set(0);
 
 		//zeros the navX
-		if (IO.DriveBase.ahrs) {
-			ahrs->ZeroYaw();
-		}
+		IO.DriveBase.ahrs.ZeroYaw();
+
 		//forces robot into low gear
 		IO.DriveBase.SolenoidShifter.Set(false);
 
 		//makes sure claw clamps shut
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
-
-
-
-
-
 
 	}
 
@@ -214,51 +203,211 @@ class Robot: public frc::TimedRobot {
 
 	void AutonomousPeriodic() {
 
-
-
 		SmartDashboard::PutString("gameData", gameData);
-				if(gameData[0] == 'L')
-					NearSwitch = caseLeft;
-				 else
-					NearSwitch = caseRight;
-				// Set far switch game state
-				if(gameData[1] == 'L')
-					ScaleState = caseLeft;
-				 else
-					ScaleState = caseRight;
+		if (gameData[0] == 'L')
+			NearSwitch = caseLeft;
+		else
+			NearSwitch = caseRight;
+		// Set far switch game state
+		if (gameData[1] == 'L')
+			ScaleState = caseLeft;
+		else
+			ScaleState = caseRight;
 
-				if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get()< 3){
-					AutoDelayActive = true;
-				}
-				else if (autoDelay == IO.DS.sAutoDelay5 and AutonTimer.Get()< 5){
-					AutoDelayActive = true;
-				}
-				else if (AutoDelayActive){
-					AutoDelayActive=false;
-					autoDelay=IO.DS.sAutoDelayOff;
-					AutonTimer.Reset();
-				}
+		if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get() < 3) {
+			AutoDelayActive = true;
+		} else if (autoDelay == IO.DS.sAutoDelay5 and AutonTimer.Get() < 5) {
+			AutoDelayActive = true;
+		} else if (AutoDelayActive) {
+			AutoDelayActive = false;
+			autoDelay = IO.DS.sAutoDelayOff;
+			AutonTimer.Reset();
+		}
 
-				if(autoSelected == IO.DS.AutoLeftSpot and NearSwitch==caseLeft and !AutoDelayActive){
-					AutoLeftSwitchLeft();
-				}
-				else if(autoSelected == IO.DS.AutoLeftSpot and NearSwitch==caseRight and !AutoDelayActive){
-					AutoLeftSwitchRight();
-				}
-				else if (autoSelected == IO.DS.AutoCenterSpot and !AutoDelayActive)
-					AutoCenter();
-				else if (autoSelected== IO.DS.AutoRightSpot and NearSwitch==caseLeft  and !AutoDelayActive)
-					AutoRightSwitchLeft();
-				else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch==caseRight  and !AutoDelayActive)
-					AutoRightSwitchRight();
-
-
+		if (autoSelected == IO.DS.AutoLeftSpot and NearSwitch == caseLeft
+				and !AutoDelayActive) {
+			AutoLeftSwitchLeft();
+		} else if (autoSelected == IO.DS.AutoLeftSpot
+				and NearSwitch == caseRight and !AutoDelayActive) {
+			AutoLeftSwitchRight();
+		} else if (autoSelected == IO.DS.AutoCenterSpot and !AutoDelayActive)
+			AutoCenter();
+		else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch == caseLeft
+				and !AutoDelayActive)
+			AutoRightSwitchLeft();
+		else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch == caseRight
+				and !AutoDelayActive)
+			AutoRightSwitchRight();
 
 	}
 
+	void AutoLeftSwitchLeft(void) {
 
+		switch (modeState) {
+		case 1:
+			if (timedDrive(1, 0.5, 0.5)) {
+				modeState = 2;
+				AutonTimer.Reset();
+			}
+			break;
+		case 2:
+			if (timedDrive(1, -0.5, -0.5)) {
+				modeState = 3;
+				AutonTimer.Reset();
+			}
+			break;
+		case 3:
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+			break;
+		default:
+			stopMotors();
+		}
+		return;
+	}
 
+	void AutoLeftSwitchRight(void) {
+		switch (modeState) {
+		case 1:
+			if (timedDrive(1, -0.5, -0.5)) {
+				modeState = 2;
+				AutonTimer.Reset();
+			}
+			break;
+		case 2:
+			if (timedDrive(1, 0.5, 0.5)) {
+				modeState = 3;
+				AutonTimer.Reset();
+			}
+			break;
+		case 3:
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+			break;
+		default:
+			stopMotors();
 
+		}
+		return;
+	}
+
+	void AutoRightSwitchLeft(void) {
+
+		switch (modeState) {
+		case 1:
+			stopMotors();
+			break;
+		case 2:
+			stopMotors();
+			break;
+		default:
+			stopMotors();
+		}
+
+	}
+
+	void AutoRightSwitchRight(void) {
+
+		switch (modeState) {
+		case 1:
+			stopMotors();
+			break;
+		case 2:
+			stopMotors();
+			break;
+		default:
+			stopMotors();
+		}
+	}
+
+	void AutoCenter(void) {
+
+		if (NearSwitch == caseLeft) {
+			switch (modeState) {
+			case 1:
+				if (timedDrive(1.0, 0.5, 0.5)) {
+					modeState = 2;
+					AutonTimer.Reset();
+				}
+				break;
+			case 2:
+				if (autonTurn(90)) {
+					modeState = 3;
+					AutonTimer.Reset();
+				}
+				break;
+			case 3:
+				if (timedDrive(0.5, 0.5, 0.5)) {
+					modeState = 4;
+					AutonTimer.Reset();
+				}
+				break;
+			case 4:
+				if (autonTurn(0)) {
+					modeState = 5;
+					AutonTimer.Reset();
+				}
+				break;
+			case 5:
+				if (timedDrive(0.5, 0.5, 0.5)) {
+					AutonTimer.Reset();
+					modeState = 6;
+				}
+				break;
+			case 6:
+				AutonTimer.Reset();
+				AutonTimer.Stop();
+				stopMotors();
+				break;
+			default:
+				stopMotors();
+			}
+		} else if (NearSwitch == caseRight) {
+			switch (modeState) {
+			case 1:
+				if (timedDrive(1, 0.5, 0.5)) {
+					modeState = 2;
+					AutonTimer.Reset();
+				}
+				break;
+			case 2:
+				if (autonTurn(-90)) {
+					modeState = 3;
+					AutonTimer.Reset();
+				}
+				break;
+			case 3:
+				if (timedDrive(0.5, 0.5, 0.5)) {
+					modeState = 4;
+					AutonTimer.Reset();
+				}
+				break;
+			case 4:
+				if (autonTurn(0)) {
+					modeState = 5;
+					AutonTimer.Reset();
+				}
+				break;
+			case 5:
+				if (timedDrive(0.5, 0.5, 0.5)) {
+					AutonTimer.Reset();
+					modeState = 6;
+				}
+				break;
+			case 6:
+				AutonTimer.Reset();
+				AutonTimer.Stop();
+				stopMotors();
+				break;
+			default:
+				stopMotors();
+
+			}
+		}
+		return;
+	}
 
 #define AB1_INIT 1
 #define AB1_FWD 2
@@ -274,7 +423,7 @@ class Robot: public frc::TimedRobot {
 		case AB1_INIT:
 			// This uses state 1 for initialization.
 			// This keeps the initialization and the code all in one place.
-			ahrs->ZeroYaw();
+			IO.DriveBase.ahrs.ZeroYaw();
 			modeState = AB1_FWD;
 			break;
 		case AB1_FWD:
@@ -322,153 +471,144 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-
-
-
-
-
 	void motorSpeed(double leftMotor, double rightMotor) {
 		IO.DriveBase.MotorsLeft.Set(leftMotor * -1);
 		IO.DriveBase.MotorsRight.Set(rightMotor);
 
-		}
+	}
 
 	void elevatorPosition(double position, bool override){
 		//TODO: Function to set elevator to a position with an override to disable it
 	}
 
 	int stopMotors() {
-			//sets motor speeds to zero
-			motorSpeed(0, 0);
-			return 1;
+		//sets motor speeds to zero
+		motorSpeed(0, 0);
+		return 1;
+	}
+
+
+#define KP_LINEAR (0.27)
+#define KP_ROTATION (0.017)
+#define LINEAR_SETTLING_TIME (0.1)
+#define LINEAR_MAX_DRIVE_SPEED (0.75)
+#define ROTATIONAL_TOLERANCE (1.0)
+#define ERROR_GAIN (-0.05)
+#define ROTATIONAL_SETTLING_TIME (0.5)
+#define MAX_DRIVE_TIME (0.5)
+#define LINEAR_TOLERANCE (0.02)
+
+	int forward(double targetDistance) {
+		//put all encoder stuff in same place
+		double encoderDistance;
+		if (IO.TestJunk.useRightEncoder)
+			encoderDistance = IO.DriveBase.EncoderRight.GetDistance();
+		else
+			encoderDistance = IO.DriveBase.EncoderLeft.GetDistance();
+
+		double encoderError = encoderDistance - targetDistance;
+		double driveCommandLinear = encoderError * KP_LINEAR;
+
+		//limits max drive speed
+		if (driveCommandLinear > LINEAR_MAX_DRIVE_SPEED) {
+			driveCommandLinear = LINEAR_MAX_DRIVE_SPEED;
+		} else if (driveCommandLinear < -1 * LINEAR_MAX_DRIVE_SPEED) { /////***** "-1" is a "magic number." At least put a clear comment in here.
+			driveCommandLinear = -1 * LINEAR_MAX_DRIVE_SPEED; /////***** same as above.
 		}
 
+		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
+		double driveCommandRotation = gyroAngle * KP_ROTATION;
+		//calculates and sets motor speeds
+		motorSpeed(driveCommandLinear + driveCommandRotation,
+				driveCommandLinear - driveCommandRotation);
 
-		int forward(double targetDistance) {
-			//put all encoder stuff in same place
-			double encoderDistance;
-			if (useRightEncoder)
-				encoderDistance = IO.DriveBase.EncoderRight.GetDistance();
-			else
-				encoderDistance = IO.DriveBase.EncoderLeft.GetDistance();
-
-			double encoderError = encoderDistance - targetDistance;
-			double driveCommandLinear = encoderError * KP_LINEAR;
-
-			//limits max drive speed
-			if (driveCommandLinear > LINEAR_MAX_DRIVE_SPEED) {
-				driveCommandLinear = LINEAR_MAX_DRIVE_SPEED;
-			} else if (driveCommandLinear < -1 * LINEAR_MAX_DRIVE_SPEED) { /////***** "-1" is a "magic number." At least put a clear comment in here.
-				driveCommandLinear = -1 * LINEAR_MAX_DRIVE_SPEED; /////***** same as above.
+		//routine helps prevent the robot from overshooting the distance
+		if (isWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the autonTurn() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
+			if (abs(encoderError) < LINEAR_TOLERANCE) {
+				isWaiting = 1;
+				AutonTimer.Reset();
 			}
-
-			double gyroAngle = ahrs->GetAngle();
-			double driveCommandRotation = gyroAngle * KP_ROTATION;
-			//calculates and sets motor speeds
-			motorSpeed(driveCommandLinear + driveCommandRotation,
-					driveCommandLinear - driveCommandRotation);
-
-			//routine helps prevent the robot from overshooting the distance
-			if (isWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the autonTurn() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
-				if (abs(encoderError) < LINEAR_TOLERANCE) {
-					isWaiting = 1;
-					AutonTimer.Reset();
-				}
-			}
-			//timed wait
-			else {
-				float currentTime = AutonTimer.Get();
-				if (abs(encoderError) > LINEAR_TOLERANCE) {
-					isWaiting = 0;					/////***** Rename
-				} else if (currentTime > LINEAR_SETTLING_TIME) {
-					isWaiting = 0;					/////***** Rename
-					return 1;
-				}
-			}
-			return 0;
 		}
-
-		int autonTurn(float targetYaw) {
-
-			float currentYaw = ahrs->GetAngle();
-			float yawError = currentYaw - targetYaw;
-
-			motorSpeed(-1 * yawError * ERROR_GAIN, yawError * ERROR_GAIN);
-
-			if (isWaiting == 0) {/////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
-				if (abs(yawError) < ROTATIONAL_TOLERANCE) {
-					isWaiting = 1;
-					AutonTimer.Reset();
-				}
-			}
-			//timed wait
-			else {
-				float currentTime = AutonTimer.Get();
-				if (abs(yawError) > ROTATIONAL_TOLERANCE) {
-					isWaiting = 0;
-				} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
-					isWaiting = 0;
-					return 1;
-				}
-			}
-			return 0;
-		}
-
-		int timedDrive(double driveTime, double leftMotorSpeed,
-				double rightMotorSpeed) {
+		//timed wait
+		else {
 			float currentTime = AutonTimer.Get();
-			if (currentTime < driveTime) {
-				motorSpeed(leftMotorSpeed, rightMotorSpeed);
-			} else {
-				stopMotors();
+			if (abs(encoderError) > LINEAR_TOLERANCE) {
+				isWaiting = 0;					/////***** Rename
+			} else if (currentTime > LINEAR_SETTLING_TIME) {
+				isWaiting = 0;					/////***** Rename
 				return 1;
 			}
-			return 0;
+		}
+		return 0;
+	}
+
+	int autonTurn(float targetYaw) {
+
+		float currentYaw = IO.DriveBase.ahrs.GetAngle();
+		float yawError = currentYaw - targetYaw;
+
+		motorSpeed(-1 * yawError * ERROR_GAIN, yawError * ERROR_GAIN);
+
+		if (isWaiting == 0) {/////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
+			if (abs(yawError) < ROTATIONAL_TOLERANCE) {
+				isWaiting = 1;
+				AutonTimer.Reset();
+			}
+		}
+		//timed wait
+		else {
+			float currentTime = AutonTimer.Get();
+			if (abs(yawError) > ROTATIONAL_TOLERANCE) {
+				isWaiting = 0;
+			} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
+				isWaiting = 0;
+				return 1;
+			}
+		}
+		return 0;
+	}
+
+	int timedDrive(double driveTime, double leftMotorSpeed,
+			double rightMotorSpeed) {
+		float currentTime = AutonTimer.Get();
+		if (currentTime < driveTime) {
+			motorSpeed(leftMotorSpeed, rightMotorSpeed);
+		} else {
+			stopMotors();
+			return 1;
+		}
+		return 0;
+	}
+
+	void SmartDashboardUpdate() {
+
+		// Auto State
+		SmartDashboard::PutNumber("Auto Switch (#)", AutoVal);
+		SmartDashboard::PutString("Auto Program", autoSelected);
+		SmartDashboard::PutNumber("Auto State (#)", modeState);
+		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
+
+		// Drive Encoders
+		SmartDashboard::PutNumber("Drive Encoder Left (RAW)",
+				IO.DriveBase.EncoderLeft.GetRaw());
+		SmartDashboard::PutNumber("Drive Encoder Left (Inches)",
+				IO.DriveBase.EncoderLeft.GetDistance());
+
+		SmartDashboard::PutNumber("Drive Encoder Right (RAW)",
+				IO.DriveBase.EncoderRight.GetRaw());
+		SmartDashboard::PutNumber("Drive Encoder Right (Inch)",
+				IO.DriveBase.EncoderRight.GetDistance());
+
+
+		// Gyro
+		if (&IO.DriveBase.ahrs) {
+			double gyroAngle = IO.DriveBase.ahrs.GetAngle();
+			SmartDashboard::PutNumber("Gyro Angle", gyroAngle);
+		} else {
+			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
 
-
-
-
-
-
-		void SmartDashboardUpdate() {
-
-				// Auto State
-				SmartDashboard::PutNumber("Auto Switch (#)", AutoVal);
-				SmartDashboard::PutString("Auto Program", autoSelected);
-				SmartDashboard::PutNumber("Auto State (#)", modeState);
-				SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
-
-				// Drive Encoders
-				SmartDashboard::PutNumber("Drive Encoder Left (RAW)",
-						EncoderLeft.GetRaw());
-				SmartDashboard::PutNumber("Drive Encoder Left (Inches)",
-						EncoderLeft.GetDistance());
-
-				SmartDashboard::PutNumber("Drive Encoder Right (RAW)",
-						EncoderRight.GetRaw());
-				SmartDashboard::PutNumber("Drive Encoder Right (Inch)",
-						EncoderRight.GetDistance());
-
-				encoderSelected = chooseDriveEncoder.GetSelected();
-				useRightEncoder = (encoderSelected == RH_Encoder);
-
-				autoBackupDistance = SmartDashboard::GetNumber(
-						"IN: Auto Backup Distance (Inch)", autoBackupDistance);
-				SmartDashboard::PutNumber("Auto Backup Distance", autoBackupDistance);
-
-				// Gyro
-				if (ahrs) {
-					double gyroAngle = ahrs->GetAngle();
-					SmartDashboard::PutNumber("Gyro Angle", gyroAngle);
-				} else {
-					SmartDashboard::PutNumber("Gyro Angle", 999);
-				}
-
-
-
-
-}
+	}
 
 }
 ;
