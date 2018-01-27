@@ -123,6 +123,7 @@ public:
 
 private:
 	void RobotInit() {
+
 		chooseAutonSelector.AddDefault(AutoOff, AutoOff);
 		chooseAutonSelector.AddObject(AutoLeftSpot, AutoLeftSpot);
 		chooseAutonSelector.AddObject(AutoCenterSpot, AutoCenterSpot);
@@ -216,6 +217,33 @@ private:
 
 		Wait(1);
 
+		std::thread visionThread(VisionThread);
+		visionThread.detach();
+
+
+
+	}
+
+
+	static void VisionThread(){
+			cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
+			//camera.SetVideoMode(cs::VideoMode::kMJPEG ,320,240,30);
+			camera.SetResolution(320, 240);
+			camera.SetFPS(120);
+			cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+			cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("Gray",320,240);
+			cv::Mat source;
+			cv::Mat output;
+
+		while(true) {
+			cvSink.GrabFrame(source);
+				cvtColor(source, output, cv::COLOR_BGR2GRAY);
+				outputStreamStd.PutFrame(output);
+			}
+			// Mjpeg server
+			cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0", 1181);
+			mjpegServer1.SetSource(camera);
+
 	}
 
 	void AutonomousInit() override {
@@ -288,6 +316,9 @@ private:
 		HighDriveChooser = chooseHighDriveSens.GetSelected();
 		SmartDashboard::PutNumber("AutonTimer", AutonTimer.Get());
 		SmartDashboard::PutNumber("modeState", modeState);
+
+
+
 	}
 
 	void DisabledPeriodic() {
