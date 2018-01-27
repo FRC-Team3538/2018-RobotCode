@@ -20,9 +20,13 @@ public:
 
 	// Driver's Station
 	struct structDS {
-		// TODO: Change to xbox controller datatype
-		Joystick DriveStick { 0 };
-		Joystick OperatorStick { 1 };
+
+		XboxController DriveStick { 0 };
+		XboxController OperatorStick { 1 };
+		Joystick LaunchPad { 4 };
+
+
+
 
 		SendableChooser<std::string> chooseAutoProgram;
 		const std::string sAuto0 = "No_Auto";
@@ -74,6 +78,8 @@ public:
 		VictorSP Elevator1 { 6 };
 		VictorSP Elevator2 { 7 };
 
+
+
 		//Elevator Sensing Package
 		Encoder EncoderElevator { 4, 5 };
 		DigitalInput SwitchElevatorLower { 8 };
@@ -103,23 +109,6 @@ public:
 	};
 	structDriveBase DriveBase;
 
-	// Default junk for testing
-	struct structTesting {
-		VictorSP RightStick1 { 6 };
-		VictorSP RightStick2 { 7 };
-		VictorSP Dpad1 { 8 };
-		VictorSP Dpad2 { 9 };
-
-		// Solenoids
-		Solenoid IntakeButton { 1 };
-		Solenoid Abutton { 2 };
-		Solenoid Bbutton { 3 };
-		Solenoid XYbutton { 4 };
-
-		// Limit Switches
-		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
-	};
-	structTesting TestJunk;
 
 	// Default Constructor
 	RJ_RobotMap();

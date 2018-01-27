@@ -60,8 +60,11 @@ class Robot: public frc::TimedRobot {
 	void TeleopPeriodic() {
 		double Deadband = 0.11;
 		double DPadSpeed = 1.0;
-		bool RightStickLimit1 = IO.TestJunk.DiIn8.Get();
-		bool RightStickLimit2 = IO.TestJunk.DiIn9.Get();
+
+
+
+
+
 
 		//high gear & low gear controls
 		if (IO.DS.DriveStick.GetRawButton(5))
@@ -107,6 +110,27 @@ class Robot: public frc::TimedRobot {
 		 * MANIP CODE
 		 */
 
+		double DeadbandOperatorLY = 0.11;
+
+		//Elevator manual drive
+		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper();
+		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower();
+		double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
+		double ElevatorOutput;
+
+		if (fabs(ElevatorStick) < DeadbandOperatorLY)
+			ElevatorOutput = 0.0;
+		else if (ElevatorStick > DeadbandOperatorLY and !SwitchElevatorUpper)
+			ElevatorOutput = 0.0;
+		else if (ElevatorStick < DeadbandOperatorLY and !SwitchElevatorLower)
+			ElevatorOutput = 0.0;
+
+		IO.DriveBase.Elevator1.Set(ElevatorOutput);
+		IO.DriveBase.Elevator2.Set(-ElevatorOutput);
+
+		// Claw control
+		IO.DS.OperatorStick.GetBumper()
+
 		//A Button to extend (Solenoid On)
 		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
 
@@ -148,17 +172,6 @@ class Robot: public frc::TimedRobot {
 			IO.TestJunk.Dpad2.Set(0.0);
 		}
 
-		double RightSpeed = IO.DS.OperatorStick.GetRawAxis(4) * -1; // get Xaxis value for Right Joystick
-
-		if (fabs(RightSpeed) < Deadband) {
-			RightSpeed = 0.0;
-		} else if (RightSpeed > Deadband and !RightStickLimit1)
-			RightSpeed = 0.0;
-		else if (RightSpeed < Deadband and !RightStickLimit2)
-			RightSpeed = 0.0;
-
-		IO.TestJunk.RightStick1.Set(RightSpeed);
-		IO.TestJunk.RightStick2.Set(RightSpeed);
 
 	}
 
@@ -319,6 +332,10 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.MotorsRight.Set(rightMotor);
 
 		}
+
+	void elevatorPosition(double position, bool override){
+		//TODO: Function to set elevator to a position with an override to disable it
+	}
 
 	int stopMotors() {
 			//sets motor speeds to zero
