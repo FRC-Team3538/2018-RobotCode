@@ -235,14 +235,25 @@ private:
 			cv::Mat source;
 			cv::Mat output;
 
-		while(true) {
+
+			// Mjpeg server1
+			cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0", 1181);
+			mjpegServer1.SetSource(camera);
+			// Mjpeg server2
+	//		cs::CvSink cvSink2 = cs::CvSink("opencv_USB Camera 0");
+	//		cvSink2.SetSource(camera);
+	//		cs::CvSource outputStreamMjpeg = cs::CvSource("Blur", cs::VideoMode::kMJPEG, 320, 240, 30);
+			cs::MjpegServer mjpegServer2 = cs::MjpegServer("serve_Blur", 1182);
+			mjpegServer2.SetSource(outputStreamStd);
+
+
+			while(true) {
 			cvSink.GrabFrame(source);
 				cvtColor(source, output, cv::COLOR_BGR2GRAY);
 				outputStreamStd.PutFrame(output);
+
 			}
-			// Mjpeg server
-			cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0", 1181);
-			mjpegServer1.SetSource(camera);
+
 
 	}
 
