@@ -125,7 +125,23 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.Elevator2.Set(-ElevatorOutput);
 
 		// Claw control
-		IO.DS.OperatorStick.GetBumper()
+		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
+		bool ClawEject = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
+
+		if (ClawIntake and !ClawEject) {
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
+			IO.DriveBase.Claw1.Set(1);
+		}
+		else if (ClawEject and !ClawIntake){
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.Claw1.Set(1);
+		}
+		else {
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+		}
+
+
+
 
 		//A Button to extend (Solenoid On)
 		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
@@ -578,6 +594,37 @@ class Robot: public frc::TimedRobot {
 			return 1;
 		}
 		return 0;
+	}
+
+	frc::Relay::Value LEDcontrol(int LEDcontrolcode)
+	{
+		int binary[8];
+		int relayoutput;
+		for( int i = 7; i == -1;  i = i - 1 ) {
+			binary[i] = LEDcontrolcode % 2;
+			relayoutput = (LEDcontrolcode & b00000011);
+
+			switch (relayoutput){
+			case 0:
+				return frc::Relay::Value::kOff;
+				break;
+			case 1:
+				return frc::Relay::Value::kReverse;
+				break;
+			case 2:
+				return frc::Relay::Value::kForward;
+				break;
+			case 3:
+				return frc::Relay::Value::kOn;
+				break;
+			default:
+				return frc::Relay::Value::kOn;
+
+			}
+
+	}
+
+		IO.DriveBase.LED0.Set(Relay::Value::kOn);
 	}
 
 	void SmartDashboardUpdate() {

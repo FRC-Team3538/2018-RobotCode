@@ -26,3 +26,20 @@ When looking at the side of the elevator with the wrist mounted
 To rotate wrist to right position (Position 1):
 WristMotor = 1
 Encoder = Increasing in a positive direction
+
+Claw Convention: 
+Intake:
+Claw motor = 1
+Claw Clamp = off
+
+Eject: 
+Claw motor = -1
+Claw Clamp = fwd
+
+Drop: 
+Claw motor = 0
+Claw Clamp = reverse
+
+Hold (default state):
+Claw motor = 0
+Claw Clamp = fwd
