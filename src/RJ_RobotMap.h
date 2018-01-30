@@ -113,8 +113,7 @@ public:
 	};
 	structDriveBase DriveBase;
 
-<<<<<<< HEAD
-=======
+
 	// Default junk for testing
 	struct structTesting {
 		VictorSP RightStick1 { 6 };
@@ -132,10 +131,10 @@ public:
 		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
 
 		//Encoder Init
-		bool useRightEncoder = false;
+		//bool useRightEncoder = false;
 	};
 	structTesting TestJunk;
->>>>>>> 9ab91a17542b926622efae5de3ec8c43b0a7f2d6
+
 
 	// Default Constructor
 	RJ_RobotMap();
