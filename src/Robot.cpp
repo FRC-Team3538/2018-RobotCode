@@ -226,9 +226,7 @@ private:
 	static void VisionThread() {
 		cs::UsbCamera camera =
 				CameraServer::GetInstance()->StartAutomaticCapture();
-		//camera.SetVideoMode(cs::VideoMode::kMJPEG ,320,240,30);
-		camera.SetResolution(320, 240);
-		camera.SetFPS(120);
+		camera.SetVideoMode(cs::VideoMode::kMJPEG ,640,480,30);
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo(
 				"Gray", 320, 240);
