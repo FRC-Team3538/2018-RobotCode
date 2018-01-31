@@ -14,6 +14,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
+//Some functional prototypes:
+void doNothing(void);  // a state machine that makes the robot do nothing.
+void crossLine(void);  // A state machine that drives the robot until it crosses the line,
+
 // Time forward: go forward for 0.75 seconds.
 #define RED_2_CASE2_FWD (71.0)
 #define RED_2_CASE3_TIME (1.0)
@@ -43,15 +47,16 @@ class Robot: public frc::IterativeRobot {
 	DifferentialDrive Adrive;
 	frc::LiveWindow* lw = LiveWindow::GetInstance();
 	frc::SendableChooser<std::string> chooseAutonSelector, chooseAutoDelay,
-			chooseDriveEncoder, chooseKicker, chooseShooter, chooseLowDriveSens,
-			chooseLowTurnSens, chooseHighDriveSens, chooseHighTurnSens;
+	chooseDriveEncoder, chooseKicker, chooseShooter, chooseLowDriveSens,
+	chooseLowTurnSens, chooseHighDriveSens, chooseHighTurnSens;
 	const std::string AutoDelayOff = "No Delay";
 	const std::string AutoDelay1 = "3s delay";
 	const std::string AutoDelay2 = "5s delay";
 	const std::string AutoOff = "No Auto Mode";
-	const std::string AutoLeftSpot = "Left Switch";
-	const std::string AutoCenterSpot = "Center";
-	const std::string AutoRightSpot = "Right Switch";
+	const std::string AutoCross = "Cross Line";
+	const std::string AutoLeftSpot = "Left Scale";
+	const std::string AutoCenterSpot = "Center Switch";
+	const std::string AutoRightSpot = "Right Scale";
 	const std::string RH_Encoder = "RH_Encoder";
 	const std::string LH_Encoder = "LH_Encoder";
 	const std::string DriveDefault = "Standard";
@@ -63,7 +68,7 @@ class Robot: public frc::IterativeRobot {
 	const std::string Turn2 = "Sens_x^3";
 	const std::string Turn3 = "Sens_x^5";
 	std::string autoSelected, autoDelay, encoderSelected, LowDriveChooser,
-			LowTurnChooser, HighDriveChooser, HighTurnChooser, gameData;
+	LowTurnChooser, HighDriveChooser, HighTurnChooser, gameData;
 	Joystick Drivestick;
 	Joystick OperatorStick;
 	VictorSP DriveLeft0;
@@ -86,7 +91,7 @@ class Robot: public frc::IterativeRobot {
 	DigitalInput DiIn8, DiIn9;
 
 	AHRS *ahrs;
-//tells us what state we are in in each auto mode
+	//tells us what state we are in in each auto mode
 	int modeState, DriveState, TurnState, ScaleState, NearSwitch, AutoSpot;
 	bool AutonOverride, AutoDelayActive;
 	int isWaiting = 0;			/////***** Divide this into 2 variables.
@@ -94,7 +99,7 @@ class Robot: public frc::IterativeRobot {
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
-//Solenoid's declared
+	//Solenoid's declared
 	Solenoid *driveSolenoid = new Solenoid(0);
 	Solenoid *XYbutton = new Solenoid(4);
 	Solenoid *Bbutton = new Solenoid(3);
@@ -111,13 +116,13 @@ class Robot: public frc::IterativeRobot {
 
 public:
 	Robot() :
-			Adrive(DriveLeft0, DriveRight0), Drivestick(0), OperatorStick(1), DriveLeft0(
-					0), DriveLeft1(1), DriveLeft2(2), DriveRight0(3), DriveRight1(
-					4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
-					7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
-					0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(
-			NULL), modeState(0), DriveState(0), TurnState(0), ScaleState(0), NearSwitch(
-					0), AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
+		Adrive(DriveLeft0, DriveRight0), Drivestick(0), OperatorStick(1), DriveLeft0(
+				0), DriveLeft1(1), DriveLeft2(2), DriveRight0(3), DriveRight1(
+						4), DriveRight2(5), Dpad1(8), Dpad2(9), RightStick1(6), RightStick2(
+								7), EncoderLeft(0, 1), EncoderRight(2, 3), OutputX(0), OutputY(
+										0), OutputX1(0), OutputY1(0), DiIn8(8), DiIn9(9), ahrs(
+												NULL), modeState(0), DriveState(0), TurnState(0), ScaleState(0), NearSwitch(
+														0), AutoSpot(0), AutonOverride(0), AutoDelayActive(0) {
 
 	}
 
@@ -184,7 +189,8 @@ private:
 
 		//from NAVX mxp data monitor example
 
-		try { /////***** Let's do this differently.  We want Auton to fail gracefully, not just abort. Remember Ariane 5
+		try { /////***** Let's do this differently.  We want Auton to fail gracefully, not just abort.
+			///////Remember Ariane 5
 
 			/* Communicate w/navX MXP via the MXP SPI Bus.                                       */
 
@@ -207,13 +213,9 @@ private:
 		}
 
 		// This gives the NAVX time to reset.
-
 		// It takes about 0.5 seconds for the reset to complete.
-
 		// RobotInit runs well before the autonomous mode starts,
-
 		//		so there is plenty of time.
-
 		Wait(1);
 
 		std::thread visionThread(VisionThread);
@@ -323,21 +325,9 @@ private:
 	void DisabledPeriodic() {
 	}
 
-#define caseLeft 1
-#define caseRight 2
+	// Wait driver-selected delay and go to the correct autonomous mode.
 	void AutonomousPeriodic() {
-
-		// Set near switch game state
-		if (gameData[0] == 'L')
-			NearSwitch = caseLeft;
-		else
-			NearSwitch = caseRight;
-		// Set far switch game state
-		if (gameData[1] == 'L')
-			ScaleState = caseLeft;
-		else
-			ScaleState = caseRight;
-
+		//wait for a selectable time.  3 means 3 seconds, 5 means 5 seconds
 		if (autoDelay == AutoDelay1 and AutonTimer.Get() < 3) {
 			AutoDelayActive = true;
 		} else if (autoDelay == AutoDelay2 and AutonTimer.Get() < 5) {
@@ -347,42 +337,43 @@ private:
 			autoDelay = AutoDelayOff;
 			AutonTimer.Reset();
 		}
-		if (autoSelected == AutoLeftSpot and NearSwitch == caseLeft
-				and !AutoDelayActive) {
-			AutoLeftSwitchLeft();
-		} else if (autoSelected == AutoLeftSpot and NearSwitch == caseRight
-				and !AutoDelayActive) {
-			AutoLeftSwitchRight();
-		} else if (autoSelected == AutoCenterSpot and !AutoDelayActive)
-			AutoCenter();
-		else if (autoSelected == AutoRightSpot and NearSwitch == caseLeft
-				and !AutoDelayActive)
-			AutoRightSwitchLeft();
-		else if (autoSelected == AutoRightSpot and NearSwitch == caseRight
-				and !AutoDelayActive)
-			AutoRightSwitchRight();
-
+		//Decode the driver-selected autonomous mode.
+		//  This will be run over and over, make sure the routines can be used like that.
+		if (autoSelected == AutoOff and !AutoDelayActive) {
+			doNothing();
+		} else if (autoSelected == AutoCross and !AutoDelayActive) {
+			crossLine();
+		} else if (autoSelected == AutoLeftSpot and !AutoDelayActive) {
+			leftLocationScale(gameData[1]);
+		} else if (autoSelected == AutoCenterSpot and !AutoDelayActive) {
+			rightLocationScale(gameData[1]);
+		} else if (autoSelected == AutoCenterSpot 	and !AutoDelayActive)
+			centerLocationSwitch(gameData[0]);
+		else if ( !AutoDelayActive ){
+			doNothing();
+		}
 	}
 
-	void AutoLeftSwitchLeft(void) {
 
+	void centerLocationSwitch(char dataChar) {}
+
+	// routine to make the robot do nothing.
+	void doNothing(void){
+		stopMotors();
+	}
+
+	//Routine to drive forward until the robot crosses the line.
+	void crossLine(void){
+		enum {CL_INIT = 0, CL_END = 9, CL_DRIVE};
 		switch (modeState) {
-		case 1:
-			if (timedDrive(1, 0.5, 0.5)) {
-				modeState = 2;
-				AutonTimer.Reset();
-			}
+		case CL_INIT:
+			modeState = CL_DRIVE;
 			break;
-		case 2:
-			if (timedDrive(1, -0.5, -0.5)) {
-				modeState = 3;
-				AutonTimer.Reset();
+		case CL_DRIVE:
+			// drive forward at 20% for 5 seconds
+			if (timedDrive(5, 0.20, 0.20)) {
+				modeState = CL_END;
 			}
-			break;
-		case 3:
-			AutonTimer.Reset();
-			AutonTimer.Stop();
-			stopMotors();
 			break;
 		default:
 			stopMotors();
@@ -390,151 +381,92 @@ private:
 		return;
 	}
 
-	void AutoLeftSwitchRight(void) {
+	//Routine to go to the scale from the left side of the field.
+	void leftLocationScale(char dataChar) {
+		// to scale, for scale: we are on the left and score on left: fwd turn right, forward, elevate, score
+		// for scale: we are on the left and score on right: fwd turn right, forward, elevate, score
+		enum {
+			LSCALE_INIT = 0,LSCALE_END = 9, LSCALE_FWD1, 	LSCALE_TURN90,
+			LSCALE_FWD2, 	LSCALE_ELEVATE, LSCALE_SCORE
+		};
+
+		int turnAngle;
 		switch (modeState) {
-		case 1:
-			if (timedDrive(1, -0.5, -0.5)) {
-				modeState = 2;
-				AutonTimer.Reset();
+		case LSCALE_INIT:
+			modeState = LSCALE_FWD1;
+			break;
+		case LSCALE_FWD1:
+			if (forward(72)) {
+				modeState = LSCALE_TURN90;
 			}
 			break;
-		case 2:
-			if (timedDrive(1, 0.5, 0.5)) {
-				modeState = 3;
-				AutonTimer.Reset();
+		case LSCALE_TURN90:
+			turnAngle = -90;
+			if (dataChar == 'L') { turnAngle = 90;}
+			if (autonTurn(turnAngle)) {
+				modeState = LSCALE_FWD2;
 			}
 			break;
-		case 3:
-			AutonTimer.Reset();
-			AutonTimer.Stop();
-			stopMotors();
+		case LSCALE_FWD2:
+			if (forward(37)) {
+				modeState = LSCALE_ELEVATE;
+			}
+			break;
+		case LSCALE_ELEVATE:
+			//raise the elevator
+			modeState = LSCALE_SCORE;
+			break;
+		case LSCALE_SCORE:
+			modeState = LSCALE_END;
 			break;
 		default:
 			stopMotors();
-
+			break;
 		}
 		return;
 	}
 
-	void AutoRightSwitchLeft(void) {
+	void rightLocationScale(char dataChar) {
+		enum {
+			RSCALE_INIT = 0, RSCALE_END = 9, RSCALE_FWD1, 	RSCALE_TURN90,
+			RSCALE_FWD2, 	RSCALE_ELEVATE, RSCALE_SCORE
+		};
 
+		int turnAngle;
 		switch (modeState) {
-		case 1:
-			stopMotors();
+		case RSCALE_INIT:
+			modeState = RSCALE_FWD1;
 			break;
-		case 2:
-			stopMotors();
+		case RSCALE_FWD1:
+			if (forward(72)) {
+				modeState = RSCALE_TURN90;
+			}
+			break;
+		case RSCALE_TURN90:
+			turnAngle = -90;
+			if (dataChar == 'L') { turnAngle = 90;}
+			if (autonTurn(turnAngle)) {
+				modeState = RSCALE_FWD2;
+			}
+			break;
+		case RSCALE_FWD2:
+			if (forward(37)) {
+				modeState = RSCALE_ELEVATE;
+			}
+			break;
+		case RSCALE_ELEVATE:
+			//raise the elevator
+			modeState = RSCALE_SCORE;
+			break;
+		case RSCALE_SCORE:
+			modeState = RSCALE_END;
 			break;
 		default:
 			stopMotors();
-		}
-
-	}
-	void AutoRightSwitchRight(void) {
-
-		switch (modeState) {
-		case 1:
-			stopMotors();
 			break;
-		case 2:
-			stopMotors();
-			break;
-		default:
-			stopMotors();
-		}
-	}
-
-	void AutoCenter(void) {
-
-		if (NearSwitch == caseLeft) {
-			switch (modeState) {
-			case 1:
-				if (timedDrive(1.0, 0.5, 0.5)) {
-					modeState = 2;
-					AutonTimer.Reset();
-				}
-				break;
-			case 2:
-				if (autonTurn(90)) {
-					modeState = 3;
-					AutonTimer.Reset();
-				}
-				break;
-			case 3:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					modeState = 4;
-					AutonTimer.Reset();
-				}
-				break;
-			case 4:
-				if (autonTurn(0)) {
-					modeState = 5;
-					AutonTimer.Reset();
-				}
-				break;
-			case 5:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					AutonTimer.Reset();
-					modeState = 6;
-				}
-				break;
-			case 6:
-				AutonTimer.Reset();
-				AutonTimer.Stop();
-				stopMotors();
-				break;
-			default:
-				stopMotors();
-			}
-		} else if (NearSwitch == caseRight) {
-			switch (modeState) {
-			case 1:
-				if (timedDrive(1, 0.5, 0.5)) {
-					modeState = 2;
-					AutonTimer.Reset();
-				}
-				break;
-			case 2:
-				if (autonTurn(-90)) {
-					modeState = 3;
-					AutonTimer.Reset();
-				}
-				break;
-			case 3:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					modeState = 4;
-					AutonTimer.Reset();
-				}
-				break;
-			case 4:
-				if (autonTurn(0)) {
-					modeState = 5;
-					AutonTimer.Reset();
-				}
-				break;
-			case 5:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					AutonTimer.Reset();
-					modeState = 6;
-				}
-				break;
-			case 6:
-				AutonTimer.Reset();
-				AutonTimer.Stop();
-				stopMotors();
-				break;
-			default:
-				stopMotors();
-
-			}
 		}
 		return;
 	}
-
-#define caseDriveDefault 1
-#define caseDrive1 2
-#define caseDrive2 3
-#define caseDrive3 4
 
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.10;
@@ -641,7 +573,7 @@ private:
 				OutputY = Drive_Deadband + (Gain * (SpeedLinear * SpeedLinear));
 			else if (SpeedLinear < -Control_Deadband)
 				OutputY = -Drive_Deadband
-						+ (-Gain * (SpeedLinear * SpeedLinear));
+				+ (-Gain * (SpeedLinear * SpeedLinear));
 			else
 				OutputY = 0;
 
@@ -687,7 +619,7 @@ private:
 				OutputX = Drive_Deadband + (Gain * (SpeedRotate * SpeedRotate));
 			else if (SpeedRotate < -Control_Deadband)
 				OutputX = -Drive_Deadband
-						+ (-Gain * (SpeedRotate * SpeedRotate));
+				+ (-Gain * (SpeedRotate * SpeedRotate));
 			else
 				OutputX = 0;
 			break;
@@ -799,15 +731,15 @@ private:
 		else if (RightSpeed < Control_Deadband and !RightStickLimit2)
 			RightSpeed = 0.0;
 
-//		if (OperatorStick.GetRawAxis(2) > 0.5) {
-//			RightSpeed = 1.0;
-//		} else if (OperatorStick.GetRawAxis(3) > 0.5) {
-//			RightSpeed = -1.0;
-//		} else if (OperatorStick.GetRawAxis(4) < Control_Deadband)
-//			RightSpeed = 0.0;
-//
-//		RightStick1.Set(RightSpeed);
-//		RightStick2.Set(RightSpeed);
+		//		if (OperatorStick.GetRawAxis(2) > 0.5) {
+		//			RightSpeed = 1.0;
+		//		} else if (OperatorStick.GetRawAxis(3) > 0.5) {
+		//			RightSpeed = -1.0;
+		//		} else if (OperatorStick.GetRawAxis(4) < Control_Deadband)
+		//			RightSpeed = 0.0;
+		//
+		//		RightStick1.Set(RightSpeed);
+		//		RightStick2.Set(RightSpeed);
 
 	}
 
@@ -855,8 +787,7 @@ private:
 	}
 
 	//drive a set period with fixed right a left motor speeds
-	bool timedDrive(double driveTime, double leftMotorSpeed,
-			double rightMotorSpeed) {
+	bool timedDrive(double driveTime, double leftMotorSpeed, double rightMotorSpeed) {
 		float currentTime = AutonTimer.Get();
 		if (currentTime < driveTime) {
 			motorSpeed(leftMotorSpeed, rightMotorSpeed);
@@ -911,7 +842,7 @@ private:
 	}
 
 	//--------------Start code for motors------------
-	//Set left an right motor speeds
+	//Set left and right motor speeds
 	void motorSpeed(double leftMotor, double rightMotor) {
 		DriveLeft0.Set(leftMotor * -1);
 		DriveLeft1.Set(leftMotor * -1);
