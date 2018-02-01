@@ -55,13 +55,10 @@ class Robot: public frc::TimedRobot {
 	}
 
 	void TeleopPeriodic() {
-		double Deadband = 0.11;
+		double Control_Deadband = 0.11;
+		double Drive_Deadband = 0.11;
 		double DPadSpeed = 1.0;
-
-
-
-
-
+		double Gain = 1;
 
 		//high gear & low gear controls
 		if (IO.DS.DriveStick.GetRawButton(5))
@@ -73,7 +70,7 @@ class Robot: public frc::TimedRobot {
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
-		double driveCurrent = 0;
+		double driveCurrent = pdp->GetTotalCurrent();
 
 		// rumble if current to high
 		double LHThr = 0.0;		// Define value for rumble
@@ -89,10 +86,27 @@ class Robot: public frc::TimedRobot {
 		double SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1; // get Yaxis value (forward)
 		double SpeedRotate = IO.DS.DriveStick.GetRawAxis(4) * -1; // get Xaxis value (turn)
 
+		//Smoothing algorithm for x^3
+		if (!IO.DriveBase.SolenoidShifter.Get()){
+			if (SpeedLinear > Control_Deadband)
+				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else if (SpeedLinear < -Control_Deadband)
+				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else
+				OutputY = 0;
+		} else {
+			if (SpeedLinear > Control_Deadband)
+				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else if (SpeedLinear < -Control_Deadband)
+				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+			else
+				OutputY = 0;
+		}
+
 		// Set dead band for X and Y axis
-		if (fabs(SpeedLinear) < Deadband)
+		if (fabs(SpeedLinear) < Control_Deadband)
 			SpeedLinear = 0.0;
-		if (fabs(SpeedRotate) < Deadband)
+		if (fabs(SpeedRotate) < Control_Deadband)
 			SpeedRotate = 0.0;
 
 		//slow down direction changes from 1 cycle to 5
@@ -126,7 +140,7 @@ class Robot: public frc::TimedRobot {
 
 
 		// Claw control
-<<<<<<< HEAD
+
 		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
 		bool ClawEject = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 
@@ -144,9 +158,9 @@ class Robot: public frc::TimedRobot {
 
 
 
-=======
+
 		//IO.DS.OperatorStick.GetBumper();
->>>>>>> f26b12785835dd051f77adf3dd39a20ec1e1373a
+
 
 		//A Button to extend (Solenoid On)
 		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
@@ -244,6 +258,7 @@ class Robot: public frc::TimedRobot {
 			autoDelay = IO.DS.sAutoDelayOff;
 			AutonTimer.Reset();
 		}
+
 
 		if (autoSelected == IO.DS.AutoLeftSpot and NearSwitch == caseLeft
 				and !AutoDelayActive) {
@@ -605,11 +620,9 @@ class Robot: public frc::TimedRobot {
 
 	frc::Relay::Value LEDcontrol(int LEDcontrolcode)
 	{
-		int binary[8];
 		int relayoutput;
-		for( int i = 7; i == -1;  i = i - 1 ) {
-			binary[i] = LEDcontrolcode % 2;
-			relayoutput = (LEDcontrolcode & b00000011);
+		for( int i = 7; i > -1;  i = i - 1 ) {
+			relayoutput = (LEDcontrolcode & 00000011);
 
 			switch (relayoutput){
 			case 0:

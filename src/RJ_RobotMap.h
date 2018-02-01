@@ -65,6 +65,8 @@ public:
 		VictorSP R3 { 5 };
 		SpeedControllerGroup MotorsRight { R1, R2, R3 };
 
+
+
 		// Drive Base Encoders
 		Encoder EncoderLeft { 0, 1 };
 		Encoder EncoderRight { 2, 3 };
@@ -128,7 +130,7 @@ public:
 		Solenoid XYbutton { 4 };
 
 		// Limit Switches
-		DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
+		//DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
 
 		//Encoder Init
 		//bool useRightEncoder = false;
