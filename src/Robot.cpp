@@ -156,25 +156,26 @@ class Robot: public frc::TimedRobot {
 			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
 
 
-
+		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
 		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
 
-		if (fabs(ElevatorStick) < Control_Deadband) {
+		if (fabs(ElevatorStick) < Control_Deadband and dpadvalue == -1) {
 			elevatorPosition(CurrentElevPos,false); 	// replace with routine to hold elevator position.
 			ElevHold = true;
-		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper) {
+		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper  and dpadvalue == -1) {
 			elevatorPosition(CurrentElevPos, false); // replace with routine to hold  top elevator position.
 			ElevHold = true;
-		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower) {
+		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower and dpadvalue == -1) {
 			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
 		}
-
-		else
+		else {
 			elevatorSpeed(ElevatorOutput);
+			ElevHold = false;
+		}
+
 
 		// Elevator automatic drive based on dpad
-		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
-		if (fabs(ElevatorStick) > Control_Deadband) {
+		if (fabs(ElevatorStick) < Control_Deadband) {
 			switch(dpadvalue) {
 				case 0:
 					//Dpad is pointing up
