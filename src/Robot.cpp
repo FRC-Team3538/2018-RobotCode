@@ -198,7 +198,7 @@ private:
 
 			ahrs->Reset();
 
-		} catch (std::exception ex) {
+		} catch (std::exception(ex)) {
 
 			std::string err_string = "Error instantiating navX MXP:  ";
 
@@ -214,8 +214,8 @@ private:
 		//		so there is plenty of time.
 		Wait(1);
 
-		std::thread visionThread(VisionThread);
-		visionThread.detach();
+		//std::thread visionThread(VisionThread);
+		//visionThread.detach();
 
 	}
 
@@ -252,6 +252,7 @@ private:
 	void AutonomousInit() override {
 		modeState = 1;
 		isWaiting = 0;				/////***** Rename this.
+		SmartDashboard::PutNumber("useable encoder", 0);
 
 		// The delays are a pull-down in the dashboard.
 		// (Currently) the choices are off, 3 seconds, and 5 seconds.
@@ -314,6 +315,7 @@ private:
 	}
 
 	void DisabledPeriodic() {
+
 	}
 
 	// Wait driver-selected delay and go to the correct autonomous mode.
@@ -328,21 +330,23 @@ private:
 			autoDelay = AutoDelayOff;
 			AutonTimer.Reset();
 		}
+		SmartDashboard::PutNumber("crossLine", 99);
+		crossLine();
 		//Decode the driver-selected autonomous mode.
 		//  This will be run over and over, make sure the routines can be used like that.
-		if (autoSelected == AutoOff and !AutoDelayActive) {
-			doNothing();
-		} else if (autoSelected == AutoCross and !AutoDelayActive) {
-			crossLine();
-		} else if (autoSelected == AutoLeftSpot and !AutoDelayActive) {
-			leftLocationScale(gameData[1]);
-		} else if (autoSelected == AutoCenterSpot and !AutoDelayActive) {
-			rightLocationScale(gameData[1]);
-		} else if (autoSelected == AutoCenterSpot 	and !AutoDelayActive)
-			centerLocationSwitch(gameData[0]);
-		else if ( !AutoDelayActive ){
-			doNothing();
-		}
+		//if (autoSelected == AutoOff and !AutoDelayActive) {
+			//doNothing();
+		//} else if (autoSelected == AutoCross and !AutoDelayActive) {
+//			crossLine();
+//		} else if (autoSelected == AutoLeftSpot and !AutoDelayActive) {
+//			leftLocationScale(gameData[1]);
+//		} else if (autoSelected == AutoCenterSpot and !AutoDelayActive) {
+//			rightLocationScale(gameData[1]);
+//		} else if (autoSelected == AutoCenterSpot 	and !AutoDelayActive)
+//			centerLocationSwitch(gameData[0]);
+//		else if ( !AutoDelayActive ){
+//			doNothing();
+//		}
 	}
 
 	void centerLocationSwitch(char locChar) {
@@ -476,19 +480,24 @@ private:
 	// Done.
 	void crossLine(void){
 		// This does not use encoders or the gyro in case they have failed.
+
 		enum {CL_INIT = 0, CL_END = 9, CL_DRIVE};
 		switch (modeState) {
 		case CL_INIT:
 			modeState = CL_DRIVE;
+			SmartDashboard::PutNumber("crossLine", modeState+99);
 			break;
 		case CL_DRIVE:
 			// drive forward at 20% for 5 seconds
 			if (timedDrive(CROSS_TIME, CROSS_SPEED, CROSS_SPEED)) {
 				modeState = CL_END;
+				SmartDashboard::PutNumber("crossLine", modeState+99);
 			}
+
 			break;
 		default:
 			stopMotors();
+			SmartDashboard::PutNumber("crossLine", modeState+99);
 		}
 		return;
 	}
@@ -1138,7 +1147,9 @@ private:
 		} else {
 			usableEncoderData = fmin(right, left);
 		}
+		//SmartDashboard::PutNumber("useable encoder", usableEncoderData);
 		return usableEncoderData;
+		SmartDashboard::PutNumber("useable encoder", usableEncoderData);
 	}
 
 	//Reset the encoders
