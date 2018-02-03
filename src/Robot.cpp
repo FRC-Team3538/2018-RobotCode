@@ -132,11 +132,12 @@ class Robot: public frc::TimedRobot {
 		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
 
 		// reversing controller input so up gives positive input
-		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
+		double ElevatorStick = IO.DS.OperatorStick.GetY(
+				frc::XboxController::kLeftHand) * -1;
 		//double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
 		//int ElevatorDpadDown = IO.DS.OperatorStick.GetPOV(180);
 
-		double ElevatorOutput =  ElevatorStick;
+		double ElevatorOutput = ElevatorStick;
 		double ElevatorDeadband = 0.11; // deadband for elevator gears and motors, value to move elevator up
 
 		//Smoothing algorithm for x^3
@@ -146,23 +147,21 @@ class Robot: public frc::TimedRobot {
 			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
 
 		double CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
-		int dpadvalue = IO.DS.OperatorStick.GetPOV();				// Read Operator Dpad value
+		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
 
-		if (fabs(ElevatorStick) < Control_Deadband and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos, false);  // replace with routine to hold elevator position.
-		} else if (ElevatorStick > Control_Deadband
-				and !SwitchElevatorUpper and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos, false);  // replace with routine to hold  top elevator position.
-		} else if (ElevatorStick < Control_Deadband
-				and !SwitchElevatorLower and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos, false);  // replace with routine to hold  bottom elevator position.
+		if (fabs(ElevatorStick) < Control_Deadband) {
+			elevatorPosition(CurrentElevPos,false); 	// replace with routine to hold elevator position.
+
+		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper) {
+			elevatorPosition(CurrentElevPos, false); // replace with routine to hold  top elevator position.
+		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower) {
+			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
 		}
 
-		else if (dpadvalue == -1) elevatorSpeed(ElevatorOutput);
-
+		else if (dpadvalue == -1)
+			elevatorSpeed(ElevatorOutput);
 
 		// Elevator automatic drive based on dpad
-
 
 		if ((dpadvalue >= 315 or dpadvalue <= 45) and dpadvalue != -1) {
 			//Dpad is pointing up
@@ -574,16 +573,35 @@ class Robot: public frc::TimedRobot {
 
 #define Elevator_MAXSpeed (1)
 #define Elevator_KP (0.27)
-	void elevatorPosition(double position, bool override) {
+#define ElevatorHoldSpeed (0.12)
+#define ElevatorPostionTol (0.125)
+	bool elevatorPosition(double position, bool override) {
 		//TODO: Function to set elevator to a position with an override to disable it
+		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
+		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
+
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - position;
 		double ElevCmd = ElevError * Elevator_KP;
+		//Limit Elevator to Max positive and negative speeds
 		if (ElevCmd > Elevator_MAXSpeed) {
 			ElevCmd = Elevator_MAXSpeed;
 		} else if (ElevCmd < -1 * Elevator_MAXSpeed) { /////***** "-1" is a "magic number." At least put a clear comment in here.
 			ElevCmd = -1 * Elevator_MAXSpeed; /////***** same as above.
 		}
+
+		if (!ElevatorUpperLimit) {
+			elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
+			return true;
+		} else if (!ElevatorLowerLimit) {
+			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
+			return true;
+		} else if (fabs(ElevError) < ElevatorPostionTol) {
+			elevatorSpeed(ElevatorHoldSpeed);
+			return true;
+		} else
+			elevatorSpeed(ElevCmd);
+		return false;
 	}
 
 	int stopMotors() {
