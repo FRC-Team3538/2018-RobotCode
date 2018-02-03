@@ -83,8 +83,8 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);	// Set Right Rumble to RH Trigger
 
 		//drive controls
-		double SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1; // get Yaxis value (forward)
-		double SpeedRotate = IO.DS.DriveStick.GetRawAxis(4) * -1; // get Xaxis value (turn)
+		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
+		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
 		//Smoothing algorithm for x^3
 		if (!IO.DriveBase.SolenoidShifter.Get()){
@@ -133,18 +133,49 @@ class Robot: public frc::TimedRobot {
 		//Elevator manual drive
 		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
-		double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
+		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand);
 		double ElevatorOutput;
 
-		if (fabs(ElevatorStick) < DeadbandOperatorLY)
+		if (fabs(ElevatorStick) < DeadbandOperatorLY){
 			ElevatorOutput = 0.0;
-		else if (ElevatorStick > DeadbandOperatorLY and !SwitchElevatorUpper)
+		}
+		else if (ElevatorStick > DeadbandOperatorLY and !SwitchElevatorUpper){
 			ElevatorOutput = 0.0;
-		else if (ElevatorStick < DeadbandOperatorLY and !SwitchElevatorLower)
+		}
+		else if (ElevatorStick < DeadbandOperatorLY and !SwitchElevatorLower){
 			ElevatorOutput = 0.0;
+		}
 
 		IO.DriveBase.Elevator1.Set(ElevatorOutput);
 		IO.DriveBase.Elevator2.Set(-ElevatorOutput);
+
+		// Elevator automatic drive based on dpad
+		int dpadvalue = IO.DS.OperatorStick.GetPOV();
+
+		if ((dpadvalue >= 315 or dpadvalue <= 45) and dpadvalue != -1){
+		//Dpad is pointing up
+		//Portal/Switch height
+			elevatorPosition(100,false);
+		}
+		else if (dpadvalue > 45 and dpadvalue <= 135){
+			//dpad is pointing to the right
+			// elevator at max height
+			elevatorPosition(1000,false);
+		}
+		else if (dpadvalue >135 and dpadvalue <= 270){
+			// dpad is pointing down
+			// ground/intake level
+			elevatorPosition(0,false);
+		}
+		else if (dpadvalue >270 and dpadvalue <= 315) {
+			// dpad is pointing to the left
+			// this is for "scale low" whatever that means
+			elevatorPosition(9001, false);
+		}
+		else if (dpadvalue == -1){
+			// dpad isn't pressed
+			}
+
 
 
 		// Claw control
