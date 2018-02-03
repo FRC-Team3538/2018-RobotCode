@@ -17,6 +17,9 @@ class Robot: public frc::TimedRobot {
 	// Drive Input Filter
 	float OutputX = 0.0, OutputY = 0.0;
 
+	// Teleop Elevator Position
+	double CurrentElevPos =0.0;
+
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
@@ -24,6 +27,8 @@ class Robot: public frc::TimedRobot {
 	bool driveButtonYPrev = false;
 	bool intakeDeployed = false;
 	bool XYDeployed = false;
+	bool ElevHold = false;
+	bool NotHome = false;
 
 	//Autonomous Variables
 	int isWaiting = 0;
@@ -52,6 +57,10 @@ class Robot: public frc::TimedRobot {
 	void TeleopInit() {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
+		// Teleop Elevator Position
+			elevatorHome();
+			CurrentElevPos =0.0;
+
 	}
 
 	void TeleopPeriodic() {
@@ -146,43 +155,49 @@ class Robot: public frc::TimedRobot {
 		else if (ElevatorStick < -Control_Deadband)
 			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
 
-		double CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
-		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+
+
+		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
 
 		if (fabs(ElevatorStick) < Control_Deadband) {
 			elevatorPosition(CurrentElevPos,false); 	// replace with routine to hold elevator position.
-
+			ElevHold = true;
 		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper) {
 			elevatorPosition(CurrentElevPos, false); // replace with routine to hold  top elevator position.
+			ElevHold = true;
 		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower) {
 			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
 		}
 
-		else if (dpadvalue == -1)
+		else
 			elevatorSpeed(ElevatorOutput);
 
 		// Elevator automatic drive based on dpad
-
-		if ((dpadvalue >= 315 or dpadvalue <= 45) and dpadvalue != -1) {
-			//Dpad is pointing up
-			//Portal/Switch height
-			elevatorPosition(100, false);
-		} else if (dpadvalue > 45 and dpadvalue <= 135) {
-			//dpad is pointing to the right
-			// elevator at max height
-			elevatorPosition(1000, false);
-		} else if (dpadvalue > 135 and dpadvalue <= 270) {
-			// dpad is pointing down
-			// ground/intake level
-			elevatorPosition(0, false);
-		} else if (dpadvalue > 270 and dpadvalue <= 315) {
-			// dpad is pointing to the left
-			// this is for "scale low" whatever that means
-			elevatorPosition(9001, false);
-		} else if (dpadvalue == -1) {
-			// dpad isn't pressed
-		}
-
+		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+		if (fabs(ElevatorStick) > Control_Deadband) {
+			switch(dpadvalue) {
+				case 0:
+					//Dpad is pointing up
+					//Portal/Switch height
+					elevatorPosition(100, false);
+					break;
+				case 90:
+					//dpad is pointing to the right
+					// elevator at max height
+					elevatorPosition(1000, false);
+					break;
+				case 180:
+					// dpad is pointing down
+					// ground/intake level
+					elevatorPosition(0, false);
+					break;
+				case 270:
+					// dpad is pointing to the left
+					// this is for "scale low" whatever that means
+					elevatorPosition(9001, false);
+					break;
+				}
+			}
 		// Claw control
 
 		bool ClawIntake = IO.DS.OperatorStick.GetBumper(
@@ -244,16 +259,14 @@ class Robot: public frc::TimedRobot {
 	}
 
 	void elevatorHome(void) {
-		//int dpadvalue = IO.DS.OperatorStick.GetPOV();
+
 		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
-		bool NotHome;
 
-		//if ((IO.DriveBase.EncoderElevator.Get() > 0) and (dpadvalue >135 and dpadvalue <= 270 ))
-		//NotHome = true;
 
-		if ((NotHome = true) and (SwitchElevatorLower = true)) {
+		if  (SwitchElevatorLower == true) {
 			elevatorSpeed(-0.45);
-		} else if ((NotHome = true) and (SwitchElevatorLower = false)) {
+			NotHome = true;
+		} else if ((NotHome == true) and (SwitchElevatorLower == false)) {
 			elevatorSpeed(0);
 			NotHome = false;
 			IO.DriveBase.EncoderElevator.Reset();  //reset elevator encoder to 0
