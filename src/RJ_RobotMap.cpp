@@ -10,6 +10,10 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.MotorsLeft.SetInverted(true);
 	DriveBase.MotorsRight.SetInverted(false);
 
+	//Set Elevator Motor directions
+	DriveBase.Elevator1.SetInverted(false);
+	DriveBase.Elevator2.SetInverted(true);
+
 	// Set Encoder Direction & Scale
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
