@@ -177,30 +177,7 @@ class Robot: public frc::TimedRobot {
 
 
 		// Elevator automatic drive based on dpad
-<<<<<<< HEAD
 
-
-		if ((dpadvalue >= 315 or dpadvalue <= 45) and dpadvalue != -1) {
-			//dpad is pointing up
-			//Portal/Switch height
-			elevatorPosition(100, false);
-		} else if (dpadvalue > 45 and dpadvalue <= 135) {
-			//dpad is pointing to the right
-			// elevator at max height
-			elevatorPosition(1000, false);
-		} else if (dpadvalue > 135 and dpadvalue <= 270) {
-			// dpad is pointing down
-			// ground/intake level
-			elevatorPosition(0, false);
-		} else if (dpadvalue > 270 and dpadvalue <= 315) {
-			// dpad is pointing to the left
-			// this is for "scale low" whatever that means
-			elevatorPosition(9001, false);
-		} else if (dpadvalue == -1) {
-			// dpad isn't pressed
-		}
-
-=======
 		if (fabs(ElevatorStick) < Control_Deadband) {
 			switch(dpadvalue) {
 				case 0:
@@ -225,7 +202,7 @@ class Robot: public frc::TimedRobot {
 					break;
 				}
 			}
->>>>>>> b384a993a8b549eeba1fd10335bf64654e947ddf
+
 		// Claw control
 
 		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
