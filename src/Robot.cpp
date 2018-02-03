@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include "math.h"
+#include <algorithm>
 
 // And So It Begins...
 #include "RJ_RobotMap.h"
@@ -161,11 +162,12 @@ class Robot: public frc::TimedRobot {
 		else if (dpadvalue == -1) elevatorSpeed(ElevatorOutput);
 
 
+
 		// Elevator automatic drive based on dpad
 
 
 		if ((dpadvalue >= 315 or dpadvalue <= 45) and dpadvalue != -1) {
-			//Dpad is pointing up
+			//dpad is pointing up
 			//Portal/Switch height
 			elevatorPosition(100, false);
 		} else if (dpadvalue > 45 and dpadvalue <= 135) {
@@ -186,10 +188,8 @@ class Robot: public frc::TimedRobot {
 
 		// Claw control
 
-		bool ClawIntake = IO.DS.OperatorStick.GetBumper(
-				frc::GenericHID::kRightHand);
-		bool ClawEject = IO.DS.OperatorStick.GetBumper(
-				frc::GenericHID::kLeftHand);
+		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
+		bool ClawEject = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 
 		if (ClawIntake and !ClawEject) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
@@ -200,6 +200,52 @@ class Robot: public frc::TimedRobot {
 		} else {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
 		}
+
+
+		// Wrist control
+		bool WristRight = IO.DS.OperatorStick.GetBumper(
+						frc::GenericHID::kRightHand);
+		bool WristLeft = IO.DS.OperatorStick.GetBumper(
+				frc::GenericHID::kLeftHand);
+
+		int OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+		int OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+
+		int WristOutput;
+
+		if (OperatorRightAxis > 0 and OperatorLeftAxis > 0) {
+			WristOutput = 0;
+		}
+		else if (OperatorRightAxis > 0 and OperatorLeftAxis == 0) {
+			WristOutput = OperatorRightAxis;
+		}
+		else if (OperatorRightAxis == 0 and OperatorLeftAxis > 0) {
+			WristOutput = -OperatorLeftAxis;
+		}
+
+
+
+		int wriststatus;
+
+		if (WristRight == true and WristLeft == false){
+			wriststatus = 1;
+		}
+		else if (WristRight == false and WristLeft ==true){
+			wriststatus = 2;
+		}
+		else if (WristRight == true and WristLeft == true){
+			//do nothing
+		}
+
+
+		if (abs(WristOutput) > 0) {
+		IO.DriveBase.Wrist1.Set(WristOutput);
+		wriststatus = 0;
+		}
+		else {
+			wristPosition(wriststatus);
+		}
+
 
 		//A Button to extend (Solenoid On)
 		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
@@ -585,6 +631,62 @@ class Robot: public frc::TimedRobot {
 			ElevCmd = -1 * Elevator_MAXSpeed; /////***** same as above.
 		}
 	}
+
+
+#define Wrist_MaxSpeed (1)
+#define Wrist_Idle (.4)
+
+
+bool wristPosition(int position){
+// Controls the wrist position.
+// for now it will send the wrist to position 1 or position 2 then return true when it is in that position
+	int wristOutput;
+	bool switchWrist1 = IO.DriveBase.SwitchWrist1.Get();
+	bool switchWrist2 = IO.DriveBase.SwitchWrist1.Get();
+	bool inCorrectPosition = false;
+	switch(position){
+		case 1:
+			///if the wrist is in position 1
+			if (switchWrist1 == true) {
+				//it is in position 1
+				wristOutput = Wrist_Idle;
+				inCorrectPosition = true;
+			}
+			else {
+				// it isn't in position 1
+				wristOutput = 1;
+				inCorrectPosition = false;
+			}
+			break;
+		case 2:
+			if (switchWrist2 == true){
+				wristOutput = -Wrist_Idle;
+				inCorrectPosition = true;
+			}
+			else {
+				wristOutput = -1;
+				inCorrectPosition = false;
+			}
+			break;
+		case 0:
+			inCorrectPosition = false;
+			break;
+		default:
+			inCorrectPosition = false;
+			break;
+		}
+
+		// Cap the speed to the maximum
+		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed),-Wrist_MaxSpeed);
+
+		IO.DriveBase.Wrist1.Set(wristOutput);
+
+		return inCorrectPosition;
+
+
+}
+
+// Drivetrain functions
 
 	int stopMotors() {
 		//sets motor speeds to zero
