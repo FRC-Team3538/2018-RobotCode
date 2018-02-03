@@ -18,11 +18,6 @@
 void doNothing(void);  // a state machine that makes the robot do nothing.
 void crossLine(void);  // A state machine that drives the robot until it crosses the line,
 
-// Time forward: go forward for 0.75 seconds.
-#define RED_2_CASE2_FWD (71.0)
-#define RED_2_CASE3_TIME (1.0)
-#define RED_2_CASE3_LSPEED (-0.2)
-#define RED_2_CASE3_RSPEED (-0.2)
 //linear calibrations
 // tolerance in inches
 #define LINEAR_TOLERANCE (0.2)
@@ -297,7 +292,6 @@ private:
 	}
 
 	void DisabledInit() {
-
 	}
 
 	void RobotPeriodic() {
@@ -352,16 +346,18 @@ private:
 		}
 	}
 
-
-	void centerLocationSwitch(char dataChar) {}
+	void centerLocationSwitch(char dataChar) {} ///// not defined, yet
 
 	// routine to make the robot do nothing.
 	void doNothing(void){
 		stopMotors();
 	}
 
+#define CROSS_SPEED (.2)
+#define CROSS_TIME (5)
 	//Routine to drive forward until the robot crosses the line.
 	void crossLine(void){
+		// This does not use encoders or the gyro in case they have failed.
 		enum {CL_INIT = 0, CL_END = 9, CL_DRIVE};
 		switch (modeState) {
 		case CL_INIT:
@@ -369,7 +365,7 @@ private:
 			break;
 		case CL_DRIVE:
 			// drive forward at 20% for 5 seconds
-			if (timedDrive(5, 0.20, 0.20)) {
+			if (timedDrive(CROSS_TIME, CROSS_SPEED, CROSS_SPEED)) {
 				modeState = CL_END;
 			}
 			break;
@@ -380,42 +376,54 @@ private:
 	}
 
 	//Routine to go to the scale from the left side of the field.
-	void leftLocationScale(char dataChar) {
-		// to scale, for scale: we are on the left and score on left: fwd turn right, forward, elevate, score
-		// for scale: we are on the left and score on right: fwd turn right, forward, elevate, score
+	void leftLocationScale(char locChar) {
+		if (locChar == 'L'){leftToLeftScale();}
+		else if (locChar == 'R'){leftToRightScale();}
+		else {
+			// leftLocationScale has received a wrong character
+			// Do nothing. ........THIS SHOULD NEVER HAPPEN........
+			}
+		return;
+		}
+
+	//Routine to go to the scale from the left side ot left side of the scale
+	void leftToLeftScale(void) {
+		// for scale: we are on the left and score on left:
+		//    init, fwd, turn right, forward, elevate, score
 		enum {
-			LSCALE_INIT = 0,LSCALE_END = 9, LSCALE_FWD1, 	LSCALE_TURN90,
-			LSCALE_FWD2, 	LSCALE_ELEVATE, LSCALE_SCORE
+			LLSCALE_INIT = 0,LLSCALE_END = 9, LLSCALE_FWD1, 	LLSCALE_TURN90,
+			LLSCALE_FWD2, 	LLSCALE_ELEVATE, LLSCALE_SCORE
 		};
 
-		int turnAngle;
 		switch (modeState) {
-		case LSCALE_INIT:
-			modeState = LSCALE_FWD1;
+		case LLSCALE_INIT:
+			modeState = LLSCALE_FWD1;
 			break;
-		case LSCALE_FWD1:
-			if (forward(72)) {
-				modeState = LSCALE_TURN90;
+		case LLSCALE_FWD1:
+			// Dummy numbers: go to scale, bearing 0 degrees.
+			if (forward(30,0)) {
+				modeState = LLSCALE_TURN90;
 			}
 			break;
-		case LSCALE_TURN90:
-			turnAngle = -90;
-			if (dataChar == 'L') { turnAngle = 90;}
-			if (autonTurn(turnAngle)) {
-				modeState = LSCALE_FWD2;
+		case LLSCALE_TURN90:
+			// Dummy numbers: turn right 90 degrees
+			if (autonTurn(90)) {
+				modeState = LLSCALE_FWD2;
 			}
 			break;
-		case LSCALE_FWD2:
-			if (forward(37)) {
-				modeState = LSCALE_ELEVATE;
+		case LLSCALE_FWD2:
+			// Dummy numbers: 	go forward until robot gets to the scale,
+			//					bearing: 90 degrees.
+			if (forward(37, 90)) {
+				modeState = LLSCALE_ELEVATE;
 			}
 			break;
-		case LSCALE_ELEVATE:
+		case LLSCALE_ELEVATE:
 			//raise the elevator
-			modeState = LSCALE_SCORE;
+			modeState = LLSCALE_SCORE;
 			break;
-		case LSCALE_SCORE:
-			modeState = LSCALE_END;
+		case LLSCALE_SCORE:
+			modeState = LLSCALE_END;
 			break;
 		default:
 			stopMotors();
@@ -424,31 +432,132 @@ private:
 		return;
 	}
 
-	void rightLocationScale(char dataChar) {
+	//Routine to go to the scale from the left side to right side of the scale
+	void leftToRightScale(void) {
+		// for scale: we are on the left and score on right:
+		//    fwd, turn right, forward, turn left, fowd, elevate, score
+		enum {
+			LRSCALE_INIT = 0,LRSCALE_END = 9, LRSCALE_FWD1, 	LRSCALE_TURN90,
+			LRSCALE_FWD2, 	LRSCALE_ELEVATE, LRSCALE_SCORE
+		};
+
+		switch (modeState) {
+		case LRSCALE_INIT:
+			modeState = LRSCALE_FWD1;
+			break;
+		case LRSCALE_FWD1:
+			// Dummy numbers: to the other side of the switch, bearing 0 degrees
+			if (forward(72, 0)) {
+				modeState = LRSCALE_TURN90;
+			}
+			break;
+		case LRSCALE_TURN90:
+			// Dummy numbers: turn right 90 degrees
+			if (autonTurn(90)) {
+				modeState = LRSCALE_FWD2;
+			}
+			break;
+		case LRSCALE_FWD2:
+			//Dummy numbers: drive to the far side of the scale,
+			//				bearing: 90 degrees to the right
+			if (forward(37, 90)) {
+				modeState = LRSCALE_ELEVATE;
+			}
+			break;
+		case LRSCALE_ELEVATE:
+			//raise the elevator
+			modeState = LRSCALE_SCORE;
+			break;
+		case LRSCALE_SCORE:
+			modeState = LRSCALE_END;
+			break;
+		default:
+			stopMotors();
+			break;
+		}
+		return;
+	}
+
+	void rightLocationScale(char locChar) {
+		if (locChar == 'L'){rightToLeftScale();}
+		else if (locChar == 'R'){rightToRightScale();}
+		else {
+			// rightLocationScale has received a wrong character
+			// Do nothing. ........THIS SHOULD NEVER HAPPEN........
+		}
+		return;
+	}
+
+	void rightToLeftScale(void) {
+		// for scale: we are on the right and score on left:
+		//    fwd, turn left, forward, turn right, fwd, elevate, score
+		enum {
+			RLSCALE_INIT = 0, RLSCALE_END = 9, RLSCALE_FWD1, 	RLSCALE_TURN90,
+			RLSCALE_FWD2, 	RLSCALE_ELEVATE, RLSCALE_SCORE
+		};
+
+		switch (modeState) {
+		case RLSCALE_INIT:
+			modeState = RLSCALE_FWD1;
+			break;
+		case RLSCALE_FWD1:
+			// Dummy numbers: go forward to the far side of the switch, bearing 0
+			if (forward(72, 0)) {
+				modeState = RLSCALE_TURN90;
+			}
+			break;
+		case RLSCALE_TURN90:
+			if (autonTurn(-90)) {
+				modeState = RLSCALE_FWD2;
+			}
+			break;
+		case RLSCALE_FWD2:
+			if (forward(37, 0)) { // error
+				modeState = RLSCALE_ELEVATE;
+			}
+			break;
+		case RLSCALE_ELEVATE:
+			//raise the elevator
+			modeState = RLSCALE_SCORE;
+			break;
+		case RLSCALE_SCORE:
+			modeState = RLSCALE_END;
+			break;
+		default:
+			stopMotors();
+			break;
+		}
+		return;
+	}
+
+	void rightToRightScale(void) {
+		// for scale: we are on the right and score on right:
+		//    fwd, turn left, forward, elevate, score
+		// for scale: we are on the right and score on left:
+		//    fwd, turn left, forward, turn right, fowd, elevate, score
 		enum {
 			RSCALE_INIT = 0, RSCALE_END = 9, RSCALE_FWD1, 	RSCALE_TURN90,
 			RSCALE_FWD2, 	RSCALE_ELEVATE, RSCALE_SCORE
 		};
 
-		int turnAngle;
 		switch (modeState) {
 		case RSCALE_INIT:
 			modeState = RSCALE_FWD1;
 			break;
 		case RSCALE_FWD1:
-			if (forward(72)) {
+			if (forward(72,0)) { //ERROR
 				modeState = RSCALE_TURN90;
 			}
 			break;
 		case RSCALE_TURN90:
-			turnAngle = -90;
-			if (dataChar == 'L') { turnAngle = 90;}
-			if (autonTurn(turnAngle)) {
+
+//			if (dataChar == 'L') { turnAngle = 90;}
+			if (autonTurn(90)) {
 				modeState = RSCALE_FWD2;
 			}
 			break;
 		case RSCALE_FWD2:
-			if (forward(37)) {
+			if (forward(37,0)) { /// ERROR
 				modeState = RSCALE_ELEVATE;
 			}
 			break;
@@ -465,6 +574,12 @@ private:
 		}
 		return;
 	}
+
+
+#define caseDriveDefault 1
+#define caseDrive1 2
+#define caseDrive2 3
+#define caseDrive3 4
 
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.10;
@@ -668,7 +783,6 @@ private:
 				//	ahrs->ZeroYaw();
 				driveButtonYPrev = true;
 			}
-			//forward(autoBackupDistance);
 		} else {
 			//manual control
 			driveButtonYPrev = false;
@@ -741,7 +855,7 @@ private:
 
 	}
 
-	int forward(double targetDistance) {
+	int forward(double targetDistance, double targetBearing) {
 		double encoderDistance = readEncoder();
 		double encoderError = encoderDistance - targetDistance;
 		double driveCommandLinear = encoderError * KP_LINEAR;
@@ -753,8 +867,8 @@ private:
 		}
 		//gyro values that make the robot drive straight
 		double gyroAngle = ahrs->GetAngle();
-		double driveCommandRotation = gyroAngle * KP_ROTATION;
-		//encdoer check
+		double driveCommandRotation = (gyroAngle - targetBearing) * KP_ROTATION;
+		//encoder check
 		if (EncoderCheckTimer.Get() > MAX_DRIVE_TIME) {
 			motorSpeed(0.0, 0.0);
 			DriverStation::ReportError(
