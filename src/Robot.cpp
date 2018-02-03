@@ -134,6 +134,7 @@ class Robot: public frc::TimedRobot {
 		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
 		double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
+		int ElevatorDpadDown = IO.DS.OperatorStick.GetPOV(180);
 		double ElevatorOutput;
 
 		if (fabs(ElevatorStick) < DeadbandOperatorLY)
@@ -146,7 +147,23 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.Elevator1.Set(ElevatorOutput);
 		IO.DriveBase.Elevator2.Set(-ElevatorOutput);
 
+//		while (!SwitchElevatorLower)
+	//		if (IO.TestJunk.Dpad2.Get())
+		//		IO.DriveBase.Elevator1.Set(-0.45);
+			//	IO.DriveBase.Elevator2.Set(0.45);
 
+		bool ElevatorHome = false;
+
+		if ((ElevatorHome = false) and (ElevatorDpadDown))
+			ElevatorHome = true;
+
+		if ((ElevatorHome = true) and (SwitchElevatorLower = false)) {
+			IO.DriveBase.Elevator1.Set(-0.45);
+			IO.DriveBase.Elevator2.Set(0.45);
+		} else if ((ElevatorHome = true) and (SwitchElevatorLower = true)) {
+			stopMotors();
+			ElevatorHome = false;
+		}
 		// Claw control
 
 		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
@@ -163,11 +180,6 @@ class Robot: public frc::TimedRobot {
 		else {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
 		}
-
-
-
-
-		//IO.DS.OperatorStick.GetBumper();
 
 
 		//A Button to extend (Solenoid On)
