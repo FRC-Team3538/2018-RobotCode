@@ -87,7 +87,7 @@ public:
 
 
 		//Elevator Sensing Package
-		Encoder EncoderElevator { 4, 5 };
+		Encoder EncoderElevator { 4, 5, false, Encoder::k4X };
 		DigitalInput SwitchElevatorLower { 8 };
 		DigitalInput SwitchElevatorUpper { 9 };
 		AnalogInput PotentiometerElevator { 0 };
