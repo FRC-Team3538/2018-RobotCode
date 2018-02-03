@@ -116,6 +116,14 @@ class Robot: public frc::TimedRobot {
 		// Drive Code
 		Adrive.ArcadeDrive(OutputY, OutputX, true);
 
+		// Joystick OutPuts
+		SmartDashboard::PutNumber("YJoystick", SpeedLinear);
+		SmartDashboard::PutNumber("XJoystick", SpeedRotate);
+
+		SmartDashboard::PutNumber("OutputY", OutputY);
+		SmartDashboard::PutNumber("OutputX", OutputX);
+
+
 		/*
 		 * MANIP CODE
 		 */

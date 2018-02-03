@@ -41,6 +41,8 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoDelay.AddObject(DS.sAutoDelay5, DS.sAutoDelay5);
 	frc::SmartDashboard::PutData("Auto Mode Delay", &DS.chooseAutoDelay);
 
+
+
 }
 
 
