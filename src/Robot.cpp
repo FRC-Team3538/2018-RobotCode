@@ -78,6 +78,7 @@ class Robot: public frc::IterativeRobot {
 	VictorSP RightStick1;
 	VictorSP RightStick2;
 	Timer AutonTimer;
+	Timer BlockingTimer;			// Used for making blocking delays
 	Timer EncoderCheckTimer;
 	Encoder EncoderLeft;
 	Encoder EncoderRight;
@@ -1065,7 +1066,6 @@ private:
 		if (currentTime < driveTime) {
 			motorSpeed(leftMotorSpeed, rightMotorSpeed);
 		} else {
-			SmartDashboard::PutNumber("currentTime", 0);
 			stopMotors();
 			return true;
 		}
@@ -1115,11 +1115,11 @@ private:
 		return false;
 	}
 
-	// This gives a blocking delay. Resets AutonTimer
+	// This gives a blocking delay.  Uses BlockedTimer
 	void blockingDelay(float seconds){
-		AutonTimer.Start();
-		while(AutonTimer.Get() < seconds){}
-		AutonTimer.Reset();
+		BlockingTimer.Start();
+		while(BlockingTimer.Get() < seconds){}
+		BlockingTimer.Reset();
 	}
 
 	//--------------Start code for motors------------
@@ -1157,7 +1157,7 @@ private:
 		} else {
 			usableEncoderData = fmin(right, left);
 		}
-		SmartDashboard::PutNumber("useable encoder", usableEncoderData);
+		SmartDashboard::PutNumber("Used encoder value", usableEncoderData);
 		return usableEncoderData;
 	}
 
