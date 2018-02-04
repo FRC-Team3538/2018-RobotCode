@@ -352,124 +352,6 @@ private:
 		//		}
 	}
 
-	void centerLocationSwitch(char locChar) {
-		if (locChar == 'L'){centerToLeftSwitch();}
-		else if (locChar == 'R'){centerToRightSwitch();}
-		else {
-			// leftLocationScale has received a wrong character
-			// ........THIS SHOULD NEVER HAPPEN........
-			// Switch over to cross line mode.
-			autoSelected = AutoCross;
-		}
-		return;
-	}
-	// Move robot from center of field to left switch
-	void centerToLeftSwitch(void) {
-		enum {
-			CLSWITCH_INIT = 1,CLSWITCH_END = 9, CLSWITCH_FWD1, 	CLSWITCH_TURNL90,
-			CLSWITCH_FWD2, 	CLSWITCH_TURNR90, CLSWITCH_FWD3, CLSWITCH_ELEVATE, CLSWITCH_SCORE
-		};
-
-		switch (modeState) {
-		case CLSWITCH_INIT:
-			modeState = CLSWITCH_FWD1;
-			break;
-		case CLSWITCH_FWD1:
-			// Dummy numbers: go forward to the far side of the switch, bearing 0
-			if (forward(72, 0)) {
-				modeState = CLSWITCH_TURNL90;
-			}
-			break;
-		case CLSWITCH_TURNL90:
-			if (autonTurn(-90)) {
-				modeState = CLSWITCH_FWD2;
-			}
-			break;
-		case CLSWITCH_FWD2:
-			if (forward(54, -90)) {
-				modeState = CLSWITCH_TURNR90;
-			}
-			break;
-		case CLSWITCH_TURNR90:
-			if (autonTurn(90)) {
-				modeState = CLSWITCH_FWD3;
-			}
-			break;
-		case CLSWITCH_FWD3:
-			if (forward(72, 0)) {
-				modeState = CLSWITCH_ELEVATE;
-			}
-			break;
-		case CLSWITCH_ELEVATE:
-			//raise the elevator
-			modeState = CLSWITCH_SCORE;
-			break;
-		case CLSWITCH_SCORE:
-			modeState = CLSWITCH_END;
-			break;
-		default:
-			stopMotors();
-			break;
-		}
-		return;
-	}
-	// Move robot from center of field to right switch
-	void centerToRightSwitch(void) {
-		enum {
-			CRSWITCH_INIT = 1,CRSWITCH_END = 9, CRSWITCH_FWD1, 	CRSWITCH_TURNR90,
-			CRSWITCH_FWD2, 	CRSWITCH_TURNL90, CRSWITCH_FWD3, CRSWITCH_ELEVATE, CRSWITCH_SCORE
-		};
-
-		switch (modeState) {
-		case CRSWITCH_INIT:
-			modeState = CRSWITCH_FWD1;
-			break;
-		case CRSWITCH_FWD1:
-			// Dummy numbers: to the other side of the switch, bearing 0 degrees
-			if (forward(72, 0)) {
-				modeState = CRSWITCH_TURNR90;
-			}
-			break;
-		case CRSWITCH_TURNR90:
-			// Dummy numbers: turn right 90 degrees
-			if (autonTurn(90)) {
-				modeState = CRSWITCH_FWD2;
-			}
-			break;
-		case CRSWITCH_FWD2:
-			//Dummy numbers: drive to the far side of the scale,
-			//				bearing: 90 degrees to the right
-			if (forward(54, 90)) {
-				modeState = CRSWITCH_ELEVATE;
-			}
-			break;
-		case CRSWITCH_TURNL90:
-			// Dummy numbers: turn left 90 degrees
-			if (autonTurn(-90)) {
-				modeState = CRSWITCH_FWD3;
-			}
-			break;
-		case CRSWITCH_FWD3:
-			//Dummy numbers: drive to the far side of the scale,
-			//				bearing: 90 degrees to the leftt
-			if (forward(72, 0)) {
-				modeState = CRSWITCH_ELEVATE;
-			}
-			break;
-
-		case CRSWITCH_ELEVATE:
-			//raise the elevator
-			modeState = CRSWITCH_SCORE;
-			break;
-		case CRSWITCH_SCORE:
-			modeState = CRSWITCH_END;
-			break;
-		default:
-			stopMotors();
-			break;
-		}
-		return;
-	}
 	// routine to make the robot do nothing.
 	void doNothing(void){
 		stopMotors();
@@ -538,7 +420,7 @@ private:
 			}
 			break;
 		case LLSCALE_TURNR90:
-			// Dummy numbers: turn right 90 degrees
+			// Dummy numbers: turn to bearing 90 degrees
 			if (autonTurn(90)) {
 				modeState = LLSCALE_FWD2;
 			}
@@ -583,7 +465,7 @@ private:
 			}
 			break;
 		case LRSCALE_TURNR90:
-			// Dummy numbers: turn right 90 degrees
+			// Dummy numbers: turn right to bearing: 90 degrees
 			if (autonTurn(90)) {
 				modeState = LRSCALE_FWD2;
 			}
@@ -596,19 +478,18 @@ private:
 			}
 			break;
 		case LRSCALE_TURNL90:
-			// Dummy numbers: turn left 90 degrees
-			if (autonTurn(-90)) {
+			// Dummy numbers: turn left to bearing: 0 degrees
+			if (autonTurn(0)) {
 				modeState = LRSCALE_FWD3;
 			}
 			break;
 		case LRSCALE_FWD3:
 			//Dummy numbers: drive to the far side of the scale,
-			//				bearing: 90 degrees to the leftt
+			//				bearing: 0 degrees
 			if (forward(54, 0)) {
 				modeState = LRSCALE_ELEVATE;
 			}
 			break;
-
 		case LRSCALE_ELEVATE:
 			//raise the elevator
 			modeState = LRSCALE_SCORE;
@@ -622,6 +503,130 @@ private:
 		}
 		return;
 	}
+
+	//Routine to go to the switch from the center of the field.
+	//If it fails it will go to crossline.
+	void centerLocationSwitch(char locChar) {
+		if (locChar == 'L'){centerToLeftSwitch();}
+		else if (locChar == 'R'){centerToRightSwitch();}
+		else {
+			// leftLocationScale has received a wrong character
+			// ........THIS SHOULD NEVER HAPPEN........
+			// Switch over to cross line mode.
+			autoSelected = AutoCross;
+		}
+		return;
+	}
+	// Move robot from center of field to left switch
+	void centerToLeftSwitch(void) {
+		enum {
+			CLSWITCH_INIT = 1,CLSWITCH_END = 9, CLSWITCH_FWD1, 	CLSWITCH_TURNL90,
+			CLSWITCH_FWD2, 	CLSWITCH_TURNR90, CLSWITCH_FWD3, CLSWITCH_ELEVATE, CLSWITCH_SCORE
+		};
+
+		switch (modeState) {
+		case CLSWITCH_INIT:
+			modeState = CLSWITCH_FWD1;
+			break;
+		case CLSWITCH_FWD1:
+			// Dummy numbers: go forward to the far side of the switch, bearing 0
+			if (forward(72, 0)) {
+				modeState = CLSWITCH_TURNL90;
+			}
+			break;
+		case CLSWITCH_TURNL90:
+			// Dummy numbers: set to bearing -90
+			if (autonTurn(-90)) {
+				modeState = CLSWITCH_FWD2;
+			}
+			break;
+		case CLSWITCH_FWD2:
+			if (forward(54, -90)) {
+				modeState = CLSWITCH_TURNR90;
+			}
+			break;
+		case CLSWITCH_TURNR90:
+			// Turn to bearing 0 degrees
+			if (autonTurn(0)) {
+				modeState = CLSWITCH_FWD3;
+			}
+			break;
+		case CLSWITCH_FWD3:
+			if (forward(72, 0)) {
+				modeState = CLSWITCH_ELEVATE;
+			}
+			break;
+		case CLSWITCH_ELEVATE:
+			//raise the elevator
+			modeState = CLSWITCH_SCORE;
+			break;
+		case CLSWITCH_SCORE:
+			modeState = CLSWITCH_END;
+			break;
+		default:
+			stopMotors();
+			break;
+		}
+		return;
+	}
+	// Move robot from center of field to right switch
+	void centerToRightSwitch(void) {
+		enum {
+			CRSWITCH_INIT = 1,CRSWITCH_END = 9, CRSWITCH_FWD1, 	CRSWITCH_TURNR90,
+			CRSWITCH_FWD2, 	CRSWITCH_TURNL90, CRSWITCH_FWD3, CRSWITCH_ELEVATE, CRSWITCH_SCORE
+		};
+
+		switch (modeState) {
+		case CRSWITCH_INIT:
+			modeState = CRSWITCH_FWD1;
+			break;
+		case CRSWITCH_FWD1:
+			// Dummy numbers: to the other side of the switch, bearing 0 degrees
+			if (forward(72, 0)) {
+				modeState = CRSWITCH_TURNR90;
+			}
+			break;
+		case CRSWITCH_TURNR90:
+			// Dummy numbers: turn bearing 90 degrees
+			if (autonTurn(90)) {
+				modeState = CRSWITCH_FWD2;
+			}
+			break;
+		case CRSWITCH_FWD2:
+			//Dummy numbers: drive to the far side of the scale,
+			//				bearing: 90 degrees to the right
+			if (forward(54, 90)) {
+				modeState = CRSWITCH_ELEVATE;
+			}
+			break;
+		case CRSWITCH_TURNL90:
+			// Dummy numbers: turn left to bearing 0 degrees
+			if (autonTurn(0)) {
+				modeState = CRSWITCH_FWD3;
+			}
+			break;
+		case CRSWITCH_FWD3:
+			//Dummy numbers: drive to the far side of the scale,
+			//				bearing: 90 degrees to the leftt
+			if (forward(72, 0)) {
+				modeState = CRSWITCH_ELEVATE;
+			}
+			break;
+
+		case CRSWITCH_ELEVATE:
+			//raise the elevator
+			modeState = CRSWITCH_SCORE;
+			break;
+		case CRSWITCH_SCORE:
+			modeState = CRSWITCH_END;
+			break;
+		default:
+			stopMotors();
+			break;
+		}
+		return;
+	}
+
 	//Routine to go to the scale from the left side of the field.
 	//If it fails it will go to crossline.
 	void rightLocationScale(char locChar) {
@@ -665,7 +670,8 @@ private:
 			}
 			break;
 		case RLSCALE_TURNR90:
-			if (autonTurn(90)) {
+			// set to bearing 0 degrees
+			if (autonTurn(0)) {
 				modeState = RLSCALE_FWD3;
 			}
 			break;
