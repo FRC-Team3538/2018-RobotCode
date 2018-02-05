@@ -772,7 +772,7 @@ private:
 
 		//drive controls
 		double SpeedLinear = Drivestick.GetRawAxis(1) * 1; // get Yaxis(Left stick) value (forward)
-		double SpeedRotate = Drivestick.GetRawAxis(4) * 1; // get Xaxis (right stick) value (turn)
+		double SpeedRotate = Drivestick.GetRawAxis(4) * -1; // get Xaxis (right stick) value (turn)
 
 		SmartDashboard::PutNumber("YJoystick", SpeedLinear);
 		SmartDashboard::PutNumber("XJoystick", SpeedRotate);
