@@ -183,12 +183,12 @@ class Robot: public frc::TimedRobot {
 				case 0:
 					//Dpad is pointing up
 					//Portal/Switch height
-					elevatorPosition(100, false);
+					elevatorPosition(1000, false);
 					break;
 				case 90:
 					//dpad is pointing to the right
 					// elevator at max height
-					elevatorPosition(1000, false);
+					elevatorPosition(2000, false);
 					break;
 				case 180:
 					// dpad is pointing down
@@ -198,7 +198,7 @@ class Robot: public frc::TimedRobot {
 				case 270:
 					// dpad is pointing to the left
 					// this is for "scale low" whatever that means
-					elevatorPosition(9001, false);
+					elevatorPosition(5000, false);
 					break;
 				}
 			}
@@ -635,7 +635,7 @@ class Robot: public frc::TimedRobot {
 
 #define Elevator_MAXSpeed (1)
 #define Elevator_KP (0.27)
-#define ElevatorHoldSpeed (0.12)
+#define ElevatorHoldSpeed (0.05)
 #define ElevatorPostionTol (0.125)
 	bool elevatorPosition(double position, bool override) {
 		//TODO: Function to set elevator to a position with an override to disable it
@@ -868,6 +868,10 @@ bool wristPosition(int position){
 				IO.DriveBase.EncoderRight.GetRaw());
 		SmartDashboard::PutNumber("Drive Encoder Right (Inch)",
 				IO.DriveBase.EncoderRight.GetDistance());
+
+		// Elevator Encoders
+		SmartDashboard::PutNumber("Elevator Encoder", IO.DriveBase.EncoderElevator.Get());
+
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
