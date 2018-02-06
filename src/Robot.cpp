@@ -79,6 +79,7 @@ class Robot: public frc::IterativeRobot {
 	VictorSP RightStick2;
 	Timer AutonTimer;
 	Timer BlockingTimer;			// Used for making blocking delays
+	Timer AutonInitialTimer;		// Used for the delay at the beginning of autonomous
 	Timer EncoderCheckTimer;
 	Encoder EncoderLeft;
 	Encoder EncoderRight;
@@ -126,6 +127,7 @@ public:
 private:
 	void RobotInit() {
 		chooseAutonSelector.AddDefault(AutoOff, AutoOff);
+		chooseAutonSelector.AddObject(AutoCross, AutoCross);
 		chooseAutonSelector.AddObject(AutoLeftSpot, AutoLeftSpot);
 		chooseAutonSelector.AddObject(AutoCenterSpot, AutoCenterSpot);
 		chooseAutonSelector.AddObject(AutoRightSpot, AutoRightSpot);
@@ -254,11 +256,14 @@ private:
 		// The "_INIT" state for the mode must be one.  Check the enums.
 		modeState = 1;
 		isWaiting = 0;
-		SmartDashboard::PutNumber("useable encoder", 0);
 
 		// The delays are a pull-down in the dashboard.
 		// (Currently) the choices are off, 3 seconds, and 5 seconds.
 		AutoDelayActive = false;
+
+		// Start up the timer for the initial delay during autonomous
+		AutonInitialTimer.Reset();
+		AutonInitialTimer.Start();
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
@@ -324,18 +329,17 @@ private:
 	// Wait driver-selected delay and go to the correct autonomous mode.
 	void AutonomousPeriodic() {
 		//wait for a selectable time.  3 means 3 seconds, 5 means 5 seconds
-		//		if (autoDelay == AutoDelay1 and AutonTimer.Get() < 3) {
-		//			AutoDelayActive = true;
-		//		} else if (autoDelay == AutoDelay2 and AutonTimer.Get() < 5) {
-		//			AutoDelayActive = true;
-		//		} else if (AutoDelayActive) {
-		//			AutoDelayActive = false;
-		//			autoDelay = AutoDelayOff;
-		//			AutonTimer.Reset();
-		//		}
+		if (autoDelay == AutoDelay1 and AutonInitialTimer.Get() < 3) {
+			AutoDelayActive = true;
+		} else if (autoDelay == AutoDelay2 and AutonInitialTimer.Get() < 5) {
+			AutoDelayActive = true;
+		} else if (AutoDelayActive) {
+			AutoDelayActive = false;
+			autoDelay = AutoDelayOff;
+			AutonInitialTimer.Reset();
+		}
 		crossLine();
-		stopMotors();
-		blockingDelay(2);
+
 		//		Decode the driver-selected autonomous mode.
 		//		  This will be run over and over, make sure the routines can be used like that.
 		//		if (autoSelected == AutoOff and !AutoDelayActive) {
@@ -372,24 +376,26 @@ private:
 			SmartDashboard::PutNumber("crossLine3", 0);
 			SmartDashboard::PutNumber("crossLine4", 0);
 			AutonTimer.Reset(); 	// Required by timedDrive in the next state.
+			AutonTimer.Start();		// Required by timedDrive in the next state.
 			modeState = CL_DRIVE;
 			break;
 		case CL_DRIVE:
 			SmartDashboard::PutNumber("crossLine2", modeState+200);
 			// drive forward at 20% for 5 seconds
 			if (timedDrive(CROSS_TIME, CROSS_SPEED, CROSS_SPEED)) {
-				SmartDashboard::PutNumber("crossLine4", modeState+400);
+				SmartDashboard::PutNumber("crossLine3", modeState+300);
 				modeState = CL_END;
 			}
 			break;
 		default:
 			stopMotors();
-			SmartDashboard::PutNumber("crossLine3", modeState+300);
+			SmartDashboard::PutNumber("crossLine4", modeState+400);
 		}
 		return;
 	}
+
 	//Routine to go to the scale from the left side of the field.
-	//If it fails it will go to crossline.
+	//If it gets an invalid character from the field, it will go to crossline.
 	void leftLocationScale(char locChar) {
 		if (locChar == 'L'){leftToLeftScale();}
 		else if (locChar == 'R'){leftToRightScale();}
@@ -406,8 +412,8 @@ private:
 		// for scale: we are on the left and score on left:
 		//    init, fwd, turn right, forward, elevate, score
 		enum {
-			LLSCALE_INIT = 1,LLSCALE_END = 9, LLSCALE_FWD1, 	LLSCALE_TURNR90,
-			LLSCALE_FWD2, 	LLSCALE_ELEVATE, LLSCALE_SCORE
+			LLSCALE_INIT = 1,LLSCALE_END = 9, LLSCALE_FWD1, LLSCALE_TURNR90,
+			LLSCALE_FWD2, LLSCALE_ELEVATE, LLSCALE_SCORE
 		};
 
 		switch (modeState) {
@@ -506,7 +512,7 @@ private:
 	}
 
 	//Routine to go to the switch from the center of the field.
-	//If it fails it will go to crossline.
+	//If it gets an invalid character from the field, it will go to crossline.
 	void centerLocationSwitch(char locChar) {
 		if (locChar == 'L'){centerToLeftSwitch();}
 		else if (locChar == 'R'){centerToRightSwitch();}
@@ -1059,7 +1065,7 @@ private:
 	}
 
 	//drive a set period with fixed right a left motor speeds
-	// Requires AutonTimer.Reset() before starting.
+	// Requires AutonTimer.Reset() and AutonTimer.Start() before starting.
 	bool timedDrive(double driveTime, double leftMotorSpeed, double rightMotorSpeed) {
 		float currentTime = AutonTimer.Get();
 		SmartDashboard::PutNumber("currentTime", currentTime);
