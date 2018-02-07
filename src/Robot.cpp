@@ -228,21 +228,21 @@ class Robot: public frc::TimedRobot {
 		int OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		int OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 
-		int WristOutput;
+		int WristOutput_teleop=0;
 
 		if (OperatorRightAxis > 0 and OperatorLeftAxis > 0) {
-			WristOutput = 0;
+			WristOutput_teleop = 0;
 		}
 		else if (OperatorRightAxis > 0 and OperatorLeftAxis == 0) {
-			WristOutput = OperatorRightAxis;
+			WristOutput_teleop = OperatorRightAxis;
 		}
 		else if (OperatorRightAxis == 0 and OperatorLeftAxis > 0) {
-			WristOutput = -OperatorLeftAxis;
+			WristOutput_teleop = -OperatorLeftAxis;
 		}
 
 
 
-		int wriststatus;
+		int wriststatus=0;
 
 		if (WristRight == true and WristLeft == false){
 			wriststatus = 1;
@@ -255,8 +255,8 @@ class Robot: public frc::TimedRobot {
 		}
 
 
-		if (abs(WristOutput) > 0) {
-		IO.DriveBase.Wrist1.Set(WristOutput);
+		if (abs(WristOutput_teleop) > 0) {
+		IO.DriveBase.Wrist1.Set(WristOutput_teleop);
 		wriststatus = 0;
 		}
 		else {
