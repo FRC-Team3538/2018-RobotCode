@@ -174,6 +174,12 @@ class Robot: public frc::TimedRobot {
 			ElevHold = false;
 		}
 
+		// Joystick OutPuts
+		SmartDashboard::PutNumber("ElevatorStick", ElevatorStick);
+		SmartDashboard::PutNumber("ElevatorOutput", ElevatorOutput);
+
+		SmartDashboard::PutNumber("dpadvalue", dpadvalue);
+
 
 
 		// Elevator automatic drive based on dpad
