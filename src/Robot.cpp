@@ -70,6 +70,7 @@ class Robot: public frc::TimedRobot {
 
 	}
 
+#define ElevDeadband (0.125)	// deadband for elevator gears and motors, value to move elevator up
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.11;
 		double Drive_Deadband = 0.11;
@@ -154,7 +155,7 @@ class Robot: public frc::TimedRobot {
 		//int ElevatorDpadDown = IO.DS.OperatorStick.GetPOV(180);
 
 		double ElevatorOutput = ElevatorStick;
-		double ElevatorDeadband = 0.125; // deadband for elevator gears and motors, value to move elevator up
+		double ElevatorDeadband = ElevDeadband; // deadband for elevator gears and motors, value to move elevator up
 
 		//Smoothing algorithm for x^3
 		if (ElevatorStick > Control_Deadband)
@@ -681,12 +682,18 @@ class Robot: public frc::TimedRobot {
 		double ElevPro = ElevError * -Elevator_KP ; // P term
 		ElevIntError = ElevIntError + ElevError;
 		double ElevInt = ElevIntError * -Elevator_KI;  // I term
+
+		if (ElevInt > ElevDeadband)
+			ElevInt = ElevDeadband;		//Set Max positive I term Max to min speed to move
+		else if (ElevInt < -ElevDeadband)
+			ElevInt = -ElevDeadband;    //Set Max negative I term Max to min speed to move
+
 		double ElevCmd = ElevPro + ElevInt;   // Motor Output = P term + I term
 		//Limit Elevator to Max positive and negative speeds
 		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
 			ElevCmd = Elevator_MAXSpeed;    //Set to Max Positive speed
-		} else if (ElevCmd < -1 * Elevator_MAXSpeed) { ///If Negative speed < Max negative speed
-			ElevCmd = -1 * Elevator_MAXSpeed; ///Set to Max Negative speed
+		} else if (ElevCmd < -Elevator_MAXSpeed) { ///If Negative speed < Max negative speed
+			ElevCmd = -Elevator_MAXSpeed; ///Set to Max Negative speed
 		}
 
 		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
