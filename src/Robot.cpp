@@ -32,6 +32,7 @@ class Robot: public frc::TimedRobot {
 	bool NotHome = false;
 	bool DpadMove = false;
 	int dpadvalue=-1;
+	double ElevIntError =0;
 
 	//Autonomous Variables
 	int isWaiting = 0;
@@ -65,6 +66,7 @@ class Robot: public frc::TimedRobot {
 			CurrentElevPos =0.0;
 			DpadMove = false;
 			dpadvalue=-1;
+			ElevIntError =0;
 
 	}
 
@@ -664,7 +666,8 @@ class Robot: public frc::TimedRobot {
 
 #define Elevator_MAXSpeed (1)
 #define Elevator_KP (0.015)
-#define ElevatorHoldSpeed (0.05)
+#define Elevator_KI (0.010)
+#define ElevatorHoldSpeed (0.11)
 #define ElevatorPostionTol (2)
 #define ElevatorLow (0)
 #define ElevatorHigh (7950)
@@ -675,7 +678,10 @@ class Robot: public frc::TimedRobot {
 
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
-		double ElevCmd = ElevError * -Elevator_KP ;
+		double ElevPro = ElevError * -Elevator_KP ; // P term
+		ElevIntError = ElevIntError + ElevError;
+		double ElevInt = ElevIntError * -Elevator_KI;  // I term
+		double ElevCmd = ElevPro + ElevInt;   // Motor Output = P term + I term
 		//Limit Elevator to Max positive and negative speeds
 		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
 			ElevCmd = Elevator_MAXSpeed;    //Set to Max Positive speed
@@ -685,12 +691,15 @@ class Robot: public frc::TimedRobot {
 
 		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
 			elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
+			ElevIntError=0;
 			return true;
 		} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
 			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
+			ElevIntError=0;
 			return true;
 		} else if (fabs(ElevError) < ElevatorPostionTol) {
 			elevatorSpeed(ElevatorHoldSpeed);
+			ElevIntError=0;
 			return true;
 		} else
 			elevatorSpeed(ElevCmd);
