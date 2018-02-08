@@ -30,6 +30,8 @@ class Robot: public frc::TimedRobot {
 	bool XYDeployed = false;
 	bool ElevHold = false;
 	bool NotHome = false;
+	bool DpadMove = false;
+	int dpadvalue=-1;
 
 	//Autonomous Variables
 	int isWaiting = 0;
@@ -61,6 +63,8 @@ class Robot: public frc::TimedRobot {
 		// Teleop Elevator Position
 			elevatorHome();
 			CurrentElevPos =0.0;
+			DpadMove = false;
+			dpadvalue=-1;
 
 	}
 
@@ -148,16 +152,20 @@ class Robot: public frc::TimedRobot {
 		//int ElevatorDpadDown = IO.DS.OperatorStick.GetPOV(180);
 
 		double ElevatorOutput = ElevatorStick;
-		double ElevatorDeadband = 0.11; // deadband for elevator gears and motors, value to move elevator up
+		double ElevatorDeadband = 0.125; // deadband for elevator gears and motors, value to move elevator up
 
 		//Smoothing algorithm for x^3
 		if (ElevatorStick > Control_Deadband)
 			ElevatorOutput = ElevatorDeadband + (Gain * pow(ElevatorStick, 3));
 		else if (ElevatorStick < -Control_Deadband)
 			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
+		else
+			ElevatorOutput =0;
 
 
-		int dpadvalue = IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+		if (!DpadMove)
+			dpadvalue= IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+
 		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
 
 		if (fabs(ElevatorStick) < Control_Deadband and dpadvalue == -1) {
@@ -177,6 +185,8 @@ class Robot: public frc::TimedRobot {
 		// Joystick OutPuts
 		SmartDashboard::PutNumber("ElevatorStick", ElevatorStick);
 		SmartDashboard::PutNumber("ElevatorOutput", ElevatorOutput);
+		SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
+		SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
 
 		SmartDashboard::PutNumber("dpadvalue", dpadvalue);
 
@@ -189,22 +199,34 @@ class Robot: public frc::TimedRobot {
 				case 0:
 					//Dpad is pointing up
 					//Portal/Switch height
-					elevatorPosition(1000, false);
+					if(elevatorPosition(1000, false))
+						DpadMove=false;
+					else
+						DpadMove=true;
 					break;
 				case 90:
 					//dpad is pointing to the right
 					// elevator at max height
-					elevatorPosition(2000, false);
+					if(elevatorPosition(2000, false))
+						DpadMove=false;
+					else
+						DpadMove=true;
 					break;
 				case 180:
 					// dpad is pointing down
 					// ground/intake level
-					elevatorPosition(0, false);
+					if(elevatorPosition(0, false))
+						DpadMove=false;
+					else
+						DpadMove=true;
 					break;
 				case 270:
 					// dpad is pointing to the left
 					// this is for "scale low" whatever that means
-					elevatorPosition(5000, false);
+					if(elevatorPosition(5000, false))
+						DpadMove=false;
+					else
+						DpadMove=true;
 					break;
 				}
 			}
@@ -324,7 +346,8 @@ class Robot: public frc::TimedRobot {
 		} else if ((NotHome == true) and (SwitchElevatorLower == false)) {
 			elevatorSpeed(0);
 			NotHome = false;
-			IO.DriveBase.EncoderElevator.Reset();  //reset elevator encoder to 0
+
+
 		}
 
 	}
@@ -640,28 +663,30 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.27)
+#define Elevator_KP (0.015)
 #define ElevatorHoldSpeed (0.05)
-#define ElevatorPostionTol (0.125)
-	bool elevatorPosition(double position, bool override) {
+#define ElevatorPostionTol (2)
+#define ElevatorLow (0)
+#define ElevatorHigh (7950)
+	bool elevatorPosition(double Elev_position, bool override) {
 		//TODO: Function to set elevator to a position with an override to disable it
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
 
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
-		double ElevError = ElevEncoderRead - position;
-		double ElevCmd = ElevError * Elevator_KP;
+		double ElevError = ElevEncoderRead - Elev_position;
+		double ElevCmd = ElevError * -Elevator_KP ;
 		//Limit Elevator to Max positive and negative speeds
-		if (ElevCmd > Elevator_MAXSpeed) {
-			ElevCmd = Elevator_MAXSpeed;
-		} else if (ElevCmd < -1 * Elevator_MAXSpeed) { /////***** "-1" is a "magic number." At least put a clear comment in here.
-			ElevCmd = -1 * Elevator_MAXSpeed; /////***** same as above.
+		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
+			ElevCmd = Elevator_MAXSpeed;    //Set to Max Positive speed
+		} else if (ElevCmd < -1 * Elevator_MAXSpeed) { ///If Negative speed < Max negative speed
+			ElevCmd = -1 * Elevator_MAXSpeed; ///Set to Max Negative speed
 		}
 
-		if (!ElevatorUpperLimit) {
+		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
 			elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
 			return true;
-		} else if (!ElevatorLowerLimit) {
+		} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
 			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
 			return true;
 		} else if (fabs(ElevError) < ElevatorPostionTol) {
