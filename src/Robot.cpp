@@ -71,6 +71,7 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define ElevDeadband (0.125)	// deadband for elevator gears and motors, value to move elevator up
+
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.11;
 		double Drive_Deadband = 0.11;
@@ -172,13 +173,14 @@ class Robot: public frc::TimedRobot {
 		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
 
 		if (fabs(ElevatorStick) < Control_Deadband and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos,false); 	// replace with routine to hold elevator position.
+			elevatorPosition(CurrentElevPos,false); 	// hold elevator position.
 			ElevHold = true;
 		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper  and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos, false); // replace with routine to hold  top elevator position.
+			elevatorPosition(CurrentElevPos, false); //  hold  top elevator position.
 			ElevHold = true;
 		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower and dpadvalue == -1) {
-			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
+			elevatorSpeed(0); //  hold  bottom elevator position.
+			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0;
 		}
 		else {
 			elevatorSpeed(ElevatorOutput);
@@ -348,6 +350,7 @@ class Robot: public frc::TimedRobot {
 			NotHome = true;
 		} else if ((NotHome == true) and (SwitchElevatorLower == false)) {
 			elevatorSpeed(0);
+			IO.DriveBase.EncoderElevator.Reset();
 			NotHome = false;
 
 
@@ -666,10 +669,10 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.015)
-#define Elevator_KI (0.010)
-#define ElevatorHoldSpeed (0.11)
-#define ElevatorPostionTol (2)
+#define Elevator_KP (0.010)
+#define Elevator_KI (0.0002)
+#define ElevatorHoldSpeed (0.05)
+#define ElevatorPostionTol (3)
 #define ElevatorLow (0)
 #define ElevatorHigh (7950)
 	bool elevatorPosition(double Elev_position, bool override) {
@@ -681,13 +684,17 @@ class Robot: public frc::TimedRobot {
 		double ElevError = ElevEncoderRead - Elev_position;
 		double ElevPro = ElevError * -Elevator_KP ; // P term
 		ElevIntError = ElevIntError + ElevError;
-		double ElevInt = ElevIntError * -Elevator_KI;  // I term
+		double ElevInt = ElevIntError * Elevator_KI * -1;  // I term
+		//ElevInt = 0;    // Use to Test P term with no I term
 
-		if (ElevInt > ElevDeadband)
+		if (ElevInt > ElevDeadband){
 			ElevInt = ElevDeadband;		//Set Max positive I term Max to min speed to move
-		else if (ElevInt < -ElevDeadband)
-			ElevInt = -ElevDeadband;    //Set Max negative I term Max to min speed to move
-
+			ElevIntError=0;				//I term to large reset to 0
+			}
+		else if (ElevInt < -(ElevDeadband)){
+			ElevInt = -(0);    //Set Max negative I term Max to min speed to move
+			ElevIntError=0;				// I term to large reset to 0
+			}
 		double ElevCmd = ElevPro + ElevInt;   // Motor Output = P term + I term
 		//Limit Elevator to Max positive and negative speeds
 		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
@@ -696,6 +703,7 @@ class Robot: public frc::TimedRobot {
 			ElevCmd = -Elevator_MAXSpeed; ///Set to Max Negative speed
 		}
 
+
 		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
 			elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
 			ElevIntError=0;
@@ -703,12 +711,13 @@ class Robot: public frc::TimedRobot {
 		} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
 			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
 			ElevIntError=0;
+			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
 			return true;
 		} else if (fabs(ElevError) < ElevatorPostionTol) {
 			elevatorSpeed(ElevatorHoldSpeed);
 			ElevIntError=0;
 			return true;
-		} else
+		}  else
 			elevatorSpeed(ElevCmd);
 		return false;
 	}
