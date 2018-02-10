@@ -30,7 +30,7 @@ class Robot: public frc::TimedRobot {
 	bool XYDeployed = false;
 	bool ElevHold = false;
 	bool NotHome = true;
-	bool DpadMove = false;
+	int DpadMove = -1;
 	int dpadvalue=-1;
 	double ElevIError =0;
 
@@ -64,7 +64,7 @@ class Robot: public frc::TimedRobot {
 		// Teleop Elevator Position
 			while(!elevatorHome());
 			CurrentElevPos =0.0;
-			DpadMove = false;
+			DpadMove = -1;
 			dpadvalue=-1;
 			ElevIError =0;
 
@@ -167,8 +167,13 @@ class Robot: public frc::TimedRobot {
 			ElevatorOutput =0;
 
 
-		if (!DpadMove)
+
 			dpadvalue= IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+
+			if(fabs(ElevatorStick)>ElevatorDeadband)
+				DpadMove = -1;
+			else if (dpadvalue != -1)
+				DpadMove = dpadvalue;
 
 		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
 
@@ -200,38 +205,26 @@ class Robot: public frc::TimedRobot {
 		// Elevator automatic drive based on dpad
 
 		if (fabs(ElevatorStick) < Control_Deadband) {
-			switch(dpadvalue) {
+			switch(DpadMove) {
 				case 270:
 					//Dpad is Pointing Left
 					//Portal/Switch height
-					if(elevatorPosition(1000, false))
-						DpadMove=false;
-					else
-						DpadMove=true;
+					elevatorPosition(1000, false);
 					break;
 				case 90:
 					//dpad is pointing to the Right
 					// elevator at max height
-					if(elevatorPosition(2000, false))
-						DpadMove=false;
-					else
-						DpadMove=true;
+					elevatorPosition(2000, false);
 					break;
 				case 180:
 					// dpad is pointing down
 					// ground/intake level
-					if(elevatorPosition(0, false))
-						DpadMove=false;
-					else
-						DpadMove=true;
+					elevatorPosition(0, false);
 					break;
 				case 0:
 					// dpad is pointing to the UP
 					// this is for "scale low" whatever that means
-					if(elevatorPosition(5000, false))
-						DpadMove=false;
-					else
-						DpadMove=true;
+					elevatorPosition(5000, false);
 					break;
 				}
 			}
@@ -669,10 +662,10 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.008)
+#define Elevator_KP (0.02)
 #define Elevator_KI (0.0004)
-#define ElevatorHoldSpeed (0.05)
-#define ElevatorPositionTol (10)
+#define ElevatorHoldSpeed (0.05) // victor in brake mode
+#define ElevatorPositionTol (3)
 #define ElevatorLow (0)
 #define ElevatorHigh (7950)
 #define ElevatorITol (20)
@@ -686,10 +679,10 @@ class Robot: public frc::TimedRobot {
 		double ElevPro = ElevError * -Elevator_KP ; // P term
 		if (fabs(ElevError) < ElevatorPositionTol) {
 			ElevIError = 0;
-	//	} else if ((ElevError > -ElevatorITol) and (ElevError <= -ElevatorPositionTol)) {
-	//		ElevIError = ElevIError + ElevError;
-		} else if (fabs(ElevError) < ElevatorITol)  {
+		} else if ((fabs(ElevError) < ElevatorITol) and (fabs(ElevError) > ElevatorPositionTol)) {
 			ElevIError = ElevIError + ElevError;
+	//	} else if (fabs(ElevError) < ElevatorITol)  {
+	//		ElevIError = ElevIError + ElevError;
 		} else {
 			ElevIError = 0;
 		}
@@ -713,7 +706,9 @@ class Robot: public frc::TimedRobot {
 
 		SmartDashboard::PutNumber("ElevInt", ElevInt);
 		SmartDashboard::PutNumber("ElevCmd", ElevCmd);
+		SmartDashboard::PutNumber("ElevError", ElevError);
 		SmartDashboard::PutNumber("ElevIError", ElevIError);
+		SmartDashboard::PutNumber("Elev_position", Elev_position);
 
 
 		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
@@ -725,8 +720,9 @@ class Robot: public frc::TimedRobot {
 			ElevIError=0;
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
 			return true;
-		} else if (fabs(ElevError) < ElevatorPositionTol) {
-			elevatorSpeed(ElevatorHoldSpeed);
+		} else if (fabs(ElevError) <= ElevatorPositionTol) {
+			//elevatorSpeed(ElevatorHoldSpeed);
+			//elevatorSpeed(0);
 			ElevIError=0;
 			return true;
 		}  else
