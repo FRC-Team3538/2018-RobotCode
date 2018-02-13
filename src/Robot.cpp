@@ -209,22 +209,38 @@ class Robot: public frc::TimedRobot {
 				case 270:
 					//Dpad is Pointing Left
 					//Portal/Switch height
-					elevatorPosition(1000, false);
+					if(elevatorPosition(1000, false)){
+						DpadMove=-1;
+						CurrentElevPos=1000;
+						ElevHold = true;
+					}
 					break;
 				case 90:
 					//dpad is pointing to the Right
 					// elevator at max height
-					elevatorPosition(2000, false);
+					if(elevatorPosition(2000, false)){
+						DpadMove=-1;
+						CurrentElevPos=2000;
+						ElevHold = true;
+					}
 					break;
 				case 180:
 					// dpad is pointing down
 					// ground/intake level
-					elevatorPosition(0, false);
+					if(elevatorPosition(0, false)){
+						DpadMove=-1;
+						CurrentElevPos=0;
+						ElevHold = true;
+					}
 					break;
 				case 0:
 					// dpad is pointing to the UP
 					// this is for "scale low" whatever that means
-					elevatorPosition(5000, false);
+					if(elevatorPosition(5000, false)){
+						DpadMove=-1;
+						CurrentElevPos=5000;
+						ElevHold = true;
+					}
 					break;
 				}
 			}
@@ -333,23 +349,6 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-	bool elevatorHome(void) {
-
-		bool SwitchElevHomeLower = IO.DriveBase.SwitchElevatorLower.Get();
-
-
-		if  (SwitchElevHomeLower == true) {
-			elevatorSpeed(-0.45);
-			NotHome = true;
-			return false;
-		} else if ((NotHome == true) and (SwitchElevHomeLower == false)) {
-			elevatorSpeed(0);
-			IO.DriveBase.EncoderElevator.Reset();
-			NotHome = false;
-			return true;
-		}
-		return false;
-	}
 
 	void AutonomousInit() {
 		//AutoProgram.Initalize();
@@ -661,8 +660,26 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.Elevator2.Set(elevMotor);
 	}
 
+	bool elevatorHome(void) {
+
+		bool SwitchElevHomeLower = IO.DriveBase.SwitchElevatorLower.Get();
+
+
+		if  (SwitchElevHomeLower == true) {
+			elevatorSpeed(-0.45);
+			NotHome = true;
+			return false;
+		} else if ((NotHome == true) and (SwitchElevHomeLower == false)) {
+			elevatorSpeed(0);
+			IO.DriveBase.EncoderElevator.Reset();  // Reset encoder to 0
+			NotHome = false;
+			return true;
+		}
+		return false;
+	}
+
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.01)
+#define Elevator_KP (0.008)
 #define Elevator_KI (0.0004)
 #define ElevatorHoldSpeed (0.05) // victor in brake mode
 #define ElevatorPositionTol (3)
