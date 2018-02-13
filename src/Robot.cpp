@@ -662,7 +662,7 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.02)
+#define Elevator_KP (0.01)
 #define Elevator_KI (0.0004)
 #define ElevatorHoldSpeed (0.05) // victor in brake mode
 #define ElevatorPositionTol (3)
