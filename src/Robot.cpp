@@ -45,11 +45,43 @@ class Robot: public frc::TimedRobot {
 		Adrive.SetSafetyEnabled(false);
 	}
 
+
+	static void VisionThread() {
+		cs::UsbCamera camera =  CameraServer::GetInstance()->StartAutomaticCapture();
+		camera.SetVideoMode(cs::VideoMode::kMJPEG ,640,480,30);
+		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo(
+				"Gray", 160, 120);
+		outputStreamStd.SetVideoMode(cs::VideoMode::kGray ,160,120,30);
+		cv::Mat source;
+	cv::Mat output;
+
+
+		// Mjpeg server1
+		cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0",
+ 				1181);
+		mjpegServer1.SetSource(camera);
+			cs::MjpegServer mjpegServer2 = cs::MjpegServer("serve_Blur", 1182);
+		mjpegServer2.SetSource(outputStreamStd);
+
+
+		while (true) {
+			cvSink.GrabFrame(source);
+			cvtColor(source, output, cv::COLOR_BGR2GRAY);
+			outputStreamStd.PutFrame(output);
+
+
+		}
+
+
+ 	}
+
 	void RobotPeriodic() {
 		// Update Smart Dash
 		SmartDashboardUpdate();
 		IO.NavXDebugger();
 		gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+		VisionThread();
 	}
 
 	void DisabledPeriodic() {
@@ -176,13 +208,13 @@ class Robot: public frc::TimedRobot {
 				switch(dpadvalue) {
 								case 270:
 									//Dpad is Pointing Left
-									//Portal/Switch height
-										CurrentElevPos=1000;
+									//Portal height
+										CurrentElevPos=4400;
 									break;
 								case 90:
 									//dpad is pointing to the Right
-									// elevator at max height
-										CurrentElevPos=2000;
+									// elevator at switch height
+										CurrentElevPos=2600;
 									break;
 								case 180:
 									// dpad is pointing down
@@ -190,9 +222,9 @@ class Robot: public frc::TimedRobot {
 										CurrentElevPos=0;
 									break;
 								case 0:
-									// dpad is pointing to the UP
+									// dpad is pointing to the UP Scale Position
 									// this is for "scale low" whatever that means
-										CurrentElevPos=5000;
+										CurrentElevPos=15000;
 									break;
 								}
 
@@ -212,7 +244,6 @@ class Robot: public frc::TimedRobot {
 		else if ((ElevatorOutput == 0) and (ElevatorSetFlag == true)){
 			// If the joystick is no longer sending a signal, but the flag is set, lock in the position and unset the flag
 			CurrentElevPos = IO.DriveBase.EncoderElevator.Get();
-			//elevatorSpeed(0);
 			elevatorPosition(CurrentElevPos,false);
 			ElevatorSetFlag = false;
 			SmartDashboard::PutString("Elevator Gatekeeper Status", "Setting Hold");
@@ -666,7 +697,7 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1)
-#define Elevator_KP (0.008)
+#define Elevator_KP (0.002)
 #define Elevator_KI (0.0004)
 #define ElevatorHoldSpeed (0.05) // victor in brake mode
 #define ElevatorPositionTol (3)
