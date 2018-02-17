@@ -19,20 +19,18 @@ class Robot: public frc::TimedRobot {
 	float OutputX = 0.0, OutputY = 0.0;
 
 	// Teleop Elevator Position
-	double CurrentElevPos =0.0;
+	double CurrentElevPos = 0.0;
+	bool ElevatorSetFlag = true;
 
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
 	// State Variables
-	bool driveButtonYPrev = false;
-	bool intakeDeployed = false;
-	bool XYDeployed = false;
 	bool ElevHold = false;
 	bool NotHome = true;
 	int DpadMove = -1;
-	int dpadvalue=-1;
-	double ElevIError =0;
+	int dpadvalue = -1;
+	double ElevIError = 0;
 
 	//Autonomous Variables
 	int isWaiting = 0;
@@ -62,10 +60,7 @@ class Robot: public frc::TimedRobot {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
 		// Teleop Elevator Position
-			while(!elevatorHome());
-			CurrentElevPos =0.0;
-			DpadMove = -1;
-			dpadvalue=-1;
+		CurrentElevPos = 0;
 			ElevIError =0;
 
 	}
@@ -75,15 +70,14 @@ class Robot: public frc::TimedRobot {
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.11;
 		double Drive_Deadband = 0.11;
-		double DPadSpeed = 1.0;
 		double Gain = 1;
 
 		//high gear & low gear controls
-		if (IO.DS.DriveStick.GetRawButton(5))
-			IO.DriveBase.SolenoidShifter.Set(true); // High gear press LH bumper
+		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
+			IO.DriveBase.SolenoidShifter.Set(true); // High gear press RH bumper
 
-		if (IO.DS.DriveStick.GetRawButton(6))
-			IO.DriveBase.SolenoidShifter.Set(false); // Low gear press RH bumper
+		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
+			IO.DriveBase.SolenoidShifter.Set(false); // Low gear press LH bumper
 
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
@@ -102,7 +96,7 @@ class Robot: public frc::TimedRobot {
 
 		//drive controls
 		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
-		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
+		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * 1; // get Xaxis value (turn)
 
 		//Smoothing algorithm for x^3
 		if (!IO.DriveBase.SolenoidShifter.Get()) {
@@ -132,7 +126,7 @@ class Robot: public frc::TimedRobot {
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
 		// Drive Code
-		Adrive.ArcadeDrive(OutputY, OutputX, true);
+		Adrive.ArcadeDrive(OutputX, OutputY, true);
 
 		// Joystick OutPuts
 		SmartDashboard::PutNumber("YJoystick", SpeedLinear);
@@ -149,6 +143,9 @@ class Robot: public frc::TimedRobot {
 		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
 
+		SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
+		SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
+
 		// reversing controller input so up gives positive input
 		double ElevatorStick = IO.DS.OperatorStick.GetY(
 				frc::XboxController::kLeftHand) * -1;
@@ -159,105 +156,104 @@ class Robot: public frc::TimedRobot {
 		double ElevatorDeadband = ElevDeadband; // deadband for elevator gears and motors, value to move elevator up
 
 		//Smoothing algorithm for x^3
-		if (ElevatorStick > Control_Deadband)
+		if (ElevatorStick > Control_Deadband) {
 			ElevatorOutput = ElevatorDeadband + (Gain * pow(ElevatorStick, 3));
-		else if (ElevatorStick < -Control_Deadband)
+			SmartDashboard::PutString("Elevator Deadband Status", "Outputting Upper Deadband");
+		}
+		else if (ElevatorStick < -Control_Deadband) {
 			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
-		else
-			ElevatorOutput =0;
-
-
-
-			dpadvalue= IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
-
-			if(fabs(ElevatorStick)>ElevatorDeadband)
-				DpadMove = -1;
-			else if (dpadvalue != -1)
-				DpadMove = dpadvalue;
-
-		if (!ElevHold) CurrentElevPos = IO.DriveBase.EncoderElevator.Get(); // Read Elevator encoder value
-
-		if (fabs(ElevatorStick) < Control_Deadband and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos,false); 	// hold elevator position.
-			ElevHold = true;
-		} else if (ElevatorStick > Control_Deadband and !SwitchElevatorUpper  and dpadvalue == -1) {
-			elevatorPosition(CurrentElevPos, false); //  hold  top elevator position.
-			ElevHold = true;
-		} else if (ElevatorStick < Control_Deadband and !SwitchElevatorLower and dpadvalue == -1) {
-			elevatorSpeed(0); //  hold  bottom elevator position.
-			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0;
+			SmartDashboard::PutString("Elevator Deadband Status", "Outputting Lower Deadband");
 		}
 		else {
-			elevatorSpeed(ElevatorOutput);
-			ElevHold = false;
+			ElevatorOutput = 0;
+			SmartDashboard::PutString("Elevator Deadband Status", "ZEROED");
 		}
 
-		// Joystick OutPuts
-		SmartDashboard::PutNumber("ElevatorStick", ElevatorStick);
+
+		// dpad pushing structure
+		dpadvalue= IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
+
+				switch(dpadvalue) {
+								case 270:
+									//Dpad is Pointing Left
+									//Portal/Switch height
+										CurrentElevPos=1000;
+									break;
+								case 90:
+									//dpad is pointing to the Right
+									// elevator at max height
+										CurrentElevPos=2000;
+									break;
+								case 180:
+									// dpad is pointing down
+									// ground/intake level
+										CurrentElevPos=0;
+									break;
+								case 0:
+									// dpad is pointing to the UP
+									// this is for "scale low" whatever that means
+										CurrentElevPos=5000;
+									break;
+								}
+
+// Final Elevator Output Gatekeeping
+		// ElevatorsetFlag is a boolean that gets clicked on the first cycle through after the joystick is released
+		SmartDashboard::PutNumber("CurrentElevPos", CurrentElevPos);
 		SmartDashboard::PutNumber("ElevatorOutput", ElevatorOutput);
-		SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
-		SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
+		SmartDashboard::PutBoolean("ElevatorSetFlag1", ElevatorSetFlag);
+		SmartDashboard::PutBoolean("ElevatorStop", IO.DriveBase.EncoderElevator.GetStopped());
 
-		SmartDashboard::PutNumber("dpadvalue", dpadvalue);
+		if (fabs(ElevatorOutput) > 0){
+			// If the joystick is sending a signal, send it to the motor and set the flag
+			elevatorSpeed(ElevatorOutput);
+			ElevatorSetFlag = true;
+			SmartDashboard::PutString("Elevator Gatekeeper Status", "Manual Jog");
+		}
+		else if ((ElevatorOutput == 0) and (ElevatorSetFlag == true)){
+			// If the joystick is no longer sending a signal, but the flag is set, lock in the position and unset the flag
+			CurrentElevPos = IO.DriveBase.EncoderElevator.Get();
+			//elevatorSpeed(0);
+			elevatorPosition(CurrentElevPos,false);
+			ElevatorSetFlag = false;
+			SmartDashboard::PutString("Elevator Gatekeeper Status", "Setting Hold");
+		}
+		else if ((fabs(ElevatorOutput) == 0) and (ElevatorSetFlag == false)){
+			// If the joystick is not sending a signal and the flag is not set, continue passing the previous elevator position
+			elevatorPosition(CurrentElevPos,false);
+			SmartDashboard::PutString("Elevator Gatekeeper Status", "IDLING");
+		}
+
+		SmartDashboard::PutBoolean("ElevatorSetFlag2", ElevatorSetFlag);
 
 
 
-		// Elevator automatic drive based on dpad
+		// Joystick OutPuts
+				SmartDashboard::PutNumber("ElevatorStick", ElevatorStick);
+				SmartDashboard::PutNumber("dpadvalue", dpadvalue);
 
-		if (fabs(ElevatorStick) < Control_Deadband) {
-			switch(DpadMove) {
-				case 270:
-					//Dpad is Pointing Left
-					//Portal/Switch height
-					if(elevatorPosition(1000, false)){
-						DpadMove=-1;
-						CurrentElevPos=1000;
-						ElevHold = true;
-					}
-					break;
-				case 90:
-					//dpad is pointing to the Right
-					// elevator at max height
-					if(elevatorPosition(2000, false)){
-						DpadMove=-1;
-						CurrentElevPos=2000;
-						ElevHold = true;
-					}
-					break;
-				case 180:
-					// dpad is pointing down
-					// ground/intake level
-					if(elevatorPosition(0, false)){
-						DpadMove=-1;
-						CurrentElevPos=0;
-						ElevHold = true;
-					}
-					break;
-				case 0:
-					// dpad is pointing to the UP
-					// this is for "scale low" whatever that means
-					if(elevatorPosition(5000, false)){
-						DpadMove=-1;
-						CurrentElevPos=5000;
-						ElevHold = true;
-					}
-					break;
-				}
-			}
+		// Elevator Outputs
+				SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
+				SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
+
 
 		// Claw control
 
-		bool ClawIntake = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
-		bool ClawEject = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
+		bool ClawIntake = IO.DS.OperatorStick.GetAButton();
+		bool ClawEject = IO.DS.OperatorStick.GetBButton();
+		bool ClawDrop = IO.DS.OperatorStick.GetYButton();
+
+		SmartDashboard::PutBoolean("Claw Drop", ClawDrop);
+
 
 		if (ClawIntake and !ClawEject) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
 			IO.DriveBase.Claw1.Set(1);
 		} else if (ClawEject and !ClawIntake) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Claw1.Set(1);
+			IO.DriveBase.Claw1.Set(-1);
 		} else {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.Claw1.Set(0);
 		}
 
 
@@ -267,10 +263,18 @@ class Robot: public frc::TimedRobot {
 		bool WristLeft = IO.DS.OperatorStick.GetBumper(
 				frc::GenericHID::kLeftHand);
 
-		int OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
-		int OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 
-		int WristOutput_teleop=0;
+
+		double OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+		double OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+
+		SmartDashboard::PutNumber("Wrist Right Axis", OperatorRightAxis);
+		SmartDashboard::PutNumber("Wrist Left Axis", OperatorLeftAxis);
+		SmartDashboard::PutNumber("Wrist Bumper Left", WristLeft);
+		SmartDashboard::PutNumber("Wrist Bumper Right", WristRight);
+
+
+		double WristOutput_teleop = 0;
 
 		if (OperatorRightAxis > 0 and OperatorLeftAxis > 0) {
 			WristOutput_teleop = 0;
@@ -281,9 +285,14 @@ class Robot: public frc::TimedRobot {
 		else if (OperatorRightAxis == 0 and OperatorLeftAxis > 0) {
 			WristOutput_teleop = -OperatorLeftAxis;
 		}
+		else if (OperatorRightAxis == 0 and OperatorLeftAxis == 0) {
+			WristOutput_teleop = 0;
+		}
+
+		IO.DriveBase.Wrist1.Set(WristOutput_teleop);
 
 
-
+/*
 		int wriststatus=0;
 
 		if (WristRight == true and WristLeft == false){
@@ -302,50 +311,10 @@ class Robot: public frc::TimedRobot {
 		wriststatus = 0;
 		}
 		else {
-			wristPosition(wriststatus);
+		//	wristPosition(wriststatus);
 		}
+*/
 
-
-		//A Button to extend (Solenoid On)
-		IO.TestJunk.Abutton.Set(IO.DS.OperatorStick.GetRawButton(1));
-
-		//B Button to extend (Solenoid On)
-		IO.TestJunk.Bbutton.Set(IO.DS.OperatorStick.GetRawButton(2));
-
-		//if Left Bumper button pressed, extend (Solenoid On)
-		if (IO.DS.OperatorStick.GetRawButton(5)) {
-			intakeDeployed = true;
-			IO.TestJunk.IntakeButton.Set(intakeDeployed);
-		}
-
-		//else Right Bumper pressed, retract (Solenoid Off)
-		else if (IO.DS.OperatorStick.GetRawButton(6)) {
-			intakeDeployed = false;
-			IO.TestJunk.IntakeButton.Set(intakeDeployed);
-		}
-		//if 'X' button pressed, extend (Solenoid On)
-		if (IO.DS.OperatorStick.GetRawButton(3)) {
-			XYDeployed = true;
-			IO.TestJunk.XYbutton.Set(XYDeployed);
-		}
-
-		//else 'Y' button pressed, retract (Solenoid Off)
-		else if (IO.DS.OperatorStick.GetRawButton(4)) {
-			XYDeployed = false;
-			IO.TestJunk.XYbutton.Set(XYDeployed);
-		}
-
-		//dpad POV stuff
-		if (IO.DS.OperatorStick.GetPOV(0) == 0) {
-			IO.TestJunk.Dpad1.Set(DPadSpeed);
-			IO.TestJunk.Dpad2.Set(DPadSpeed);
-		} else if (IO.DS.OperatorStick.GetPOV(0) == 180) {
-			IO.TestJunk.Dpad1.Set(-DPadSpeed);
-			IO.TestJunk.Dpad2.Set(-DPadSpeed);
-		} else {
-			IO.TestJunk.Dpad1.Set(0.0);
-			IO.TestJunk.Dpad2.Set(0.0);
-		}
 
 	}
 
@@ -656,8 +625,26 @@ class Robot: public frc::TimedRobot {
 	}
 
 	void elevatorSpeed(double elevMotor) {
-		IO.DriveBase.Elevator1.Set(elevMotor);
-		IO.DriveBase.Elevator2.Set(elevMotor);
+		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
+		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
+
+		if (ElevatorLowerLimit == false){
+					IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
+				}
+
+		if ((ElevatorUpperLimit == false) and (elevMotor > 0)){
+			IO.DriveBase.Elevator1.Set(0);
+			IO.DriveBase.Elevator2.Set(0);
+		}
+		else if ((ElevatorLowerLimit == false) and (elevMotor < 0)){
+			IO.DriveBase.Elevator1.Set(0);
+			IO.DriveBase.Elevator2.Set(0);
+		}
+		else  {
+			IO.DriveBase.Elevator1.Set(elevMotor);
+			IO.DriveBase.Elevator2.Set(elevMotor);
+		}
+		SmartDashboard::PutNumber("elevMotor", elevMotor);
 	}
 
 	bool elevatorHome(void) {
@@ -666,7 +653,7 @@ class Robot: public frc::TimedRobot {
 
 
 		if  (SwitchElevHomeLower == true) {
-			elevatorSpeed(-0.45);
+			elevatorSpeed(-1);
 			NotHome = true;
 			return false;
 		} else if ((NotHome == true) and (SwitchElevHomeLower == false)) {
@@ -687,10 +674,11 @@ class Robot: public frc::TimedRobot {
 #define ElevatorHigh (7950)
 #define ElevatorITol (20)
 	bool elevatorPosition(double Elev_position, bool override) {
-		//TODO: Function to set elevator to a position with an override to disable it
-		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
-		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
-
+//		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
+//		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
+		if (override){
+			return true;  //if override quit function
+		}
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
 		double ElevPro = ElevError * -Elevator_KP ; // P term
@@ -728,16 +716,16 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Elev_position", Elev_position);
 
 
-		if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
-			elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
-			ElevIError=0;
-			return true;
-		} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
-			elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
-			ElevIError=0;
-			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
-			return true;
-		} else if (fabs(ElevError) <= ElevatorPositionTol) {
+		//if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
+		//	elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
+		//	ElevIError=0;
+		//	return true;
+		//} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
+		//	elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
+		//	ElevIError=0;
+		//	IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
+		//	return true;
+		 if (fabs(ElevError) <= ElevatorPositionTol) {
 			//elevatorSpeed(ElevatorHoldSpeed);
 			//elevatorSpeed(0);
 			ElevIError=0;
