@@ -19,8 +19,9 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
-	DriveBase.EncoderLeft.SetDistancePerPulse(139.0 / 14025.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(139.0 / 14025.0 * 4.0);
+	DriveBase.EncoderLeft.SetDistancePerPulse(100.0 / 11000.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(100.0 / 11000.0 * 4.0);
+
 
 	// Set Default Gear
 	DriveBase.SolenoidShifter.Set(false);

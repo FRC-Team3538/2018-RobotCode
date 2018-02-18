@@ -28,18 +28,14 @@ class Robot: public frc::TimedRobot {
 	bool ElevatorSetFlag = true;
 
 	// State Variables
-	bool ElevHold = false;
-	bool NotHome = true;
-	int DpadMove = -1;
 	double ElevIError = 0;
 
 	//Autonomous Variables
 	int autoWaiting = 0;
 	Timer AutonTimer, autoSettleTimer;
 	std::string autoGameData, autoDelay, autoPosition, autoEncoder;
-	int AutoVal, autoModeState, autoDriveState, autoTurnState, autoScaleState,
-			AutoSpot, autoLeftMode;
-	bool AutonOverride, AutoDelayActive;
+	int autoModeState;
+
 
 	void RobotInit() {
 		//disable drive watchdogs
@@ -104,9 +100,6 @@ class Robot: public frc::TimedRobot {
 	void TeleopInit() {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
-		// Teleop Elevator Position
-		ElevPosTarget = 800;
-		ElevIError = 0;
 
 	}
 
@@ -424,34 +417,14 @@ class Robot: public frc::TimedRobot {
 
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
-		double ElevPro = ElevError * -Elevator_KP; // P term
-		if (fabs(ElevError) < ElevatorPositionTol) {
-			ElevIError = 0;
-		} else if ((fabs(ElevError) < ElevatorITol)
-				and (fabs(ElevError) > ElevatorPositionTol)) {
-			ElevIError = ElevIError + ElevError;
-		} else {
-			ElevIError = 0;
-		}
+		double ElevCmd = ElevError * -Elevator_KP; // P term
 
-		//	double ElevInt = ElevIError * -Elevator_KI;  // I term
-		double ElevInt = 0;    // Use to Test P term with no I term
+		//Limit Elevator Max Speed
+		if (ElevCmd > Elevator_MAXSpeed) ElevCmd = Elevator_MAXSpeed;
+		if (ElevCmd < -Elevator_MAXSpeed) ElevCmd = -Elevator_MAXSpeed;
 
-		if (ElevInt > ElevDeadband) {
-			ElevInt = ElevDeadband;	//Set Max positive I term Max to min speed to move
-		} else if (ElevInt < -(ElevDeadband)) {
-			ElevInt = (0);    //Set Max negative I term Max to min speed to move
-		}
-		double ElevCmd = ElevPro + ElevInt;   // Motor Output = P term + I term
-		//Limit Elevator to Max positive and negative speeds
-		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
-			ElevCmd = Elevator_MAXSpeed;    //Set to Max Positive speed
-		} else if (ElevCmd < -Elevator_MAXSpeed) { ///If Negative speed < Max negative speed
-			ElevCmd = -Elevator_MAXSpeed; ///Set to Max Negative speed
-		}
-
+		// Check if we made it to the target
 		if (fabs(ElevError) <= ElevatorPositionTol) {
-			ElevIError = 0;
 			return true;
 		} else
 			elevatorSpeed(ElevCmd);
