@@ -26,27 +26,21 @@ public:
 		Joystick LaunchPad { 4 };
 
 
-
-
-		SendableChooser<std::string> chooseAutoProgram;
-		const std::string sAuto0 = "No_Auto";
-		const std::string sAuto1 = "Auto_1";
-		const std::string sAuto2 = "Auto_2";
-		const std::string sAuto3 = "Auto_3";
-
 		SendableChooser<std::string> chooseAutoDelay;
 		const std::string sAutoDelayOff = "No_Delay";
 		const std::string sAutoDelay3 = "3 Seconds";
 		const std::string sAutoDelay5 = "5 Seconds";
 
-		SendableChooser<std::string> chooseAutoSelected;
+		SendableChooser<std::string> chooseAutoPosition;
 		const std::string AutoLeftSpot = "Left";
 		const std::string AutoCenterSpot = "Center";
 		const std::string AutoRightSpot = "Right";
 
-		SendableChooser<std::string> chooseDriveEncoder;
-		const std::string  EncoderLeft  = "Left_Encoder";
-		const std::string EncoderRight = "Right_Encoder";
+		SendableChooser<std::string> chooseAutoEncoder;
+		const std::string EncoderAuto  = "Auto";
+		const std::string EncoderLeft  = "Left";
+		const std::string EncoderRight = "Right";
+		const std::string EncoderNone  = "None";
 
 	};
 	structDS DS;
@@ -103,7 +97,7 @@ public:
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };
-		VictorSP ClawIntake2 { 10 };
+		VictorSP ClawIntake2 { 10 }; // TODO: Probably Unused
 		DoubleSolenoid ClawClamp { 1, 2 };
 
 		//LED Control

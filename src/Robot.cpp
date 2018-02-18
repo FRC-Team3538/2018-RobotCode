@@ -24,7 +24,7 @@ class Robot: public frc::TimedRobot {
 	float OutputX = 0.0, OutputY = 0.0;
 
 	// Teleop Elevator Position
-	double ElevPosTarget = 0.0;
+	double ElevPosTarget = 800;
 	bool ElevatorSetFlag = true;
 
 	// State Variables
@@ -35,15 +35,22 @@ class Robot: public frc::TimedRobot {
 
 	//Autonomous Variables
 	int autoWaiting = 0;
-	Timer AutonTimer;
-	std::string autoGameData, autoDelay, autoSelected, DriveEncoder;
+	Timer AutonTimer, autoSettleTimer;
+	std::string autoGameData, autoDelay, autoPosition, autoEncoder;
 	int AutoVal, autoModeState, autoDriveState, autoTurnState, autoScaleState,
-			autoNearSwitch, AutoSpot, autoLeftMode;
+			AutoSpot, autoLeftMode;
 	bool AutonOverride, AutoDelayActive;
 
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
+
+		// Reset Encoders
+		IO.DriveBase.EncoderLeft.Reset();
+		IO.DriveBase.EncoderRight.Reset();
+
+		// Zeros the NavX Yaw
+		IO.DriveBase.ahrs.ZeroYaw();
 	}
 
 	static void VisionThread() {
@@ -74,9 +81,17 @@ class Robot: public frc::TimedRobot {
 	}
 
 	void RobotPeriodic() {
+
 		// Update Smart Dash
 		SmartDashboardUpdate();
-		IO.NavXDebugger();
+		//IO.NavXDebugger();
+
+		// Get SmartDash Choosers
+		autoDelay = IO.DS.chooseAutoDelay.GetSelected();
+		autoPosition = IO.DS.chooseAutoPosition.GetSelected();
+		autoEncoder = IO.DS.chooseAutoEncoder.GetSelected();
+
+		// Get the game-specific message (ex: RLL)
 		autoGameData =
 				frc::DriverStation::GetInstance().GetGameSpecificMessage();
 		//VisionThread();
@@ -90,7 +105,7 @@ class Robot: public frc::TimedRobot {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
 		// Teleop Elevator Position
-		ElevPosTarget = 0.0;
+		ElevPosTarget = 800;
 		ElevIError = 0;
 
 	}
@@ -123,22 +138,26 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);	// Set Right Rumble to RH Trigger
 
 		//drive controls
-		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
-		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * 1; // get Xaxis value (turn)
+		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * -1; // get Yaxis value (forward)
+		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
 		//Smoothing algorithm for x^3
 		if (!IO.DriveBase.SolenoidShifter.Get()) {
 			if (SpeedLinear > Control_Deadband)
-				OutputY = Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
+				OutputY = Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedLinear, 3));
 			else if (SpeedLinear < -Control_Deadband)
-				OutputY = -Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
+				OutputY = -Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedLinear, 3));
 			else
 				OutputY = 0;
 		} else {
 			if (SpeedLinear > Control_Deadband)
-				OutputY = Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
+				OutputY = Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedLinear, 3));
 			else if (SpeedLinear < -Control_Deadband)
-				OutputY = -Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
+				OutputY = -Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedLinear, 3));
 			else
 				OutputY = 0;
 		}
@@ -156,31 +175,23 @@ class Robot: public frc::TimedRobot {
 		// Drive Code
 		Adrive.ArcadeDrive(OutputX, OutputY, true);
 
-		// Joystick OutPuts
-		SmartDashboard::PutNumber("YJoystick", SpeedLinear);
-		SmartDashboard::PutNumber("XJoystick", SpeedRotate);
-
-		SmartDashboard::PutNumber("OutputY", OutputY);
-		SmartDashboard::PutNumber("OutputX", OutputX);
-
 		/*
 		 * MANIP CODE
 		 */
 
 		// reversing controller input so up gives positive input
-		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
+		double ElevatorStick = IO.DS.OperatorStick.GetY(
+				frc::XboxController::kLeftHand) * -1;
 
 		// Smoothing algorithm for x^3
 		double ElevCommand = 0.0;
 		if (ElevatorStick > Control_Deadband)
-			ElevCommand = ElevDeadband + (Smoothing_Gain * pow(ElevatorStick, 3));
+			ElevCommand = ElevDeadband
+					+ (Smoothing_Gain * pow(ElevatorStick, 3));
 
 		else if (ElevatorStick < -Control_Deadband)
 			// deadband is not required thanks to gravity .
 			ElevCommand = 0.0 + (Smoothing_Gain * pow(ElevatorStick, 3));
-
-		SmartDashboard::PutNumber("ElevCommand", ElevCommand);
-
 
 		// Dpad Elevator Preset Positions
 		switch (IO.DS.OperatorStick.GetPOV()) {
@@ -202,16 +213,14 @@ class Robot: public frc::TimedRobot {
 			break;
 		}
 
-
 		if (fabs(ElevCommand) > 0.0) {
 			// Manual control of Joystick
 			elevatorSpeed(ElevCommand);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
-		}  else  {
+		} else {
 			// Hold Current Position
 			elevatorPosition(ElevPosTarget);
 		}
-
 
 		//
 		// Wrist control
@@ -222,7 +231,6 @@ class Robot: public frc::TimedRobot {
 				frc::GenericHID::kLeftHand);
 
 		IO.DriveBase.Wrist1.Set(OperatorRightAxis - OperatorLeftAxis);
-
 
 		//
 		// Claw control
@@ -237,12 +245,12 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
 			IO.DriveBase.ClawIntake1.Set(-1);
 
-		}else if (IO.DS.OperatorStick.GetXButton()) {
+		} else if (IO.DS.OperatorStick.GetXButton()) {
 			// X Button - Tight Intake
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
 			IO.DriveBase.ClawIntake1.Set(1);
 
-		}else if (IO.DS.OperatorStick.GetYButton()) {
+		} else if (IO.DS.OperatorStick.GetYButton()) {
 			// Y Button - Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
 			IO.DriveBase.ClawIntake1.Set(0);
@@ -255,21 +263,22 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-
 	void AutonomousInit() {
-		//AutoProgram.Initalize();
-
 		autoModeState = 1;
-		autoWaiting = 0;							/////***** Rename this.
+		autoWaiting = 0;
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
+
+		autoSettleTimer.Reset();
+		autoSettleTimer.Start();
+
 		// Encoder based auton
 		IO.DriveBase.EncoderLeft.Reset();
 		IO.DriveBase.EncoderRight.Reset();
+
 		// Turn off drive motors
 		IO.DriveBase.MotorsLeft.Set(0);
-
 		IO.DriveBase.MotorsRight.Set(0);
 
 		//zeros the navX
@@ -280,279 +289,99 @@ class Robot: public frc::TimedRobot {
 
 		//makes sure claw clamps shut
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
+		IO.DriveBase.ClawIntake1.Set(0);
 
 	}
 
-#define caseLeft 1
-#define caseRight 2
+	// Reset all the stuff that needs to be reset at each state
+	void autoNextState(int nextState) {
+		autoModeState = nextState;
+		AutonTimer.Reset();
+		autoSettleTimer.Reset();
+		IO.DriveBase.ahrs.ZeroYaw();
+	}
 
 	void AutonomousPeriodic() {
 
-		SmartDashboard::PutString("autoGameData", autoGameData);
-		if (autoGameData[0] == 'L')
-			autoNearSwitch = caseLeft;
-		else
-			autoNearSwitch = caseRight;
-		// Set far switch game state
-		if (autoGameData[1] == 'L')
-			autoScaleState = caseLeft;
-		else
-			autoScaleState = caseRight;
+		// Delay our auton program if required
+		if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get() < 3)
+			return;
+		if (autoDelay == IO.DS.sAutoDelay5 and AutonTimer.Get() < 5)
+			return;
 
-		if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get() < 3) {
-			AutoDelayActive = true;
-		} else if (autoDelay == IO.DS.sAutoDelay5 and AutonTimer.Get() < 5) {
-			AutoDelayActive = true;
-		} else if (AutoDelayActive) {
-			AutoDelayActive = false;
-			autoDelay = IO.DS.sAutoDelayOff;
-			AutonTimer.Reset();
-		}
-
-		if (autoSelected == IO.DS.AutoLeftSpot and autoNearSwitch == caseLeft
-				and !AutoDelayActive) {
-			AutoLeftSwitchLeft();
-		} else if (autoSelected == IO.DS.AutoLeftSpot
-				and autoNearSwitch == caseRight and !AutoDelayActive) {
-			AutoLeftSwitchRight();
-		} else if (autoSelected == IO.DS.AutoCenterSpot and !AutoDelayActive)
+		// Select a Starting Location
+		if (autoPosition == IO.DS.AutoCenterSpot) {
+			// Start Center, score in switch
 			AutoCenter();
-		else if (autoSelected == IO.DS.AutoRightSpot
-				and autoNearSwitch == caseLeft and !AutoDelayActive)
-			AutoRightSwitchLeft();
-		else if (autoSelected == IO.DS.AutoRightSpot
-				and autoNearSwitch == caseRight and !AutoDelayActive)
-			AutoRightSwitchRight();
-
-	}
-
-	void AutoLeftSwitchLeft(void) {
-
-		switch (autoModeState) {
-		case 1:
-			if (timedDrive(1, 0.5, 0.5)) {
-				autoModeState = 2;
-				AutonTimer.Reset();
-			}
-			break;
-		case 2:
-			if (timedDrive(1, -0.5, -0.5)) {
-				autoModeState = 3;
-				AutonTimer.Reset();
-			}
-			break;
-		case 3:
-			AutonTimer.Reset();
-			AutonTimer.Stop();
-			stopMotors();
-			break;
-		default:
-			stopMotors();
 		}
-		return;
-	}
-
-	void AutoLeftSwitchRight(void) {
-		switch (autoModeState) {
-		case 1:
-			if (timedDrive(1, -0.5, -0.5)) {
-				autoModeState = 2;
-				AutonTimer.Reset();
-			}
-			break;
-		case 2:
-			if (timedDrive(1, 0.5, 0.5)) {
-				autoModeState = 3;
-				AutonTimer.Reset();
-			}
-			break;
-		case 3:
-			AutonTimer.Reset();
-			AutonTimer.Stop();
-			stopMotors();
-			break;
-		default:
-			stopMotors();
+		if (autoPosition == IO.DS.AutoLeftSpot) {
+			// Start Left, score scale
 
 		}
-		return;
-	}
 
-	void AutoRightSwitchLeft(void) {
-
-		switch (autoModeState) {
-		case 1:
-			stopMotors();
-			break;
-		case 2:
-			stopMotors();
-			break;
-		default:
-			stopMotors();
-		}
-
-	}
-
-	void AutoRightSwitchRight(void) {
-
-		switch (autoModeState) {
-		case 1:
-			stopMotors();
-			break;
-		case 2:
-			stopMotors();
-			break;
-		default:
-			stopMotors();
-		}
 	}
 
 	void AutoCenter(void) {
 
-		if (autoNearSwitch == caseLeft) {
-			switch (autoModeState) {
-			case 1:
-				if (timedDrive(1.0, 0.5, 0.5)) {
-					autoModeState = 2;
-					AutonTimer.Reset();
-				}
-				break;
-			case 2:
-				if (autonTurn(90)) {
-					autoModeState = 3;
-					AutonTimer.Reset();
-				}
-				break;
-			case 3:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					autoModeState = 4;
-					AutonTimer.Reset();
-				}
-				break;
-			case 4:
-				if (autonTurn(0)) {
-					autoModeState = 5;
-					AutonTimer.Reset();
-				}
-				break;
-			case 5:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					AutonTimer.Reset();
-					autoModeState = 6;
-				}
-				break;
-			case 6:
-				AutonTimer.Reset();
-				AutonTimer.Stop();
-				stopMotors();
-				break;
-			default:
-				stopMotors();
-			}
-		} else if (autoNearSwitch == caseRight) {
-			switch (autoModeState) {
-			case 1:
-				if (timedDrive(1, 0.5, 0.5)) {
-					autoModeState = 2;
-					AutonTimer.Reset();
-				}
-				break;
-			case 2:
-				if (autonTurn(-90)) {
-					autoModeState = 3;
-					AutonTimer.Reset();
-				}
-				break;
-			case 3:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					autoModeState = 4;
-					AutonTimer.Reset();
-				}
-				break;
-			case 4:
-				if (autonTurn(0)) {
-					autoModeState = 5;
-					AutonTimer.Reset();
-				}
-				break;
-			case 5:
-				if (timedDrive(0.5, 0.5, 0.5)) {
-					AutonTimer.Reset();
-					autoModeState = 6;
-				}
-				break;
-			case 6:
-				AutonTimer.Reset();
-				AutonTimer.Stop();
-				stopMotors();
-				break;
-			default:
-				stopMotors();
+		bool isSwitchLeft = (autoGameData[0] == 'L');
+		int dir = 1;
 
-			}
-		}
-		return;
-	}
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
 
-#define AB1_INIT 1
-#define AB1_FWD 2
-#define	AB1_TURN90 3
-#define AB1_FWD2 4
-#define AB1_SCORE 5
-#define AB1_BACK 6
-#define AB1_END 7
-	void autoBlue1(void) {
-		//blue side code
-		//Starts from the center and drives to put the cube in the switch
 		switch (autoModeState) {
-		case AB1_INIT:
-			// This uses state 1 for initialization.
-			// This keeps the initialization and the code all in one place.
-			IO.DriveBase.ahrs.ZeroYaw();
-			autoModeState = AB1_FWD;
-			break;
-		case AB1_FWD:
-			// Drives forward off the wall to perform the turn
-			// TODO: adjust value
-			if (forward(71.0)) {
-				AutonTimer.Reset();
-				autoModeState = AB1_TURN90;
-			}
-			break;
-		case AB1_TURN90:
-			// Turns 90 in the direction of the switch goal
-			if (autonTurn(90)) {
-				AutonTimer.Reset();
-				autoModeState = AB1_FWD2;
-			}
-			break;
-		case AB1_FWD2:
-			// Drives forward to the switch goal
-			// TODO: adjust value
-			// TODO: should also be adjusting elevator height and claw location during this move
-			if (forward(71.0)) {
-				autoModeState = AB1_SCORE;
-			}
-			break;
-		case AB1_SCORE:
-			// Opens the claw to drop the pre-loaded cube
-			// TODO: confirm directionality
-			// TODO: consider separate function for clamp opening to coordinate wheel motion
-			if (1) {
-				IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
-				autoModeState = AB1_BACK;
-			}
-			break;
-		case AB1_BACK:
-			if (timedDrive(5.0, 0.3, 0.3)) {
-				AutonTimer.Reset();
-				autoModeState = AB1_END;
-			}
-			break;
+		case 1:
+			ElevPosTarget = 6500;
+			IO.DriveBase.Wrist1.Set(0.35);
 
+			if (forward(24))
+				autoNextState(2);
+			break;
+		case 2:
+			// Pick a direction based on switch state
+			if (isSwitchLeft)
+				dir = 1;
+			else
+				dir = -1;
+
+			if (autonTurn(dir * 90))
+				autoNextState(3);
+			break;
+		case 3:
+			if (forward(48))
+				autoNextState(4);
+			break;
+		case 4:
+			// Pick a direction based on switch state
+			if (isSwitchLeft)
+				dir = -1;
+			else
+				dir = 1;
+
+			if (autonTurn(dir * 90))
+				autoNextState(5);
+			break;
+		case 5:
+
+			if (forward(36))
+				autoNextState(6);
+			break;
+		case 6:
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+
+			IO.DriveBase.Wrist1.Set(0.2);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+
+			autoNextState(7);
+
+			break;
 		default:
 			stopMotors();
+
 		}
+
 		return;
 	}
 
@@ -582,24 +411,7 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("elevMotor", elevMotor);
 	}
 
-	bool elevatorHome(void) {
-
-		bool SwitchElevHomeLower = IO.DriveBase.SwitchElevatorLower.Get();
-
-		if (SwitchElevHomeLower == true) {
-			elevatorSpeed(-1);
-			NotHome = true;
-			return false;
-		} else if ((NotHome == true) and (SwitchElevHomeLower == false)) {
-			elevatorSpeed(0);
-			IO.DriveBase.EncoderElevator.Reset();  // Reset encoder to 0
-			NotHome = false;
-			return true;
-		}
-		return false;
-	}
-
-#define Elevator_MAXSpeed (1)
+#define Elevator_MAXSpeed (0.70)
 #define Elevator_KP (0.002)
 #define Elevator_KI (0.0004)
 #define ElevatorHoldSpeed (0.05) // victor in brake mode
@@ -704,85 +516,87 @@ class Robot: public frc::TimedRobot {
 		return 1;
 	}
 
+	// Go forward autonomously...
 #define KP_LINEAR (0.27)
+#define LINEAR_SETTLING_TIME (0.250)
+#define LINEAR_MAX_DRIVE_SPEED (0.35)
+#define LINEAR_TOLERANCE (0.125)
 #define KP_ROTATION (0.017)
-#define LINEAR_SETTLING_TIME (0.1)
-#define LINEAR_MAX_DRIVE_SPEED (0.75)
-#define ROTATIONAL_TOLERANCE (1.0)
-#define ERROR_GAIN (-0.05)
 #define ROTATIONAL_SETTLING_TIME (0.5)
-#define MAX_DRIVE_TIME (0.5)
-#define LINEAR_TOLERANCE (0.02)
 
 	int forward(double targetDistance) {
-		//put all encoder stuff in same place
-		double encoderDistance;
-		bool useRightEncoder = true;
 
-		if (useRightEncoder)
-			encoderDistance = IO.DriveBase.EncoderRight.GetDistance();
-		else
-			encoderDistance = IO.DriveBase.EncoderLeft.GetDistance();
+		// Inches per second-ish... (No encoder mode)
+		double encoderDistance = AutonTimer.Get() * 50.0;
+		if (encoderDistance > targetDistance)
+			encoderDistance = targetDistance;
 
-		double encoderError = encoderDistance - targetDistance;
+		// If an encoder is available, use it...
+		double encoderLeft = IO.DriveBase.EncoderLeft.GetDistance();
+		double encoderRight = IO.DriveBase.EncoderRight.GetDistance();
+		if (autoEncoder == IO.DS.EncoderAuto) {
+			// Automatically select the larger value (assume one was disconnected)
+			if (fabs(encoderLeft) > fabs(encoderRight))
+				encoderDistance = encoderLeft;
+			else
+				encoderDistance = encoderRight;
+
+		} else if (autoEncoder == IO.DS.EncoderLeft)
+			encoderDistance = encoderLeft;
+
+		else if (autoEncoder == IO.DS.EncoderRight)
+			encoderDistance = encoderRight;
+
+		// Calculate motor power
+		double encoderError = targetDistance - encoderDistance;
 		double driveCommandLinear = encoderError * KP_LINEAR;
 
-		//limits max drive speed
-		if (driveCommandLinear > LINEAR_MAX_DRIVE_SPEED) {
+		// limit max drive speed to reduce slippage
+		if (driveCommandLinear > LINEAR_MAX_DRIVE_SPEED)
 			driveCommandLinear = LINEAR_MAX_DRIVE_SPEED;
-		} else if (driveCommandLinear < -1 * LINEAR_MAX_DRIVE_SPEED) { /////***** "-1" is a "magic number." At least put a clear comment in here.
-			driveCommandLinear = -1 * LINEAR_MAX_DRIVE_SPEED; /////***** same as above.
-		}
+		if (driveCommandLinear < -LINEAR_MAX_DRIVE_SPEED)
+			driveCommandLinear = -LINEAR_MAX_DRIVE_SPEED;
 
+		// Use Gyro to keep straight
 		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
 		double driveCommandRotation = gyroAngle * KP_ROTATION;
 		//calculates and sets motor speeds
 		motorSpeed(driveCommandLinear + driveCommandRotation,
 				driveCommandLinear - driveCommandRotation);
 
-		//routine helps prevent the robot from overshooting the distance
-		if (autoWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the autonTurn() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
-			if (abs(encoderError) < LINEAR_TOLERANCE) {
-				autoWaiting = 1;
-				AutonTimer.Reset();
-			}
+		// Allow robot to come to a stop after reaching target
+		if (abs(encoderError) > LINEAR_TOLERANCE) {
+			autoSettleTimer.Reset();
+		} else if (autoSettleTimer.Get() > LINEAR_SETTLING_TIME) {
+			return 1;
 		}
-		//timed wait
-		else {
-			float currentTime = AutonTimer.Get();
-			if (abs(encoderError) > LINEAR_TOLERANCE) {
-				autoWaiting = 0;					/////***** Rename
-			} else if (currentTime > LINEAR_SETTLING_TIME) {
-				autoWaiting = 0;					/////***** Rename
-				return 1;
-			}
-		}
+
 		return 0;
 	}
+
+#define ROTATION_kP (-0.05)
+#define ROTATION_TOLERANCE (2.0)
 
 	int autonTurn(float targetYaw) {
 
 		float currentYaw = IO.DriveBase.ahrs.GetAngle();
-		float yawError = currentYaw - targetYaw;
+		float yawError = -targetYaw - currentYaw;
+		float yawCommand = yawError * ROTATION_kP;
 
-		motorSpeed(-1 * yawError * ERROR_GAIN, yawError * ERROR_GAIN);
+		// Limit max rotation speed
+		if (yawCommand > 0.5)
+			yawCommand = 0.5;
+		if (yawCommand < -0.5)
+			yawCommand = -0.5;
 
-		if (autoWaiting == 0) {	/////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
-			if (abs(yawError) < ROTATIONAL_TOLERANCE) {
-				autoWaiting = 1;
-				AutonTimer.Reset();
-			}
+		motorSpeed(yawCommand, -yawCommand);
+
+		if (abs(yawError) > ROTATION_TOLERANCE) {
+			autoSettleTimer.Reset();
+		} else if (autoSettleTimer.Get() > ROTATIONAL_SETTLING_TIME) {
+			return 1;
 		}
-		//timed wait
-		else {
-			float currentTime = AutonTimer.Get();
-			if (abs(yawError) > ROTATIONAL_TOLERANCE) {
-				autoWaiting = 0;
-			} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
-				autoWaiting = 0;
-				return 1;
-			}
-		}
+
 		return 0;
 	}
 
@@ -829,8 +643,7 @@ class Robot: public frc::TimedRobot {
 	void SmartDashboardUpdate() {
 
 		// Auto State
-		SmartDashboard::PutNumber("Auto Switch (#)", AutoVal);
-		SmartDashboard::PutString("Auto Program", autoSelected);
+		SmartDashboard::PutString("Auto Posn", autoPosition);
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 
@@ -851,20 +664,23 @@ class Robot: public frc::TimedRobot {
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
-			double gyroAngle = IO.DriveBase.ahrs.GetAngle();
-			SmartDashboard::PutNumber("Gyro Angle", gyroAngle);
+			SmartDashboard::PutNumber("Gyro Angle",
+					IO.DriveBase.ahrs.GetAngle());
 		} else {
 			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
 
+		// Game Specific Message
+		SmartDashboard::PutString("autoGameData", autoGameData);
 
 		// State Vars
 		SmartDashboard::PutNumber("ElevPosTarget", ElevPosTarget);
 
-
-		//Elevator manual drive
-		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
-		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
+		// Elevator Limit Switches
+		SmartDashboard::PutBoolean("SwitchElevatorUpper",
+				IO.DriveBase.SwitchElevatorUpper.Get());
+		SmartDashboard::PutBoolean("SwitchElevatorLower",
+				IO.DriveBase.SwitchElevatorLower.Get());
 	}
 
 }
