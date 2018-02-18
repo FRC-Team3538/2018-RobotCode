@@ -7,6 +7,8 @@
 // And So It Begins...
 #include "RJ_RobotMap.h"
 
+#define ElevDeadband (0.125)	// deadband for elevator gears and motors, value to move elevator up
+
 class Robot: public frc::TimedRobot {
 
 	// Robot Hardware Setup
@@ -15,29 +17,28 @@ class Robot: public frc::TimedRobot {
 	// Built-In Drive code for teleop
 	DifferentialDrive Adrive { IO.DriveBase.MotorsLeft, IO.DriveBase.MotorsRight };
 
+	// create pdp variable
+	PowerDistributionPanel *pdp = new PowerDistributionPanel();
+
 	// Drive Input Filter
 	float OutputX = 0.0, OutputY = 0.0;
 
 	// Teleop Elevator Position
-	double CurrentElevPos = 0.0;
+	double ElevPosTarget = 0.0;
 	bool ElevatorSetFlag = true;
-
-	// create pdp variable
-	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
 	// State Variables
 	bool ElevHold = false;
 	bool NotHome = true;
 	int DpadMove = -1;
-	int dpadvalue = -1;
 	double ElevIError = 0;
 
 	//Autonomous Variables
-	int isWaiting = 0;
+	int autoWaiting = 0;
 	Timer AutonTimer;
-	std::string gameData, autoDelay, autoSelected, DriveEncoder;
-	int AutoVal, modeState, DriveState, TurnState, ScaleState, NearSwitch,
-			AutoSpot, LeftMode;
+	std::string autoGameData, autoDelay, autoSelected, DriveEncoder;
+	int AutoVal, autoModeState, autoDriveState, autoTurnState, autoScaleState,
+			autoNearSwitch, AutoSpot, autoLeftMode;
 	bool AutonOverride, AutoDelayActive;
 
 	void RobotInit() {
@@ -45,43 +46,40 @@ class Robot: public frc::TimedRobot {
 		Adrive.SetSafetyEnabled(false);
 	}
 
-
 	static void VisionThread() {
-		cs::UsbCamera camera =  CameraServer::GetInstance()->StartAutomaticCapture();
-		camera.SetVideoMode(cs::VideoMode::kMJPEG ,640,480,30);
+		cs::UsbCamera camera =
+				CameraServer::GetInstance()->StartAutomaticCapture();
+		camera.SetVideoMode(cs::VideoMode::kMJPEG, 640, 480, 30);
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo(
 				"Gray", 160, 120);
-		outputStreamStd.SetVideoMode(cs::VideoMode::kGray ,160,120,30);
+		outputStreamStd.SetVideoMode(cs::VideoMode::kGray, 160, 120, 30);
 		cv::Mat source;
-	cv::Mat output;
-
+		cv::Mat output;
 
 		// Mjpeg server1
 		cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0",
- 				1181);
+				1181);
 		mjpegServer1.SetSource(camera);
-			cs::MjpegServer mjpegServer2 = cs::MjpegServer("serve_Blur", 1182);
+		cs::MjpegServer mjpegServer2 = cs::MjpegServer("serve_Blur", 1182);
 		mjpegServer2.SetSource(outputStreamStd);
-
 
 		while (true) {
 			cvSink.GrabFrame(source);
 			cvtColor(source, output, cv::COLOR_BGR2GRAY);
 			outputStreamStd.PutFrame(output);
 
-
 		}
 
-
- 	}
+	}
 
 	void RobotPeriodic() {
 		// Update Smart Dash
 		SmartDashboardUpdate();
 		IO.NavXDebugger();
-		gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
-		VisionThread();
+		autoGameData =
+				frc::DriverStation::GetInstance().GetGameSpecificMessage();
+		//VisionThread();
 	}
 
 	void DisabledPeriodic() {
@@ -92,17 +90,15 @@ class Robot: public frc::TimedRobot {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
 		// Teleop Elevator Position
-		CurrentElevPos = 0;
-			ElevIError =0;
+		ElevPosTarget = 0.0;
+		ElevIError = 0;
 
 	}
-
-#define ElevDeadband (0.125)	// deadband for elevator gears and motors, value to move elevator up
 
 	void TeleopPeriodic() {
 		double Control_Deadband = 0.11;
 		double Drive_Deadband = 0.11;
-		double Gain = 1;
+		double Smoothing_Gain = 1;
 
 		//high gear & low gear controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -133,16 +129,16 @@ class Robot: public frc::TimedRobot {
 		//Smoothing algorithm for x^3
 		if (!IO.DriveBase.SolenoidShifter.Get()) {
 			if (SpeedLinear > Control_Deadband)
-				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+				OutputY = Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
 			else if (SpeedLinear < -Control_Deadband)
-				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+				OutputY = -Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
 			else
 				OutputY = 0;
 		} else {
 			if (SpeedLinear > Control_Deadband)
-				OutputY = Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+				OutputY = Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
 			else if (SpeedLinear < -Control_Deadband)
-				OutputY = -Drive_Deadband + (Gain * pow(SpeedLinear, 3));
+				OutputY = -Drive_Deadband + (Smoothing_Gain * pow(SpeedLinear, 3));
 			else
 				OutputY = 0;
 		}
@@ -171,181 +167,91 @@ class Robot: public frc::TimedRobot {
 		 * MANIP CODE
 		 */
 
-		//Elevator manual drive
-		bool SwitchElevatorUpper = IO.DriveBase.SwitchElevatorUpper.Get();
-		bool SwitchElevatorLower = IO.DriveBase.SwitchElevatorLower.Get();
-
-		SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
-		SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
-
 		// reversing controller input so up gives positive input
-		double ElevatorStick = IO.DS.OperatorStick.GetY(
-				frc::XboxController::kLeftHand) * -1;
-		//double ElevatorStick = IO.DS.OperatorStick.GetX(frc::XboxController::kLeftHand);
-		//int ElevatorDpadDown = IO.DS.OperatorStick.GetPOV(180);
+		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
 
-		double ElevatorOutput = ElevatorStick;
-		double ElevatorDeadband = ElevDeadband; // deadband for elevator gears and motors, value to move elevator up
+		// Smoothing algorithm for x^3
+		double ElevCommand = 0.0;
+		if (ElevatorStick > Control_Deadband)
+			ElevCommand = ElevDeadband + (Smoothing_Gain * pow(ElevatorStick, 3));
 
-		//Smoothing algorithm for x^3
-		if (ElevatorStick > Control_Deadband) {
-			ElevatorOutput = ElevatorDeadband + (Gain * pow(ElevatorStick, 3));
-			SmartDashboard::PutString("Elevator Deadband Status", "Outputting Upper Deadband");
-		}
-		else if (ElevatorStick < -Control_Deadband) {
-			ElevatorOutput = 0 + (Gain * pow(ElevatorStick, 3)); //due to gravity deadband is not required for the elevator to move down.
-			SmartDashboard::PutString("Elevator Deadband Status", "Outputting Lower Deadband");
-		}
-		else {
-			ElevatorOutput = 0;
-			SmartDashboard::PutString("Elevator Deadband Status", "ZEROED");
-		}
+		else if (ElevatorStick < -Control_Deadband)
+			// deadband is not required thanks to gravity .
+			ElevCommand = 0.0 + (Smoothing_Gain * pow(ElevatorStick, 3));
+
+		SmartDashboard::PutNumber("ElevCommand", ElevCommand);
 
 
-		// dpad pushing structure
-		dpadvalue= IO.DS.OperatorStick.GetPOV();// Read Operator Dpad value
-
-				switch(dpadvalue) {
-								case 270:
-									//Dpad is Pointing Left
-									//Portal height
-										CurrentElevPos=4400;
-									break;
-								case 90:
-									//dpad is pointing to the Right
-									// elevator at switch height
-										CurrentElevPos=2600;
-									break;
-								case 180:
-									// dpad is pointing down
-									// ground/intake level
-										CurrentElevPos=0;
-									break;
-								case 0:
-									// dpad is pointing to the UP Scale Position
-									// this is for "scale low" whatever that means
-										CurrentElevPos=15000;
-									break;
-								}
-
-// Final Elevator Output Gatekeeping
-		// ElevatorsetFlag is a boolean that gets clicked on the first cycle through after the joystick is released
-		SmartDashboard::PutNumber("CurrentElevPos", CurrentElevPos);
-		SmartDashboard::PutNumber("ElevatorOutput", ElevatorOutput);
-		SmartDashboard::PutBoolean("ElevatorSetFlag1", ElevatorSetFlag);
-		SmartDashboard::PutBoolean("ElevatorStop", IO.DriveBase.EncoderElevator.GetStopped());
-
-		if (fabs(ElevatorOutput) > 0){
-			// If the joystick is sending a signal, send it to the motor and set the flag
-			elevatorSpeed(ElevatorOutput);
-			ElevatorSetFlag = true;
-			SmartDashboard::PutString("Elevator Gatekeeper Status", "Manual Jog");
-		}
-		else if ((ElevatorOutput == 0) and (ElevatorSetFlag == true)){
-			// If the joystick is no longer sending a signal, but the flag is set, lock in the position and unset the flag
-			CurrentElevPos = IO.DriveBase.EncoderElevator.Get();
-			elevatorPosition(CurrentElevPos,false);
-			ElevatorSetFlag = false;
-			SmartDashboard::PutString("Elevator Gatekeeper Status", "Setting Hold");
-		}
-		else if ((fabs(ElevatorOutput) == 0) and (ElevatorSetFlag == false)){
-			// If the joystick is not sending a signal and the flag is not set, continue passing the previous elevator position
-			elevatorPosition(CurrentElevPos,false);
-			SmartDashboard::PutString("Elevator Gatekeeper Status", "IDLING");
-		}
-
-		SmartDashboard::PutBoolean("ElevatorSetFlag2", ElevatorSetFlag);
-
-
-
-		// Joystick OutPuts
-				SmartDashboard::PutNumber("ElevatorStick", ElevatorStick);
-				SmartDashboard::PutNumber("dpadvalue", dpadvalue);
-
-		// Elevator Outputs
-				SmartDashboard::PutBoolean("SwitchElevatorUpper", SwitchElevatorUpper);
-				SmartDashboard::PutBoolean("SwitchElevatorLower", SwitchElevatorLower);
-
-
-		// Claw control
-
-		bool ClawIntake = IO.DS.OperatorStick.GetAButton();
-		bool ClawEject = IO.DS.OperatorStick.GetBButton();
-		bool ClawDrop = IO.DS.OperatorStick.GetYButton();
-
-		SmartDashboard::PutBoolean("Claw Drop", ClawDrop);
-
-
-		if (ClawIntake and !ClawEject) {
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
-			IO.DriveBase.Claw1.Set(1);
-		} else if (ClawEject and !ClawIntake) {
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Claw1.Set(-1);
-		} else {
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Claw1.Set(0);
+		// Dpad Elevator Preset Positions
+		switch (IO.DS.OperatorStick.GetPOV()) {
+		case 270:
+			// Dpad Left - Portal height
+			ElevPosTarget = 4400;
+			break;
+		case 90:
+			// Dpad Right - Switch height
+			ElevPosTarget = 2600;
+			break;
+		case 180:
+			// Dpad Down - ground/intake level
+			ElevPosTarget = 0;
+			break;
+		case 0:
+			// Dpad  Up - Scale Position
+			ElevPosTarget = 15000;
+			break;
 		}
 
 
+		if (fabs(ElevCommand) > 0.0) {
+			// Manual control of Joystick
+			elevatorSpeed(ElevCommand);
+			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
+		}  else  {
+			// Hold Current Position
+			elevatorPosition(ElevPosTarget);
+		}
+
+
+		//
 		// Wrist control
-		bool WristRight = IO.DS.OperatorStick.GetBumper(
-						frc::GenericHID::kRightHand);
-		bool WristLeft = IO.DS.OperatorStick.GetBumper(
+		//
+		double OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(
+				frc::GenericHID::kRightHand);
+		double OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(
 				frc::GenericHID::kLeftHand);
 
+		IO.DriveBase.Wrist1.Set(OperatorRightAxis - OperatorLeftAxis);
 
 
-		double OperatorRightAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
-		double OperatorLeftAxis = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+		//
+		// Claw control
+		//
+		if (IO.DS.OperatorStick.GetAButton()) {
+			// A Button - Loose Intake
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
+			IO.DriveBase.ClawIntake1.Set(1);
 
-		SmartDashboard::PutNumber("Wrist Right Axis", OperatorRightAxis);
-		SmartDashboard::PutNumber("Wrist Left Axis", OperatorLeftAxis);
-		SmartDashboard::PutNumber("Wrist Bumper Left", WristLeft);
-		SmartDashboard::PutNumber("Wrist Bumper Right", WristRight);
+		} else if (IO.DS.OperatorStick.GetBButton()) {
+			// B Button - Forceful Eject
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.ClawIntake1.Set(-1);
 
+		}else if (IO.DS.OperatorStick.GetXButton()) {
+			// X Button - Tight Intake
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.ClawIntake1.Set(1);
 
-		double WristOutput_teleop = 0;
+		}else if (IO.DS.OperatorStick.GetYButton()) {
+			// Y Button - Drop it like it's hot
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+			IO.DriveBase.ClawIntake1.Set(0);
 
-		if (OperatorRightAxis > 0 and OperatorLeftAxis > 0) {
-			WristOutput_teleop = 0;
+		} else {
+			// Default Hold Cube
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.ClawIntake1.Set(0);
 		}
-		else if (OperatorRightAxis > 0 and OperatorLeftAxis == 0) {
-			WristOutput_teleop = OperatorRightAxis;
-		}
-		else if (OperatorRightAxis == 0 and OperatorLeftAxis > 0) {
-			WristOutput_teleop = -OperatorLeftAxis;
-		}
-		else if (OperatorRightAxis == 0 and OperatorLeftAxis == 0) {
-			WristOutput_teleop = 0;
-		}
-
-		IO.DriveBase.Wrist1.Set(WristOutput_teleop);
-
-
-/*
-		int wriststatus=0;
-
-		if (WristRight == true and WristLeft == false){
-			wriststatus = 1;
-		}
-		else if (WristRight == false and WristLeft ==true){
-			wriststatus = 2;
-		}
-		else if (WristRight == true and WristLeft == true){
-			//do nothing
-		}
-
-
-		if (abs(WristOutput_teleop) > 0) {
-		IO.DriveBase.Wrist1.Set(WristOutput_teleop);
-		wriststatus = 0;
-		}
-		else {
-		//	wristPosition(wriststatus);
-		}
-*/
-
 
 	}
 
@@ -353,8 +259,8 @@ class Robot: public frc::TimedRobot {
 	void AutonomousInit() {
 		//AutoProgram.Initalize();
 
-		modeState = 1;
-		isWaiting = 0;							/////***** Rename this.
+		autoModeState = 1;
+		autoWaiting = 0;							/////***** Rename this.
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
@@ -382,16 +288,16 @@ class Robot: public frc::TimedRobot {
 
 	void AutonomousPeriodic() {
 
-		SmartDashboard::PutString("gameData", gameData);
-		if (gameData[0] == 'L')
-			NearSwitch = caseLeft;
+		SmartDashboard::PutString("autoGameData", autoGameData);
+		if (autoGameData[0] == 'L')
+			autoNearSwitch = caseLeft;
 		else
-			NearSwitch = caseRight;
+			autoNearSwitch = caseRight;
 		// Set far switch game state
-		if (gameData[1] == 'L')
-			ScaleState = caseLeft;
+		if (autoGameData[1] == 'L')
+			autoScaleState = caseLeft;
 		else
-			ScaleState = caseRight;
+			autoScaleState = caseRight;
 
 		if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get() < 3) {
 			AutoDelayActive = true;
@@ -403,35 +309,35 @@ class Robot: public frc::TimedRobot {
 			AutonTimer.Reset();
 		}
 
-		if (autoSelected == IO.DS.AutoLeftSpot and NearSwitch == caseLeft
+		if (autoSelected == IO.DS.AutoLeftSpot and autoNearSwitch == caseLeft
 				and !AutoDelayActive) {
 			AutoLeftSwitchLeft();
 		} else if (autoSelected == IO.DS.AutoLeftSpot
-				and NearSwitch == caseRight and !AutoDelayActive) {
+				and autoNearSwitch == caseRight and !AutoDelayActive) {
 			AutoLeftSwitchRight();
 		} else if (autoSelected == IO.DS.AutoCenterSpot and !AutoDelayActive)
 			AutoCenter();
-		else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch == caseLeft
-				and !AutoDelayActive)
+		else if (autoSelected == IO.DS.AutoRightSpot
+				and autoNearSwitch == caseLeft and !AutoDelayActive)
 			AutoRightSwitchLeft();
-		else if (autoSelected == IO.DS.AutoRightSpot and NearSwitch == caseRight
-				and !AutoDelayActive)
+		else if (autoSelected == IO.DS.AutoRightSpot
+				and autoNearSwitch == caseRight and !AutoDelayActive)
 			AutoRightSwitchRight();
 
 	}
 
 	void AutoLeftSwitchLeft(void) {
 
-		switch (modeState) {
+		switch (autoModeState) {
 		case 1:
 			if (timedDrive(1, 0.5, 0.5)) {
-				modeState = 2;
+				autoModeState = 2;
 				AutonTimer.Reset();
 			}
 			break;
 		case 2:
 			if (timedDrive(1, -0.5, -0.5)) {
-				modeState = 3;
+				autoModeState = 3;
 				AutonTimer.Reset();
 			}
 			break;
@@ -447,16 +353,16 @@ class Robot: public frc::TimedRobot {
 	}
 
 	void AutoLeftSwitchRight(void) {
-		switch (modeState) {
+		switch (autoModeState) {
 		case 1:
 			if (timedDrive(1, -0.5, -0.5)) {
-				modeState = 2;
+				autoModeState = 2;
 				AutonTimer.Reset();
 			}
 			break;
 		case 2:
 			if (timedDrive(1, 0.5, 0.5)) {
-				modeState = 3;
+				autoModeState = 3;
 				AutonTimer.Reset();
 			}
 			break;
@@ -474,7 +380,7 @@ class Robot: public frc::TimedRobot {
 
 	void AutoRightSwitchLeft(void) {
 
-		switch (modeState) {
+		switch (autoModeState) {
 		case 1:
 			stopMotors();
 			break;
@@ -489,7 +395,7 @@ class Robot: public frc::TimedRobot {
 
 	void AutoRightSwitchRight(void) {
 
-		switch (modeState) {
+		switch (autoModeState) {
 		case 1:
 			stopMotors();
 			break;
@@ -503,36 +409,36 @@ class Robot: public frc::TimedRobot {
 
 	void AutoCenter(void) {
 
-		if (NearSwitch == caseLeft) {
-			switch (modeState) {
+		if (autoNearSwitch == caseLeft) {
+			switch (autoModeState) {
 			case 1:
 				if (timedDrive(1.0, 0.5, 0.5)) {
-					modeState = 2;
+					autoModeState = 2;
 					AutonTimer.Reset();
 				}
 				break;
 			case 2:
 				if (autonTurn(90)) {
-					modeState = 3;
+					autoModeState = 3;
 					AutonTimer.Reset();
 				}
 				break;
 			case 3:
 				if (timedDrive(0.5, 0.5, 0.5)) {
-					modeState = 4;
+					autoModeState = 4;
 					AutonTimer.Reset();
 				}
 				break;
 			case 4:
 				if (autonTurn(0)) {
-					modeState = 5;
+					autoModeState = 5;
 					AutonTimer.Reset();
 				}
 				break;
 			case 5:
 				if (timedDrive(0.5, 0.5, 0.5)) {
 					AutonTimer.Reset();
-					modeState = 6;
+					autoModeState = 6;
 				}
 				break;
 			case 6:
@@ -543,36 +449,36 @@ class Robot: public frc::TimedRobot {
 			default:
 				stopMotors();
 			}
-		} else if (NearSwitch == caseRight) {
-			switch (modeState) {
+		} else if (autoNearSwitch == caseRight) {
+			switch (autoModeState) {
 			case 1:
 				if (timedDrive(1, 0.5, 0.5)) {
-					modeState = 2;
+					autoModeState = 2;
 					AutonTimer.Reset();
 				}
 				break;
 			case 2:
 				if (autonTurn(-90)) {
-					modeState = 3;
+					autoModeState = 3;
 					AutonTimer.Reset();
 				}
 				break;
 			case 3:
 				if (timedDrive(0.5, 0.5, 0.5)) {
-					modeState = 4;
+					autoModeState = 4;
 					AutonTimer.Reset();
 				}
 				break;
 			case 4:
 				if (autonTurn(0)) {
-					modeState = 5;
+					autoModeState = 5;
 					AutonTimer.Reset();
 				}
 				break;
 			case 5:
 				if (timedDrive(0.5, 0.5, 0.5)) {
 					AutonTimer.Reset();
-					modeState = 6;
+					autoModeState = 6;
 				}
 				break;
 			case 6:
@@ -598,26 +504,26 @@ class Robot: public frc::TimedRobot {
 	void autoBlue1(void) {
 		//blue side code
 		//Starts from the center and drives to put the cube in the switch
-		switch (modeState) {
+		switch (autoModeState) {
 		case AB1_INIT:
 			// This uses state 1 for initialization.
 			// This keeps the initialization and the code all in one place.
 			IO.DriveBase.ahrs.ZeroYaw();
-			modeState = AB1_FWD;
+			autoModeState = AB1_FWD;
 			break;
 		case AB1_FWD:
 			// Drives forward off the wall to perform the turn
 			// TODO: adjust value
 			if (forward(71.0)) {
 				AutonTimer.Reset();
-				modeState = AB1_TURN90;
+				autoModeState = AB1_TURN90;
 			}
 			break;
 		case AB1_TURN90:
 			// Turns 90 in the direction of the switch goal
 			if (autonTurn(90)) {
 				AutonTimer.Reset();
-				modeState = AB1_FWD2;
+				autoModeState = AB1_FWD2;
 			}
 			break;
 		case AB1_FWD2:
@@ -625,7 +531,7 @@ class Robot: public frc::TimedRobot {
 			// TODO: adjust value
 			// TODO: should also be adjusting elevator height and claw location during this move
 			if (forward(71.0)) {
-				modeState = AB1_SCORE;
+				autoModeState = AB1_SCORE;
 			}
 			break;
 		case AB1_SCORE:
@@ -634,13 +540,13 @@ class Robot: public frc::TimedRobot {
 			// TODO: consider separate function for clamp opening to coordinate wheel motion
 			if (1) {
 				IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
-				modeState = AB1_BACK;
+				autoModeState = AB1_BACK;
 			}
 			break;
 		case AB1_BACK:
 			if (timedDrive(5.0, 0.3, 0.3)) {
 				AutonTimer.Reset();
-				modeState = AB1_END;
+				autoModeState = AB1_END;
 			}
 			break;
 
@@ -659,19 +565,17 @@ class Robot: public frc::TimedRobot {
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
 
-		if (ElevatorLowerLimit == false){
-					IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
-				}
+		if (ElevatorLowerLimit == false) {
+			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
+		}
 
-		if ((ElevatorUpperLimit == false) and (elevMotor > 0)){
+		if ((!ElevatorUpperLimit) and (elevMotor > 0)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
-		}
-		else if ((ElevatorLowerLimit == false) and (elevMotor < 0)){
+		} else if ((!ElevatorLowerLimit) and (elevMotor < 0)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
-		}
-		else  {
+		} else {
 			IO.DriveBase.Elevator1.Set(elevMotor);
 			IO.DriveBase.Elevator2.Set(elevMotor);
 		}
@@ -682,8 +586,7 @@ class Robot: public frc::TimedRobot {
 
 		bool SwitchElevHomeLower = IO.DriveBase.SwitchElevatorLower.Get();
 
-
-		if  (SwitchElevHomeLower == true) {
+		if (SwitchElevHomeLower == true) {
 			elevatorSpeed(-1);
 			NotHome = true;
 			return false;
@@ -704,34 +607,29 @@ class Robot: public frc::TimedRobot {
 #define ElevatorLow (0)
 #define ElevatorHigh (7950)
 #define ElevatorITol (20)
-	bool elevatorPosition(double Elev_position, bool override) {
-//		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
-//		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
-		if (override){
-			return true;  //if override quit function
-		}
+
+	bool elevatorPosition(double Elev_position) {
+
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
-		double ElevPro = ElevError * -Elevator_KP ; // P term
+		double ElevPro = ElevError * -Elevator_KP; // P term
 		if (fabs(ElevError) < ElevatorPositionTol) {
 			ElevIError = 0;
-		} else if ((fabs(ElevError) < ElevatorITol) and (fabs(ElevError) > ElevatorPositionTol)) {
+		} else if ((fabs(ElevError) < ElevatorITol)
+				and (fabs(ElevError) > ElevatorPositionTol)) {
 			ElevIError = ElevIError + ElevError;
-	//	} else if (fabs(ElevError) < ElevatorITol)  {
-	//		ElevIError = ElevIError + ElevError;
 		} else {
 			ElevIError = 0;
 		}
 
-	//	double ElevInt = ElevIError * -Elevator_KI;  // I term
+		//	double ElevInt = ElevIError * -Elevator_KI;  // I term
 		double ElevInt = 0;    // Use to Test P term with no I term
 
-		if (ElevInt > ElevDeadband){
-			ElevInt = ElevDeadband;		//Set Max positive I term Max to min speed to move
-			}
-		else if (ElevInt < -(ElevDeadband)){
+		if (ElevInt > ElevDeadband) {
+			ElevInt = ElevDeadband;	//Set Max positive I term Max to min speed to move
+		} else if (ElevInt < -(ElevDeadband)) {
 			ElevInt = (0);    //Set Max negative I term Max to min speed to move
-			}
+		}
 		double ElevCmd = ElevPro + ElevInt;   // Motor Output = P term + I term
 		//Limit Elevator to Max positive and negative speeds
 		if (ElevCmd > Elevator_MAXSpeed) { //If Positive speed > Max Positive speed
@@ -740,64 +638,42 @@ class Robot: public frc::TimedRobot {
 			ElevCmd = -Elevator_MAXSpeed; ///Set to Max Negative speed
 		}
 
-		SmartDashboard::PutNumber("ElevInt", ElevInt);
-		SmartDashboard::PutNumber("ElevCmd", ElevCmd);
-		SmartDashboard::PutNumber("ElevError", ElevError);
-		SmartDashboard::PutNumber("ElevIError", ElevIError);
-		SmartDashboard::PutNumber("Elev_position", Elev_position);
-
-
-		//if (!ElevatorUpperLimit and Elev_position>ElevatorHigh) {
-		//	elevatorSpeed(ElevatorHoldSpeed); // replace with routine to hold  top elevator position.
-		//	ElevIError=0;
-		//	return true;
-		//} else if (!ElevatorLowerLimit and Elev_position<ElevatorLow) {
-		//	elevatorSpeed(0); // replace with routine to hold  bottom elevator position.
-		//	ElevIError=0;
-		//	IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
-		//	return true;
-		 if (fabs(ElevError) <= ElevatorPositionTol) {
-			//elevatorSpeed(ElevatorHoldSpeed);
-			//elevatorSpeed(0);
-			ElevIError=0;
+		if (fabs(ElevError) <= ElevatorPositionTol) {
+			ElevIError = 0;
 			return true;
-		}  else
+		} else
 			elevatorSpeed(ElevCmd);
 		return false;
 	}
 
-
 #define Wrist_MaxSpeed (1)
 #define Wrist_Idle (.4)
 
-
-bool wristPosition(int position){
+	bool wristPosition(int position) {
 // Controls the wrist position.
 // for now it will send the wrist to position 1 or position 2 then return true when it is in that position
-	int wristOutput;
-	bool switchWrist1 = IO.DriveBase.SwitchWrist1.Get();
-	bool switchWrist2 = IO.DriveBase.SwitchWrist1.Get();
-	bool inCorrectPosition = false;
-	switch(position){
+		int wristOutput;
+		bool switchWrist1 = IO.DriveBase.SwitchWrist1.Get();
+		bool switchWrist2 = IO.DriveBase.SwitchWrist1.Get();
+		bool inCorrectPosition = false;
+		switch (position) {
 		case 1:
 			///if the wrist is in position 1
 			if (switchWrist1 == true) {
 				//it is in position 1
 				wristOutput = Wrist_Idle;
 				inCorrectPosition = true;
-			}
-			else {
+			} else {
 				// it isn't in position 1
 				wristOutput = 1;
 				inCorrectPosition = false;
 			}
 			break;
 		case 2:
-			if (switchWrist2 == true){
+			if (switchWrist2 == true) {
 				wristOutput = -Wrist_Idle;
 				inCorrectPosition = true;
-			}
-			else {
+			} else {
 				wristOutput = -1;
 				inCorrectPosition = false;
 			}
@@ -811,14 +687,14 @@ bool wristPosition(int position){
 		}
 
 		// Cap the speed to the maximum
-		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed),-Wrist_MaxSpeed);
+		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed),
+				-Wrist_MaxSpeed);
 
 		IO.DriveBase.Wrist1.Set(wristOutput);
 
 		return inCorrectPosition;
 
-
-}
+	}
 
 // Drivetrain functions
 
@@ -865,9 +741,9 @@ bool wristPosition(int position){
 				driveCommandLinear - driveCommandRotation);
 
 		//routine helps prevent the robot from overshooting the distance
-		if (isWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the autonTurn() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
+		if (autoWaiting == 0) { /////***** Rename "isWaiting."  This isWaiting overlaps with the autonTurn() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
 			if (abs(encoderError) < LINEAR_TOLERANCE) {
-				isWaiting = 1;
+				autoWaiting = 1;
 				AutonTimer.Reset();
 			}
 		}
@@ -875,9 +751,9 @@ bool wristPosition(int position){
 		else {
 			float currentTime = AutonTimer.Get();
 			if (abs(encoderError) > LINEAR_TOLERANCE) {
-				isWaiting = 0;					/////***** Rename
+				autoWaiting = 0;					/////***** Rename
 			} else if (currentTime > LINEAR_SETTLING_TIME) {
-				isWaiting = 0;					/////***** Rename
+				autoWaiting = 0;					/////***** Rename
 				return 1;
 			}
 		}
@@ -891,9 +767,9 @@ bool wristPosition(int position){
 
 		motorSpeed(-1 * yawError * ERROR_GAIN, yawError * ERROR_GAIN);
 
-		if (isWaiting == 0) {/////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
+		if (autoWaiting == 0) {	/////***** Rename "isWaiting."  This isWaiting overlaps with the forward() isWaiting.  There is nothing like 2 globals that are used for different things, but have the same name.
 			if (abs(yawError) < ROTATIONAL_TOLERANCE) {
-				isWaiting = 1;
+				autoWaiting = 1;
 				AutonTimer.Reset();
 			}
 		}
@@ -901,9 +777,9 @@ bool wristPosition(int position){
 		else {
 			float currentTime = AutonTimer.Get();
 			if (abs(yawError) > ROTATIONAL_TOLERANCE) {
-				isWaiting = 0;
+				autoWaiting = 0;
 			} else if (currentTime > ROTATIONAL_SETTLING_TIME) {
-				isWaiting = 0;
+				autoWaiting = 0;
 				return 1;
 			}
 		}
@@ -955,7 +831,7 @@ bool wristPosition(int position){
 		// Auto State
 		SmartDashboard::PutNumber("Auto Switch (#)", AutoVal);
 		SmartDashboard::PutString("Auto Program", autoSelected);
-		SmartDashboard::PutNumber("Auto State (#)", modeState);
+		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 
 		// Drive Encoders
@@ -970,8 +846,8 @@ bool wristPosition(int position){
 				IO.DriveBase.EncoderRight.GetDistance());
 
 		// Elevator Encoders
-		SmartDashboard::PutNumber("Elevator Encoder", IO.DriveBase.EncoderElevator.Get());
-
+		SmartDashboard::PutNumber("Elevator Encoder",
+				IO.DriveBase.EncoderElevator.Get());
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
@@ -981,6 +857,14 @@ bool wristPosition(int position){
 			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
 
+
+		// State Vars
+		SmartDashboard::PutNumber("ElevPosTarget", ElevPosTarget);
+
+
+		//Elevator manual drive
+		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
+		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 	}
 
 }

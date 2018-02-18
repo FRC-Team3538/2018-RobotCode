@@ -102,8 +102,8 @@ public:
 		AnalogInput PotentiometerWrist { 1 };
 
 		//Claw
-		VictorSP Claw1 { 9 };
-		VictorSP Claw2 { 10 };
+		VictorSP ClawIntake1 { 9 };
+		VictorSP ClawIntake2 { 10 };
 		DoubleSolenoid ClawClamp { 1, 2 };
 
 		//LED Control
