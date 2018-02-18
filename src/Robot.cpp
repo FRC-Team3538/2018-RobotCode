@@ -131,7 +131,7 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);	// Set Right Rumble to RH Trigger
 
 		//drive controls
-		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * -1; // get Yaxis value (forward)
+		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
 		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
 		//Smoothing algorithm for x^3
