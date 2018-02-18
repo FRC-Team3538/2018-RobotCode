@@ -186,7 +186,7 @@ class Robot: public frc::TimedRobot {
 		switch (IO.DS.OperatorStick.GetPOV()) {
 		case 270:
 			// Dpad Left - Portal height
-			ElevPosTarget = 4400;
+			ElevPosTarget = 10500;
 			break;
 		case 90:
 			// Dpad Right - Switch height
@@ -194,7 +194,7 @@ class Robot: public frc::TimedRobot {
 			break;
 		case 180:
 			// Dpad Down - ground/intake level
-			ElevPosTarget = 0;
+			ElevPosTarget = 1342;
 			break;
 		case 0:
 			// Dpad  Up - Scale Position
@@ -239,7 +239,7 @@ class Robot: public frc::TimedRobot {
 
 		}else if (IO.DS.OperatorStick.GetXButton()) {
 			// X Button - Tight Intake
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
 			IO.DriveBase.ClawIntake1.Set(1);
 
 		}else if (IO.DS.OperatorStick.GetYButton()) {
