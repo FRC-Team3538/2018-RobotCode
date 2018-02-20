@@ -20,6 +20,9 @@ class Robot: public frc::TimedRobot {
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
+	// Override Elevator lower limit switch, upper limit switch, and elevator encoder
+	bool ElevOverride = false;
+
 	// Drive Input Filter
 	float OutputX = 0.0, OutputY = 0.0;
 
@@ -119,16 +122,21 @@ class Robot: public frc::TimedRobot {
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
 		double driveCurrent = pdp->GetTotalCurrent();
+		double elevCurrent_m1 = pdp->GetCurrent(8);
+		double elevCurrent_m2 = pdp->GetCurrent(9);
+
 
 		// rumble if current to high
-		double LHThr = 0.0;		// Define value for rumble
+		double RbtThr = 0.0;		// Define value for total rumble current
+		double EleThr = 0.0;		// Define value for elevator rumble current
 		if (driveCurrent > 125.0)// Rumble if greater than 125 amps motor current
-			LHThr = 0.5;
-		Joystick::RumbleType Vibrate;				// define Vibrate variable
-		Vibrate = Joystick::kLeftRumble;		// set Vibrate to Left
-		IO.DS.DriveStick.SetRumble(Vibrate, LHThr); // Set Left Rumble to RH Trigger
-		Vibrate = Joystick::kRightRumble;		// set vibrate to Right
-		IO.DS.DriveStick.SetRumble(Vibrate, LHThr);	// Set Right Rumble to RH Trigger
+			RbtThr = 0.5;
+		if (elevCurrent_m1 > 8.0 or elevCurrent_m2 >8.0)
+			EleThr =0.5;
+		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble,  RbtThr); // Set Left Rumble to RbtThr
+		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
+		IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, EleThr); // Set Left Rumble to EleThr
+		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble,EleThr); // Set Right Rumble to EleThr
 
 		//drive controls
 		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
@@ -210,10 +218,12 @@ class Robot: public frc::TimedRobot {
 			// Manual control of Joystick
 			elevatorSpeed(ElevCommand);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
-		} else {
-			// Hold Current Position
+		} else if (!ElevOverride)     // Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
-		}
+		else
+			elevatorSpeed(0); // Stop elevator movement whe Elevator Override = true;
+
+
 
 		//
 		// Wrist control
@@ -391,10 +401,10 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
 		}
 
-		if ((!ElevatorUpperLimit) and (elevMotor > 0)) {
+		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
-		} else if ((!ElevatorLowerLimit) and (elevMotor < 0)) {
+		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
 		} else {
@@ -406,12 +416,7 @@ class Robot: public frc::TimedRobot {
 
 #define Elevator_MAXSpeed (0.70)
 #define Elevator_KP (0.002)
-#define Elevator_KI (0.0004)
-#define ElevatorHoldSpeed (0.05) // victor in brake mode
 #define ElevatorPositionTol (3)
-#define ElevatorLow (0)
-#define ElevatorHigh (7950)
-#define ElevatorITol (20)
 
 	bool elevatorPosition(double Elev_position) {
 
