@@ -122,21 +122,14 @@ class Robot: public frc::TimedRobot {
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
 		double driveCurrent = pdp->GetTotalCurrent();
-		double elevCurrent_m1 = pdp->GetCurrent(8);
-		double elevCurrent_m2 = pdp->GetCurrent(9);
-
 
 		// rumble if current to high
 		double RbtThr = 0.0;		// Define value for total rumble current
-		double EleThr = 0.0;		// Define value for elevator rumble current
 		if (driveCurrent > 125.0)// Rumble if greater than 125 amps motor current
 			RbtThr = 0.5;
-		if (elevCurrent_m1 > 8.0 or elevCurrent_m2 >8.0)
-			EleThr =0.5;
+
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble,  RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
-		IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, EleThr); // Set Left Rumble to EleThr
-		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble,EleThr); // Set Right Rumble to EleThr
 
 		//drive controls
 		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
@@ -223,6 +216,17 @@ class Robot: public frc::TimedRobot {
 		else
 			elevatorSpeed(0); // Stop elevator movement whe Elevator Override = true;
 
+
+		// Controller Rumble if the elevator motor current is high
+		double elevCurrent_m1 = pdp->GetCurrent(8);
+		double elevCurrent_m2 = pdp->GetCurrent(9);
+
+		double EleThr = 0.0;		// Define value for elevator rumble current
+		if (elevCurrent_m1 > 8.0 or elevCurrent_m2 >8.0)
+			EleThr = 1.0;
+
+		IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, EleThr); // Set Left Rumble to EleThr
+		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble,EleThr); // Set Right Rumble to EleThr
 
 
 		//

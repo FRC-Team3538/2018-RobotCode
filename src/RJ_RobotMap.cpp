@@ -27,7 +27,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.SolenoidShifter.Set(false);
 
 	// Invert manip motors
-	DriveBase.Wrist1.SetInverted(true);
+	DriveBase.Wrist1.SetInverted(false);
 
 	//
 	// Smart Dashboard
