@@ -31,7 +31,7 @@ public:
 		const std::string sAutoDelay3 = "3 Seconds";
 		const std::string sAutoDelay5 = "5 Seconds";
 
-		SendableChooser<std::string> chooseAutoPosition;
+		SendableChooser<std::string> chooseAutoProgram;
 		const std::string AutoLeftSpot = "Left";
 		const std::string AutoCenterSpot = "Center";
 		const std::string AutoRightSpot = "Right";

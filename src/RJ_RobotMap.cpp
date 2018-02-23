@@ -26,7 +26,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	// Set Default Gear
 	DriveBase.SolenoidShifter.Set(false);
 
-	// Invert manip motors
+	// Invert Wrist motor
 	DriveBase.Wrist1.SetInverted(false);
 
 	//
@@ -35,10 +35,10 @@ RJ_RobotMap::RJ_RobotMap() {
 
 
 	// Auto Program Chooser
-	DS.chooseAutoPosition.AddDefault(DS.AutoCenterSpot, DS.AutoCenterSpot);
-	DS.chooseAutoPosition.AddObject(DS.AutoLeftSpot, DS.AutoLeftSpot);
-	DS.chooseAutoPosition.AddObject(DS.AutoRightSpot, DS.AutoRightSpot);
-	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoPosition);
+	DS.chooseAutoProgram.AddDefault(DS.AutoCenterSpot, DS.AutoCenterSpot);
+	DS.chooseAutoProgram.AddObject(DS.AutoLeftSpot, DS.AutoLeftSpot);
+	DS.chooseAutoProgram.AddObject(DS.AutoRightSpot, DS.AutoRightSpot);
+	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoProgram);
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
