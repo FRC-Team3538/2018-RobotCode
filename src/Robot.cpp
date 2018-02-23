@@ -49,33 +49,10 @@ class Robot: public frc::TimedRobot {
 
 		// Zeros the NavX Yaw
 		IO.DriveBase.ahrs.ZeroYaw();
-	}
 
-	static void VisionThread() {
-		cs::UsbCamera camera =
-				CameraServer::GetInstance()->StartAutomaticCapture();
-		camera.SetVideoMode(cs::VideoMode::kMJPEG, 640, 480, 30);
-		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo(
-				"Gray", 160, 120);
-		outputStreamStd.SetVideoMode(cs::VideoMode::kGray, 160, 120, 30);
-		cv::Mat source;
-		cv::Mat output;
-
-		// Mjpeg server1
-		cs::MjpegServer mjpegServer1 = cs::MjpegServer("serve_USB Camera 0",
-				1181);
-		mjpegServer1.SetSource(camera);
-		cs::MjpegServer mjpegServer2 = cs::MjpegServer("serve_Blur", 1182);
-		mjpegServer2.SetSource(outputStreamStd);
-
-		while (true) {
-			cvSink.GrabFrame(source);
-			cvtColor(source, output, cv::COLOR_BGR2GRAY);
-			outputStreamStd.PutFrame(output);
-
-		}
-
+		// Start Vision Thread
+		std::thread visionThread(VisionThread);
+		visionThread.detach();
 	}
 
 	void RobotPeriodic() {
@@ -90,8 +67,7 @@ class Robot: public frc::TimedRobot {
 		autoEncoder = IO.DS.chooseAutoEncoder.GetSelected();
 
 		// Get the game-specific message (ex: RLL)
-		autoGameData =
-				frc::DriverStation::GetInstance().GetGameSpecificMessage();
+		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 		//VisionThread();
 	}
 
@@ -119,11 +95,9 @@ class Robot: public frc::TimedRobot {
 
 		// Smoothing algorithm for x^3
 		if (SpeedLinear > 0)
-			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3)
-					+ Drive_Deadband;
+			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) + Drive_Deadband;
 		else
-			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3)
-					- Drive_Deadband;
+			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) - Drive_Deadband;
 
 		// Limit max rotation speed for increased sensitivity
 		SpeedRotate = 0.8 * SpeedRotate;
@@ -149,7 +123,7 @@ class Robot: public frc::TimedRobot {
 
 		// rumble if current to high
 		double RbtThr = 0.0;		// Define value for total rumble current
-		if (driveCurrent > 125.0)// Rumble if greater than 125 amps motor current
+		if (driveCurrent > 125.0)		// Rumble if greater than 125 amps motor current
 			RbtThr = 1.0;
 
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
@@ -160,14 +134,12 @@ class Robot: public frc::TimedRobot {
 		 */
 
 		// reversing controller input so up gives positive input
-		double ElevatorStick = IO.DS.OperatorStick.GetY(
-				frc::XboxController::kLeftHand) * -1;
+		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
 		ElevatorStick = deadband(ElevatorStick, Control_Deadband);
 
 		// Smoothing algorithm for x^3
 		// No reverse bias is needed thanks to gravity
-		ElevatorStick = (1 - ElevDeadband)
-				* pow(ElevatorStick, 3) + ElevDeadband;
+		ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
 
 		// Elevator Preset Positions [DPAD]
 		switch (IO.DS.OperatorStick.GetPOV()) {
@@ -215,10 +187,8 @@ class Robot: public frc::TimedRobot {
 		//
 		// Wrist control
 		//
-		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(
-				frc::GenericHID::kRightHand);
-		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(
-				frc::GenericHID::kLeftHand);
+		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 
 		IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
 
@@ -401,8 +371,7 @@ class Robot: public frc::TimedRobot {
 		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
-		} else if ((!ElevatorLowerLimit) and (elevMotor < 0)
-				and (!ElevOverride)) {
+		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
 		} else {
@@ -477,8 +446,7 @@ class Robot: public frc::TimedRobot {
 		}
 
 		// Cap the speed to the maximum
-		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed),
-				-Wrist_MaxSpeed);
+		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed), -Wrist_MaxSpeed);
 
 		IO.DriveBase.Wrist1.Set(wristOutput);
 
@@ -540,8 +508,7 @@ class Robot: public frc::TimedRobot {
 		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
 		double driveCommandRotation = gyroAngle * KP_ROTATION;
 		//calculates and sets motor speeds
-		motorSpeed(driveCommandLinear + driveCommandRotation,
-				driveCommandLinear - driveCommandRotation);
+		motorSpeed(driveCommandLinear + driveCommandRotation, driveCommandLinear - driveCommandRotation);
 
 		// Allow robot to come to a stop after reaching target
 		if (abs(encoderError) > LINEAR_TOLERANCE) {
@@ -581,8 +548,7 @@ class Robot: public frc::TimedRobot {
 		return 0;
 	}
 
-	int timedDrive(double driveTime, double leftMotorSpeed,
-			double rightMotorSpeed) {
+	int timedDrive(double driveTime, double leftMotorSpeed, double rightMotorSpeed) {
 		float currentTime = AutonTimer.Get();
 		if (currentTime < driveTime) {
 			motorSpeed(leftMotorSpeed, rightMotorSpeed);
@@ -629,24 +595,18 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 
 		// Drive Encoders
-		SmartDashboard::PutNumber("Drive Encoder Left (RAW)",
-				IO.DriveBase.EncoderLeft.GetRaw());
-		SmartDashboard::PutNumber("Drive Encoder Left (Inches)",
-				IO.DriveBase.EncoderLeft.GetDistance());
+		SmartDashboard::PutNumber("Drive Encoder Left (RAW)", IO.DriveBase.EncoderLeft.GetRaw());
+		SmartDashboard::PutNumber("Drive Encoder Left (Inches)", IO.DriveBase.EncoderLeft.GetDistance());
 
-		SmartDashboard::PutNumber("Drive Encoder Right (RAW)",
-				IO.DriveBase.EncoderRight.GetRaw());
-		SmartDashboard::PutNumber("Drive Encoder Right (Inch)",
-				IO.DriveBase.EncoderRight.GetDistance());
+		SmartDashboard::PutNumber("Drive Encoder Right (RAW)", IO.DriveBase.EncoderRight.GetRaw());
+		SmartDashboard::PutNumber("Drive Encoder Right (Inch)", IO.DriveBase.EncoderRight.GetDistance());
 
 		// Elevator Encoders
-		SmartDashboard::PutNumber("Elevator Encoder",
-				IO.DriveBase.EncoderElevator.Get());
+		SmartDashboard::PutNumber("Elevator Encoder", IO.DriveBase.EncoderElevator.Get());
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
-			SmartDashboard::PutNumber("Gyro Angle",
-					IO.DriveBase.ahrs.GetAngle());
+			SmartDashboard::PutNumber("Gyro Angle", IO.DriveBase.ahrs.GetAngle());
 		} else {
 			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
@@ -658,10 +618,8 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("ElevPosTarget", ElevPosTarget);
 
 		// Elevator Limit Switches
-		SmartDashboard::PutBoolean("SwitchElevatorUpper",
-				IO.DriveBase.SwitchElevatorUpper.Get());
-		SmartDashboard::PutBoolean("SwitchElevatorLower",
-				IO.DriveBase.SwitchElevatorLower.Get());
+		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
+		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 	}
 
 	// Dead band function
@@ -677,6 +635,29 @@ class Robot: public frc::TimedRobot {
 			return input * (1 - minval) - minval;
 		else
 			return input * (1 - minval) + minval;
+
+	}
+
+	// Vision Thread
+	// Runs in parallel to the main robot control program
+	static void VisionThread() {
+		cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
+		camera.SetVideoMode(cs::VideoMode::kMJPEG, 640, 480, 30);
+		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("RGB", 160, 120);
+		outputStreamStd.SetVideoMode(cs::VideoMode::kGray, 160, 120, 30);
+		cv::Mat source;
+		cv::Mat output;
+
+		while (true) {
+			cvSink.GrabFrame(source);
+			cvtColor(source, output, cv::COLOR_BGR2GRAY);
+			outputStreamStd.PutFrame(output);
+
+			// Sleep to limit loop rate
+			std::chrono::milliseconds timespan(250);
+			std::this_thread::sleep_for(timespan);
+		}
 
 	}
 };
