@@ -34,10 +34,10 @@ class Robot: public frc::TimedRobot {
 	double ElevIError = 0;
 
 	//Autonomous Variables
-	int autoWaiting = 0;
 	Timer AutonTimer, autoSettleTimer;
 	std::string autoGameData, autoDelay, autoPosition, autoEncoder;
-	int autoModeState;
+	int autoModeState;  // current step in auto sequence
+	double autoHeading; // current gyro heading to maintain
 
 	void RobotInit() {
 		//disable drive watchdogs
@@ -68,6 +68,7 @@ class Robot: public frc::TimedRobot {
 
 		// Get the game-specific message (ex: RLL)
 		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
+		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
 		//VisionThread();
 	}
 
@@ -80,7 +81,6 @@ class Robot: public frc::TimedRobot {
 		OutputX = 0, OutputY = 0;
 		elevatorSpeed(0);
 		ElevPosTarget = 0;
-
 
 		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 	}
@@ -135,7 +135,6 @@ class Robot: public frc::TimedRobot {
 
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
-
 
 		/*
 		 * MANIP CODE
@@ -232,7 +231,6 @@ class Robot: public frc::TimedRobot {
 
 	void AutonomousInit() {
 		autoModeState = 1;
-		autoWaiting = 0;
 
 		AutonTimer.Reset();
 		AutonTimer.Start();
@@ -265,10 +263,10 @@ class Robot: public frc::TimedRobot {
 		autoModeState++;
 		AutonTimer.Reset();
 		autoSettleTimer.Reset();
-		IO.DriveBase.ahrs.ZeroYaw(); // TODO: DAW - I don't like this...
 		IO.DriveBase.EncoderLeft.Reset();
 		IO.DriveBase.EncoderRight.Reset();
 		stopMotors();
+
 	}
 
 	void AutonomousPeriodic() {
@@ -299,9 +297,16 @@ class Robot: public frc::TimedRobot {
 			autoScale(true);
 		}
 
-
 	}
 
+	/*
+	 * AUTO PROGRAM - CROSS THE LINE
+	 *
+	 * Start robot anywhere.
+	 *
+	 * The robot will simply cross the line.
+	 * This is really just a test program...
+	 */
 	void autoLine(void) {
 
 		switch (autoModeState) {
@@ -323,6 +328,13 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
+	/*
+	 * AUTO PROGRAM - CENTER SWITCH
+	 *
+	 * Start robot in center of wall, adjacent to Exchange Zone
+	 *
+	 * The robot will go the the proper side of the switch based on FMS data.
+	 */
 	void autoCenter(void) {
 
 		// Closed Loop control of Elevator
@@ -333,53 +345,49 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
 
-
-			if (AutonTimer.Get() < 0.5)
-				break;
-
-			if (autoForward(48))
+			if (autoForward(36))
 				autoNextState();
 			break;
 
 		case 2:
 			// Pick a direction based on FMS switch state
 			if (SwitchLeft)
-				if (autoTurn(90))
+				if (autoTurn(45))
 					autoNextState();
 
 			if (SwitchRight)
-				if (autoTurn(-90))
+				if (autoTurn(-45))
 					autoNextState();
 
 			break;
 
 		case 3:
-			// Drive to center of switch platform
-			if (autoForward(48.0))
-				autoNextState();
+			// Start lifting the elevator
+			ElevPosTarget = -6700;
 
+			// Drive to center of switch platform
+			if (autoForward(62.0))
+				autoNextState();
 			break;
 
 		case 4:
-			// Pick a direction based on FMS switch state
-			if (SwitchLeft)
-				if (autoTurn(-90))
-					autoNextState();
-
-			if (SwitchRight)
-				if (autoTurn(90))
-					autoNextState();
+			if (autoTurn(0))
+				autoNextState();
 			break;
 
 		case 5:
-			if (autoForward(59.0))
+			if (autoForward(18.0))
 				autoNextState();
 			break;
 
 		case 6:
+			if (timedDrive(1.5, 0.8, 0.8))
+				autoNextState();
+			break;
+
+		case 7:
 			AutonTimer.Reset();
 			AutonTimer.Stop();
 			stopMotors();
@@ -399,15 +407,28 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-	void autoSwitchSide(bool isRightSide) {
+	/*
+	 * AUTO PROGRAM - SIDE SWITCH
+	 *
+	 * Start robot in side of wall, with the corner of the robot touching the portal
+	 *
+	 * The robot will go the the proper side of the switch based on FMS data.
+	 * But it will score on the side or rear of switch, so that we do not interfere with
+	 * our alliance partners doing a center switch program.
+	 *
+	 * Input parameter is which side of the field the robot is starting on (left | right)
+	 */
+	void autoSwitchSide(bool isStartRightPos) {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 
+		// Determin which path to take
 		bool SwitchNear;
-		double rotDir;
 		bool SwitchFar;
-		if (isRightSide) {
+		double rotDir;
+
+		if (isStartRightPos) {
 			SwitchNear = (autoGameData[0] == 'R');
 			SwitchFar = (autoGameData[0] == 'L');
 			rotDir = -1.0;
@@ -417,13 +438,11 @@ class Robot: public frc::TimedRobot {
 			rotDir = 1.0;
 		}
 
+		// Auto Sequence
 		switch (autoModeState) {
 		case 1:
 			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
-
-			if (AutonTimer.Get() < 0.5)
-				break;
 
 			if (SwitchNear)
 				if (autoForward(150))
@@ -444,7 +463,7 @@ class Robot: public frc::TimedRobot {
 			if (SwitchNear)
 				if (autoForward(18)) {
 					autoNextState();
-					autoModeState = 8; // Go To End
+					autoModeState = 7; // Go To End
 				}
 
 			if (SwitchFar)
@@ -454,7 +473,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 4:
-			if (autoTurn(-25 * rotDir))
+			if (autoTurn((-90 - 25) * rotDir))
 				autoNextState();
 			break;
 
@@ -464,16 +483,16 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			if (autoTurn(-55 * rotDir))
+			if (autoTurn(-180 * rotDir))
 				autoNextState();
 			break;
 
-		case 7:
-			if (autoForward(6.0))
+		case 7:  // dont forget to update step 3!!!!!
+			if (timedDrive(1.5, 0.8, 0.8))
 				autoNextState();
 			break;
 
-		case 8: // dont forget to update step 3!!!!!
+		case 8:
 			AutonTimer.Reset();
 			AutonTimer.Stop();
 			stopMotors();
@@ -490,70 +509,91 @@ class Robot: public frc::TimedRobot {
 		}
 
 		return;
-
 	}
 
+	/*
+	 * AUTO PROGRAM -  SCALE
+	 *
+	 * Start robot in side of wall, with the corner of the robot touching the portal
+	 *
+	 * The robot will go the the proper side of the scale based on FMS data.
+	 * But it will score on the side or front of switch, so that we do not interfere with
+	 * our alliance partners doing the same program
+	 *
+	 * Input parameter is which side of the field the robot is starting on (left | right)
+	 */
 	void autoScale(bool isRightSide) {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
+		double elevatorPreset = -17500;
 
-		bool SwitchNear;
+		bool targetNear;
+		bool targetFar;
 		double rotDir;
-		bool SwitchFar;
+
 		if (isRightSide) {
-			SwitchNear = (autoGameData[0] == 'R');
-			SwitchFar = (autoGameData[0] == 'L');
+			targetNear = (autoGameData[1] == 'R');
+			targetFar = (autoGameData[1] == 'L');
 			rotDir = -1.0;
 		} else {
-			SwitchNear = (autoGameData[0] == 'L');
-			SwitchFar = (autoGameData[0] == 'R');
+			targetNear = (autoGameData[1] == 'L');
+			targetFar = (autoGameData[1] == 'R');
 			rotDir = 1.0;
 		}
 
 		switch (autoModeState) {
 		case 1:
-			ElevPosTarget = -17500;
-			IO.DriveBase.Wrist1.Set(-0.35);
 
-			if (AutonTimer.Get() < 0.5)
-				break;
-
-			if (SwitchNear)
-				if (autoForward(256+48))
+			if (targetNear)
+				if (autoForward(304))
 					autoNextState();
 
-			if (SwitchFar)
+			if (targetFar)
 				if (autoForward(226))
 					autoNextState();
 
 			break;
 
 		case 2:
-			if (autoTurn(-90 * rotDir))
-				autoNextState();
+
+			if (targetNear) {
+				IO.DriveBase.Wrist1.Set(-0.35);
+				ElevPosTarget = elevatorPreset;
+				double elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
+				if (autoTurn(-90 * rotDir) && elevError < 100)
+					autoNextState();
+			}
+
+			if (targetFar)
+				if (autoTurn(90 * rotDir))
+					autoNextState();
 			break;
 
 		case 3:
-			if (SwitchNear)
+			if (targetNear)
 				if (autoForward(6)) {
 					autoNextState();
 					autoModeState = 6; // Go To End
 				}
 
-			if (SwitchFar)
-				if (autoForward(150+36))
+			if (targetFar)
+				if (autoForward(186))
 					autoNextState();
 
 			break;
 
 		case 4:
-			if (autoTurn(90 * rotDir))
+			IO.DriveBase.Wrist1.Set(-0.35);
+			ElevPosTarget = elevatorPreset;
+			double elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
+
+			if (autoTurn(0) && elevError < 100)
 				autoNextState();
 			break;
 
 		case 5:
-			if (autoForward(36.0))
+			if (autoForward(24.0))
 				autoNextState();
 			break;
 
@@ -602,7 +642,7 @@ class Robot: public frc::TimedRobot {
 		}
 	}
 
-#define Elevator_MAXSpeed (0.50)
+#define Elevator_MAXSpeed (0.75)
 #define Elevator_KP (0.002)
 #define ElevatorPositionTol (3)
 
@@ -626,55 +666,6 @@ class Robot: public frc::TimedRobot {
 		} else
 			elevatorSpeed(ElevCmd);
 		return false;
-	}
-
-#define Wrist_MaxSpeed (1)
-#define Wrist_Idle (.4)
-
-	bool wristPosition(int position) {
-// Controls the wrist position.
-// for now it will send the wrist to position 1 or position 2 then return true when it is in that position
-		int wristOutput;
-		bool switchWrist1 = IO.DriveBase.SwitchWrist1.Get();
-		bool switchWrist2 = IO.DriveBase.SwitchWrist1.Get();
-		bool inCorrectPosition = false;
-		switch (position) {
-		case 1:
-			///if the wrist is in position 1
-			if (switchWrist1 == true) {
-				//it is in position 1
-				wristOutput = Wrist_Idle;
-				inCorrectPosition = true;
-			} else {
-				// it isn't in position 1
-				wristOutput = 1;
-				inCorrectPosition = false;
-			}
-			break;
-		case 2:
-			if (switchWrist2 == true) {
-				wristOutput = -Wrist_Idle;
-				inCorrectPosition = true;
-			} else {
-				wristOutput = -1;
-				inCorrectPosition = false;
-			}
-			break;
-		case 0:
-			inCorrectPosition = false;
-			break;
-		default:
-			inCorrectPosition = false;
-			break;
-		}
-
-		// Cap the speed to the maximum
-		wristOutput = std::max(std::min(wristOutput, Wrist_MaxSpeed), -Wrist_MaxSpeed);
-
-		IO.DriveBase.Wrist1.Set(wristOutput);
-
-		return inCorrectPosition;
-
 	}
 
 // Drivetrain functions
@@ -731,7 +722,7 @@ class Robot: public frc::TimedRobot {
 
 		// Use Gyro to drive straight
 		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
-		double driveCommandRotation = (gyroAngle) * KP_ROTATION;
+		double driveCommandRotation = (gyroAngle - autoHeading) * KP_ROTATION;
 		//calculates and sets motor speeds
 		motorSpeed(driveCommandLinear - driveCommandRotation, driveCommandLinear + driveCommandRotation);
 
@@ -769,6 +760,7 @@ class Robot: public frc::TimedRobot {
 		if (abs(yawError) > ROTATION_TOLERANCE) {
 			autoSettleTimer.Reset();
 		} else if (autoSettleTimer.Get() > ROTATIONAL_SETTLING_TIME) {
+			autoHeading = targetYaw;
 			return 1;
 		}
 
