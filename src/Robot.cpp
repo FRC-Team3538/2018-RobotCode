@@ -103,6 +103,9 @@ class Robot: public frc::TimedRobot {
 	void TeleopInit() {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
+		elevatorSpeed(0);
+		ElevPosTarget = 0;
+
 
 	}
 
@@ -142,7 +145,7 @@ class Robot: public frc::TimedRobot {
 		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
 		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
-		//Smoothing algorithm for x^3
+		//Smoothing algorithm for x^3 on throttle (linear)
 		if (!IO.DriveBase.SolenoidShifter.Get()) {
 			if (SpeedLinear > Control_Deadband)
 				OutputY = Drive_Deadband
@@ -163,6 +166,28 @@ class Robot: public frc::TimedRobot {
 				OutputY = 0;
 		}
 
+		// Smoothing algorithm for x^5 on turn (rotate)
+		if (!IO.DriveBase.SolenoidShifter.Get()) {
+			if (SpeedRotate > Control_Deadband)
+				OutputX = Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedRotate, 3));
+			else if (SpeedRotate < -Control_Deadband)
+				OutputX = -Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedRotate, 3));
+			else
+				OutputX = 0;
+		} else {
+			if (SpeedRotate > Control_Deadband)
+				OutputX = Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedRotate, 3));
+			else if (SpeedRotate < -Control_Deadband)
+				OutputX = -Drive_Deadband
+						+ (Smoothing_Gain * pow(SpeedRotate, 3));
+			else
+				OutputX = 0;
+		}
+
+
 		// Set dead band for X and Y axis
 		if (fabs(SpeedLinear) < Control_Deadband)
 			SpeedLinear = 0.0;
@@ -179,6 +204,7 @@ class Robot: public frc::TimedRobot {
 		/*
 		 * MANIP CODE
 		 */
+		ElevOverride = false;
 
 		// reversing controller input so up gives positive input
 		double ElevatorStick = IO.DS.OperatorStick.GetY(
@@ -221,7 +247,7 @@ class Robot: public frc::TimedRobot {
 		} else if (!ElevOverride)     // Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
 		else
-			elevatorSpeed(0); // Stop elevator movement whe Elevator Override = true;
+			elevatorSpeed(0); // Stop elevator movement when Elevator Override = true;
 
 
 
