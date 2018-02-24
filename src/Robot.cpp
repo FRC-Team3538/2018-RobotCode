@@ -123,6 +123,20 @@ class Robot: public frc::TimedRobot {
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
 			IO.DriveBase.SolenoidShifter.Set(false); // Low gear
 
+		if (IO.DS.DriveStick.GetAButton()) {
+			// A Button - Loose Intake
+			IO.DriveBase.Zbar.Set(true);
+		} else {
+			IO.DriveBase.Zbar.Set(false);
+		}
+
+		if (IO.DS.DriveStick.GetBButton()) {
+			// A Button - Loose Intake
+			IO.DriveBase.Zbar1.Set(true);
+		} else {
+			IO.DriveBase.Zbar1.Set(false);
+		}
+
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
@@ -527,6 +541,7 @@ class Robot: public frc::TimedRobot {
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 		double elevatorPreset = -17500;
+		double elevError;
 
 		bool targetNear;
 		bool targetFar;
@@ -560,7 +575,7 @@ class Robot: public frc::TimedRobot {
 			if (targetNear) {
 				IO.DriveBase.Wrist1.Set(-0.35);
 				ElevPosTarget = elevatorPreset;
-				double elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
+				elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
 				if (autoTurn(-90 * rotDir) && elevError < 100)
 					autoNextState();
 			}
@@ -586,7 +601,7 @@ class Robot: public frc::TimedRobot {
 		case 4:
 			IO.DriveBase.Wrist1.Set(-0.35);
 			ElevPosTarget = elevatorPreset;
-			double elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
+			elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
 
 			if (autoTurn(0) && elevError < 100)
 				autoNextState();
@@ -625,6 +640,10 @@ class Robot: public frc::TimedRobot {
 	void elevatorSpeed(double elevMotor) {
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
+
+		//if ((IO.DriveBase.EncoderElevator == 0) and  (ElevatorLowerLimit == true)){
+		//
+		//}
 
 		if (ElevatorLowerLimit == false) {
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
