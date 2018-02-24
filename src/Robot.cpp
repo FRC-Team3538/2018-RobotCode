@@ -78,6 +78,9 @@ class Robot: public frc::TimedRobot {
 	void TeleopInit() {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
+		elevatorSpeed(0);
+		ElevPosTarget = 0;
+
 
 		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 	}
@@ -133,9 +136,11 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
 
+
 		/*
 		 * MANIP CODE
 		 */
+		ElevOverride = false;
 
 		// reversing controller input so up gives positive input
 		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
@@ -170,7 +175,6 @@ class Robot: public frc::TimedRobot {
 		} else if (!ElevOverride) {
 			// Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
-
 		} else {
 			// Stop elevator movement when Elevator Override = true;
 			elevatorSpeed(0);
