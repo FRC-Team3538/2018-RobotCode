@@ -81,7 +81,6 @@ class Robot: public frc::TimedRobot {
 		elevatorSpeed(0);
 		ElevPosTarget = 0;
 
-
 		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 	}
 
@@ -123,6 +122,20 @@ class Robot: public frc::TimedRobot {
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
 			IO.DriveBase.SolenoidShifter.Set(false); // Low gear
 
+		if (IO.DS.DriveStick.GetAButton()) {
+			// A Button - Loose Intake
+			IO.DriveBase.Zbar.Set(true);
+		} else {
+			IO.DriveBase.Zbar.Set(false);
+		}
+
+		if (IO.DS.DriveStick.GetBButton()) {
+			// A Button - Loose Intake
+			IO.DriveBase.Zbar1.Set(true);
+		} else {
+			IO.DriveBase.Zbar1.Set(false);
+		}
+
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
@@ -135,7 +148,6 @@ class Robot: public frc::TimedRobot {
 
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
-
 
 		/*
 		 * MANIP CODE
@@ -299,7 +311,6 @@ class Robot: public frc::TimedRobot {
 			autoScale(true);
 		}
 
-
 	}
 
 	void autoLine(void) {
@@ -335,7 +346,6 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
-
 
 			if (AutonTimer.Get() < 0.5)
 				break;
@@ -520,7 +530,7 @@ class Robot: public frc::TimedRobot {
 				break;
 
 			if (SwitchNear)
-				if (autoForward(256+48))
+				if (autoForward(256 + 48))
 					autoNextState();
 
 			if (SwitchFar)
@@ -542,7 +552,7 @@ class Robot: public frc::TimedRobot {
 				}
 
 			if (SwitchFar)
-				if (autoForward(150+36))
+				if (autoForward(150 + 36))
 					autoNextState();
 
 			break;
@@ -585,6 +595,10 @@ class Robot: public frc::TimedRobot {
 	void elevatorSpeed(double elevMotor) {
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
+
+		//if ((IO.DriveBase.EncoderElevator == 0) and  (ElevatorLowerLimit == true)){
+		//
+		//}
 
 		if (ElevatorLowerLimit == false) {
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0

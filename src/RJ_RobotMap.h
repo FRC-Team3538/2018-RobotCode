@@ -71,6 +71,8 @@ public:
 
 		// Shifting Solenoid
 		Solenoid SolenoidShifter { 0 };
+		Solenoid Zbar { 3 };
+		Solenoid Zbar1 { 4 };
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;
