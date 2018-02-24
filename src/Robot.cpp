@@ -286,7 +286,11 @@ class Robot: public frc::TimedRobot {
 		}
 		if (autoPosition == IO.DS.AutoSwitchLeft) {
 			// Start Side, score in switch
-			autoSwitchSide();
+			autoSwitchSide(false);
+		}
+		if (autoPosition == IO.DS.AutoSwitchRight) {
+			// Start Side, score in switch
+			autoScale(false);
 		}
 
 	}
@@ -295,7 +299,6 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-
 			if (autoForward(122.0))
 				autoNextState();
 			break;
@@ -326,6 +329,8 @@ class Robot: public frc::TimedRobot {
 			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
 
+			if (AutonTimer.Get() < 0.5)
+				break;
 
 			if (autoForward(48))
 				autoNextState();
@@ -386,60 +391,69 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-	void autoSwitchSide(void) {
+	void autoSwitchSide(bool isRightSide) {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 
-		bool SwitchLeft = (autoGameData[0] == 'L');
-		bool SwitchRight = (autoGameData[0] == 'R');
+		bool SwitchNear;
+		bool SwitchFar;
+		if (isRightSide) {
+			SwitchNear = (autoGameData[0] == 'R');
+			SwitchFar = (autoGameData[0] == 'L');
+		} else {
+			SwitchNear = (autoGameData[0] == 'L');
+			SwitchFar = (autoGameData[0] == 'R');
+		}
 
 		switch (autoModeState) {
 		case 1:
 			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
 
+			if (AutonTimer.Get() < 0.5)
+				break;
 
-			if (SwitchLeft)
+			if (SwitchNear)
 				if (autoForward(150))
 					autoNextState();
 
-			if (SwitchRight)
+			if (SwitchFar)
 				if (autoForward(226))
 					autoNextState();
 
 			break;
 
 		case 2:
-			if (autoTurn(-90))
+			if (autoTurn(-90 * -isRightSide))
 				autoNextState();
 			break;
 
 		case 3:
-			if (SwitchLeft)
-				if (autoForward(22)) {
+			if (SwitchNear)
+				if (autoForward(18)) {
 					autoNextState();
 					autoModeState = 8; // Go To End
 				}
 
-			if (SwitchRight)
-				if (autoForward(154))
+			if (SwitchFar)
+				if (autoForward(150))
 					autoNextState();
 
 			break;
 
 		case 4:
-			if (autoTurn(-25))
+			if (autoTurn(-25 * -isRightSide))
 				autoNextState();
 			break;
 
 		case 5:
-			if (autoForward(38.0))
+			if (autoForward(36.0))
 				autoNextState();
 			break;
 
 		case 6:
-			if (autoTurn(-55))
+			if (autoTurn(-55 * -isRightSide))
 				autoNextState();
 			break;
 
@@ -577,11 +591,11 @@ class Robot: public frc::TimedRobot {
 	}
 
 	// Go AutoForward autonomously...
-#define KP_LINEAR (0.07)
-#define LINEAR_SETTLING_TIME (0.250)
+#define KP_LINEAR (0.09)
+#define LINEAR_SETTLING_TIME (0.200)
 #define LINEAR_MAX_DRIVE_SPEED (0.80)
 #define LINEAR_TOLERANCE (0.5)
-#define KP_ROTATION (0.017)
+#define KP_ROTATION (0.04)
 #define ROTATIONAL_SETTLING_TIME (0.5)
 
 	int autoForward(double targetDistance) {
