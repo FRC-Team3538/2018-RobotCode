@@ -37,6 +37,8 @@ public:
 		const std::string AutoSwitchCenter = "Switch Center";
 		const std::string AutoSwitchLeft = "Switch Left";
 		const std::string AutoSwitchRight = "Switch Right";
+		const std::string AutoScaleLeft = "Scale Left";
+		const std::string AutoScaleRight = "Scale Right";
 
 		SendableChooser<std::string> chooseAutoEncoder;
 		const std::string EncoderAuto  = "Auto";

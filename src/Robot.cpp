@@ -277,21 +277,24 @@ class Robot: public frc::TimedRobot {
 
 		// Select a Starting Location
 		if (autoPosition == IO.DS.AutoLine) {
-			// Start Center, score in switch
 			autoLine();
 		}
 		if (autoPosition == IO.DS.AutoSwitchCenter) {
-			// Start Center, score in switch
 			autoCenter();
 		}
 		if (autoPosition == IO.DS.AutoSwitchLeft) {
-			// Start Side, score in switch
 			autoSwitchSide(false);
 		}
 		if (autoPosition == IO.DS.AutoSwitchRight) {
-			// Start Side, score in switch
+			autoSwitchSide(true);
+		}
+		if (autoPosition == IO.DS.AutoScaleLeft) {
 			autoScale(false);
 		}
+		if (autoPosition == IO.DS.AutoScaleRight) {
+			autoScale(true);
+		}
+
 
 	}
 
@@ -328,6 +331,7 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			ElevPosTarget = -6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
+
 
 			if (AutonTimer.Get() < 0.5)
 				break;
@@ -397,13 +401,16 @@ class Robot: public frc::TimedRobot {
 		elevatorPosition(ElevPosTarget);
 
 		bool SwitchNear;
+		double rotDir;
 		bool SwitchFar;
 		if (isRightSide) {
 			SwitchNear = (autoGameData[0] == 'R');
 			SwitchFar = (autoGameData[0] == 'L');
+			rotDir = -1.0;
 		} else {
 			SwitchNear = (autoGameData[0] == 'L');
 			SwitchFar = (autoGameData[0] == 'R');
+			rotDir = 1.0;
 		}
 
 		switch (autoModeState) {
@@ -425,7 +432,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 2:
-			if (autoTurn(-90 * -isRightSide))
+			if (autoTurn(-90 * rotDir))
 				autoNextState();
 			break;
 
@@ -443,7 +450,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 4:
-			if (autoTurn(-25 * -isRightSide))
+			if (autoTurn(-25 * rotDir))
 				autoNextState();
 			break;
 
@@ -453,7 +460,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			if (autoTurn(-55 * -isRightSide))
+			if (autoTurn(-55 * rotDir))
 				autoNextState();
 			break;
 
@@ -463,6 +470,90 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 8: // dont forget to update step 3!!!!!
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+			IO.DriveBase.ClawIntake1.Set(-1);
+
+			autoNextState();
+
+			break;
+		default:
+			stopMotors();
+
+		}
+
+		return;
+
+	}
+
+	void autoScale(bool isRightSide) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+
+		bool SwitchNear;
+		double rotDir;
+		bool SwitchFar;
+		if (isRightSide) {
+			SwitchNear = (autoGameData[0] == 'R');
+			SwitchFar = (autoGameData[0] == 'L');
+			rotDir = -1.0;
+		} else {
+			SwitchNear = (autoGameData[0] == 'L');
+			SwitchFar = (autoGameData[0] == 'R');
+			rotDir = 1.0;
+		}
+
+		switch (autoModeState) {
+		case 1:
+			ElevPosTarget = -17500;
+			IO.DriveBase.Wrist1.Set(-0.35);
+
+			if (AutonTimer.Get() < 0.5)
+				break;
+
+			if (SwitchNear)
+				if (autoForward(256+48))
+					autoNextState();
+
+			if (SwitchFar)
+				if (autoForward(226))
+					autoNextState();
+
+			break;
+
+		case 2:
+			if (autoTurn(-90 * rotDir))
+				autoNextState();
+			break;
+
+		case 3:
+			if (SwitchNear)
+				if (autoForward(6)) {
+					autoNextState();
+					autoModeState = 6; // Go To End
+				}
+
+			if (SwitchFar)
+				if (autoForward(150+36))
+					autoNextState();
+
+			break;
+
+		case 4:
+			if (autoTurn(90 * rotDir))
+				autoNextState();
+			break;
+
+		case 5:
+			if (autoForward(36.0))
+				autoNextState();
+			break;
+
+		case 6: // dont forget to update step 3!!!!!
 			AutonTimer.Reset();
 			AutonTimer.Stop();
 			stopMotors();

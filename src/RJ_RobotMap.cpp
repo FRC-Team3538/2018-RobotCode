@@ -39,6 +39,8 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoProgram.AddObject(DS.AutoSwitchCenter, DS.AutoSwitchCenter);
 	DS.chooseAutoProgram.AddObject(DS.AutoSwitchLeft, DS.AutoSwitchLeft);
 	DS.chooseAutoProgram.AddObject(DS.AutoSwitchRight, DS.AutoSwitchRight);
+	DS.chooseAutoProgram.AddObject(DS.AutoScaleLeft, DS.AutoScaleLeft);
+	DS.chooseAutoProgram.AddObject(DS.AutoScaleRight, DS.AutoScaleRight);
 	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
 	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoProgram);
 
