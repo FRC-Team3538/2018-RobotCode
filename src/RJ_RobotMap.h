@@ -32,9 +32,11 @@ public:
 		const std::string sAutoDelay5 = "5 Seconds";
 
 		SendableChooser<std::string> chooseAutoProgram;
-		const std::string AutoLeftSpot = "Left";
-		const std::string AutoCenterSpot = "Center";
-		const std::string AutoRightSpot = "Right";
+		const std::string AutoNone = "None";
+		const std::string AutoLine = "Line";
+		const std::string AutoSwitchCenter = "Switch Center";
+		const std::string AutoSwitchLeft = "Switch Left";
+		const std::string AutoSwitchRight = "Switch Right";
 
 		SendableChooser<std::string> chooseAutoEncoder;
 		const std::string EncoderAuto  = "Auto";

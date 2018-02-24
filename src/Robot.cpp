@@ -51,8 +51,8 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.ahrs.ZeroYaw();
 
 		// Start Vision Thread
-		std::thread visionThread(VisionThread);
-		visionThread.detach();
+		//std::thread visionThread(VisionThread);
+		//visionThread.detach();
 	}
 
 	void RobotPeriodic() {
@@ -79,6 +79,7 @@ class Robot: public frc::TimedRobot {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
 
+		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 	}
 
 	void TeleopPeriodic() {
@@ -94,20 +95,23 @@ class Robot: public frc::TimedRobot {
 		SpeedRotate = deadband(SpeedRotate, Control_Deadband);
 
 		// Smoothing algorithm for x^3
-		if (SpeedLinear > 0)
+		if (SpeedLinear > 0.0)
 			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) + Drive_Deadband;
 		else
 			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) - Drive_Deadband;
 
-		// Limit max rotation speed for increased sensitivity
-		SpeedRotate = 0.8 * SpeedRotate;
+		// Smoothing algorithm for x^3
+		if (SpeedRotate > 0.0)
+			SpeedRotate = (1 - Drive_Deadband) * pow(SpeedRotate, 3) + Drive_Deadband;
+		else
+			SpeedRotate = (1 - Drive_Deadband) * pow(SpeedRotate, 3) - Drive_Deadband;
 
 		// Moving Average Filter (Previous 5 commands are averaged together.)
 		OutputY = (0.8 * OutputY) + (0.2 * SpeedLinear);
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
 		// Drive Code (WPI Built-in)
-		Adrive.ArcadeDrive(OutputX, OutputY, true);
+		Adrive.ArcadeDrive(OutputY, OutputX, true);
 
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -137,37 +141,36 @@ class Robot: public frc::TimedRobot {
 		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
 		ElevatorStick = deadband(ElevatorStick, Control_Deadband);
 
-		// Smoothing algorithm for x^3
-		// No reverse bias is needed thanks to gravity
-		ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
-
 		// Elevator Preset Positions [DPAD]
 		switch (IO.DS.OperatorStick.GetPOV()) {
 		case 270:
 			// Dpad Left - Portal height
-			ElevPosTarget = 10500;
+			ElevPosTarget = -10500;
 			break;
 		case 90:
 			// Dpad Right - Switch height
-			ElevPosTarget = 2600;
+			ElevPosTarget = -2600;
 			break;
 		case 180:
 			// Dpad Down - ground/intake level
-			ElevPosTarget = 1342;
+			ElevPosTarget = -1342;
 			break;
 		case 0:
 			// Dpad  Up - Scale Position
-			ElevPosTarget = 15000;
+			ElevPosTarget = -15000;
 			break;
 		}
 
-		if (fabs(ElevatorStick) > 0.0) {
+		if (fabs(ElevatorStick) > Control_Deadband) {
 			// Manual control of Joystick
+			ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
 			elevatorSpeed(ElevatorStick);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
+
 		} else if (!ElevOverride) {
 			// Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
+
 		} else {
 			// Stop elevator movement when Elevator Override = true;
 			elevatorSpeed(0);
@@ -207,7 +210,7 @@ class Robot: public frc::TimedRobot {
 
 		} else if (IO.DS.OperatorStick.GetXButton()) {
 			// X Button - Tight Intake
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
 			IO.DriveBase.ClawIntake1.Set(1);
 
 		} else if (IO.DS.OperatorStick.GetYButton()) {
@@ -254,11 +257,14 @@ class Robot: public frc::TimedRobot {
 	}
 
 	// Reset all the stuff that needs to be reset at each state
-	void autoNextState(int nextState) {
-		autoModeState = nextState;
+	void autoNextState() {
+		autoModeState++;
 		AutonTimer.Reset();
 		autoSettleTimer.Reset();
 		IO.DriveBase.ahrs.ZeroYaw(); // TODO: DAW - I don't like this...
+		IO.DriveBase.EncoderLeft.Reset();
+		IO.DriveBase.EncoderRight.Reset();
+		stopMotors();
 	}
 
 	void AutonomousPeriodic() {
@@ -270,15 +276,41 @@ class Robot: public frc::TimedRobot {
 			return;
 
 		// Select a Starting Location
-		if (autoPosition == IO.DS.AutoCenterSpot) {
+		if (autoPosition == IO.DS.AutoLine) {
+			// Start Center, score in switch
+			autoLine();
+		}
+		if (autoPosition == IO.DS.AutoSwitchCenter) {
 			// Start Center, score in switch
 			autoCenter();
 		}
-		if (autoPosition == IO.DS.AutoLeftSpot) {
-			// Start Left, score scale
+		if (autoPosition == IO.DS.AutoSwitchLeft) {
+			// Start Side, score in switch
+			autoSwitchSide();
+		}
+
+	}
+
+	void autoLine(void) {
+
+		switch (autoModeState) {
+		case 1:
+
+			if (autoForward(122.0))
+				autoNextState();
+			break;
+
+		case 2:
+			if (autoTurn(-90.0))
+				autoNextState();
+			break;
+
+		default:
+			stopMotors();
 
 		}
 
+		return;
 	}
 
 	void autoCenter(void) {
@@ -291,60 +323,58 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			ElevPosTarget = 6500;
-			IO.DriveBase.Wrist1.Set(0.35);
+			ElevPosTarget = -6500;
+			IO.DriveBase.Wrist1.Set(-0.35);
 
-			if (autoForward(24))
-				autoNextState(2);
+
+			if (autoForward(48))
+				autoNextState();
 			break;
+
 		case 2:
 			// Pick a direction based on FMS switch state
-			if (SwitchLeft) {
+			if (SwitchLeft)
 				if (autoTurn(90))
-					autoNextState(3);
+					autoNextState();
 
-			} else if (SwitchRight) {
+			if (SwitchRight)
 				if (autoTurn(-90))
-					autoNextState(3);
-			}
+					autoNextState();
 
 			break;
+
 		case 3:
-			if (SwitchLeft) {
-				if (autoForward(48))
-					autoNextState(4);
-
-			} else if (SwitchRight) {
-				if (autoForward(48))
-					autoNextState(4);
-			}
+			// Drive to center of switch platform
+			if (autoForward(48.0))
+				autoNextState();
 
 			break;
+
 		case 4:
 			// Pick a direction based on FMS switch state
-			if (SwitchLeft) {
+			if (SwitchLeft)
 				if (autoTurn(-90))
-					autoNextState(5);
+					autoNextState();
 
-			} else if (SwitchRight) {
+			if (SwitchRight)
 				if (autoTurn(90))
-					autoNextState(5);
-			}
+					autoNextState();
 			break;
-		case 5:
 
-			if (autoForward(36))
-				autoNextState(6);
+		case 5:
+			if (autoForward(59.0))
+				autoNextState();
 			break;
+
 		case 6:
 			AutonTimer.Reset();
 			AutonTimer.Stop();
 			stopMotors();
 
-			IO.DriveBase.Wrist1.Set(0.2);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+			IO.DriveBase.ClawIntake1.Set(-1);
 
-			autoNextState(7);
+			autoNextState();
 
 			break;
 		default:
@@ -353,10 +383,93 @@ class Robot: public frc::TimedRobot {
 		}
 
 		return;
+
+	}
+
+	void autoSwitchSide(void) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+
+		bool SwitchLeft = (autoGameData[0] == 'L');
+		bool SwitchRight = (autoGameData[0] == 'R');
+
+		switch (autoModeState) {
+		case 1:
+			ElevPosTarget = -6500;
+			IO.DriveBase.Wrist1.Set(-0.35);
+
+
+			if (SwitchLeft)
+				if (autoForward(150))
+					autoNextState();
+
+			if (SwitchRight)
+				if (autoForward(226))
+					autoNextState();
+
+			break;
+
+		case 2:
+			if (autoTurn(-90))
+				autoNextState();
+			break;
+
+		case 3:
+			if (SwitchLeft)
+				if (autoForward(22)) {
+					autoNextState();
+					autoModeState = 8; // Go To End
+				}
+
+			if (SwitchRight)
+				if (autoForward(154))
+					autoNextState();
+
+			break;
+
+		case 4:
+			if (autoTurn(-25))
+				autoNextState();
+			break;
+
+		case 5:
+			if (autoForward(38.0))
+				autoNextState();
+			break;
+
+		case 6:
+			if (autoTurn(-55))
+				autoNextState();
+			break;
+
+		case 7:
+			if (autoForward(6.0))
+				autoNextState();
+			break;
+
+		case 8: // dont forget to update step 3!!!!!
+			AutonTimer.Reset();
+			AutonTimer.Stop();
+			stopMotors();
+
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
+			IO.DriveBase.ClawIntake1.Set(-1);
+
+			autoNextState();
+
+			break;
+		default:
+			stopMotors();
+
+		}
+
+		return;
+
 	}
 
 	void motorSpeed(double leftMotor, double rightMotor) {
-		IO.DriveBase.MotorsLeft.Set(leftMotor);
+		IO.DriveBase.MotorsLeft.Set(-leftMotor);
 		IO.DriveBase.MotorsRight.Set(rightMotor);
 	}
 
@@ -378,10 +491,9 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Elevator1.Set(elevMotor);
 			IO.DriveBase.Elevator2.Set(elevMotor);
 		}
-		SmartDashboard::PutNumber("elevMotor", elevMotor);
 	}
 
-#define Elevator_MAXSpeed (0.70)
+#define Elevator_MAXSpeed (0.50)
 #define Elevator_KP (0.002)
 #define ElevatorPositionTol (3)
 
@@ -389,13 +501,15 @@ class Robot: public frc::TimedRobot {
 
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
-		double ElevCmd = ElevError * -Elevator_KP; // P term
+		double ElevCmd = ElevError * Elevator_KP; // P term
 
 		//Limit Elevator Max Speed
 		if (ElevCmd > Elevator_MAXSpeed)
 			ElevCmd = Elevator_MAXSpeed;
 		if (ElevCmd < -Elevator_MAXSpeed)
 			ElevCmd = -Elevator_MAXSpeed;
+
+		SmartDashboard::PutNumber("Elev error", fabs(ElevError));
 
 		// Check if we made it to the target
 		if (fabs(ElevError) <= ElevatorPositionTol) {
@@ -463,10 +577,10 @@ class Robot: public frc::TimedRobot {
 	}
 
 	// Go AutoForward autonomously...
-#define KP_LINEAR (0.27)
+#define KP_LINEAR (0.07)
 #define LINEAR_SETTLING_TIME (0.250)
-#define LINEAR_MAX_DRIVE_SPEED (0.35)
-#define LINEAR_TOLERANCE (0.125)
+#define LINEAR_MAX_DRIVE_SPEED (0.80)
+#define LINEAR_TOLERANCE (0.5)
 #define KP_ROTATION (0.017)
 #define ROTATIONAL_SETTLING_TIME (0.5)
 
@@ -494,6 +608,8 @@ class Robot: public frc::TimedRobot {
 		else if (autoEncoder == IO.DS.EncoderRight)
 			encoderDistance = encoderRight;
 
+		SmartDashboard::PutNumber("Auto FWD dist", encoderDistance);
+
 		// Calculate motor power
 		double encoderError = targetDistance - encoderDistance;
 		double driveCommandLinear = encoderError * KP_LINEAR;
@@ -506,9 +622,11 @@ class Robot: public frc::TimedRobot {
 
 		// Use Gyro to drive straight
 		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
-		double driveCommandRotation = gyroAngle * KP_ROTATION;
+		double driveCommandRotation = (gyroAngle) * KP_ROTATION;
 		//calculates and sets motor speeds
-		motorSpeed(driveCommandLinear + driveCommandRotation, driveCommandLinear - driveCommandRotation);
+		motorSpeed(driveCommandLinear - driveCommandRotation, driveCommandLinear + driveCommandRotation);
+
+		SmartDashboard::PutNumber("Auto FWD err", abs(encoderError));
 
 		// Allow robot to come to a stop after reaching target
 		if (abs(encoderError) > LINEAR_TOLERANCE) {
@@ -520,7 +638,7 @@ class Robot: public frc::TimedRobot {
 		return 0;
 	}
 
-#define ROTATION_kP (-0.05)
+#define ROTATION_kP (-0.04)
 #define ROTATION_TOLERANCE (2.0)
 
 	int autoTurn(float targetYaw) {
@@ -536,7 +654,7 @@ class Robot: public frc::TimedRobot {
 			yawCommand = -0.5;
 
 		// dooo it!
-		motorSpeed(yawCommand, -yawCommand);
+		motorSpeed(-yawCommand, yawCommand);
 
 		// Allow for the robot to settle into position
 		if (abs(yawError) > ROTATION_TOLERANCE) {
@@ -589,6 +707,10 @@ class Robot: public frc::TimedRobot {
 
 	void SmartDashboardUpdate() {
 
+		// Motor Outputs
+		SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
+		SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
+
 		// Auto State
 		SmartDashboard::PutString("Auto Posn", autoPosition);
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
@@ -602,7 +724,8 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Drive Encoder Right (Inch)", IO.DriveBase.EncoderRight.GetDistance());
 
 		// Elevator Encoders
-		SmartDashboard::PutNumber("Elevator Encoder", IO.DriveBase.EncoderElevator.Get());
+		SmartDashboard::PutNumber("Elevator Encoder [RAW]", IO.DriveBase.EncoderElevator.Get());
+		SmartDashboard::PutNumber("Elevator Encoder [INCH]", IO.DriveBase.EncoderElevator.GetDistance());
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
@@ -631,7 +754,7 @@ class Robot: public frc::TimedRobot {
 			return 0.0;
 
 		// Transform input so that output has full range [0.0 - 1.0]
-		if (input > 0)
+		if (input < 0.0)
 			return input * (1 - minval) - minval;
 		else
 			return input * (1 - minval) + minval;
@@ -641,21 +764,35 @@ class Robot: public frc::TimedRobot {
 	// Vision Thread
 	// Runs in parallel to the main robot control program
 	static void VisionThread() {
-		cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
-		camera.SetVideoMode(cs::VideoMode::kMJPEG, 640, 480, 30);
-		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("RGB", 160, 120);
-		outputStreamStd.SetVideoMode(cs::VideoMode::kGray, 160, 120, 30);
-		cv::Mat source;
-		cv::Mat output;
 
+		// Frame Rate [Hz]
+		int frameRate = 30;
+
+		// Connect to the USB Camera
+		cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
+		camera.SetVideoMode(cs::VideoMode::kMJPEG, 320, 240, frameRate);
+		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+
+		// Start a webserver for viewing camera stream
+		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("RJ Vision", 320, 240);
+		outputStreamStd.SetVideoMode(cs::VideoMode::kMJPEG, 160, 120, frameRate);
+
+		// Vision Loop
 		while (true) {
+			cv::Mat source;
+			cv::Mat output;
+
+			// Get image from camera
 			cvSink.GrabFrame(source);
+
+			// Convert image format
 			cvtColor(source, output, cv::COLOR_BGR2GRAY);
+
+			// Send image to webserver
 			outputStreamStd.PutFrame(output);
 
-			// Sleep to limit loop rate
-			std::chrono::milliseconds timespan(250);
+			// Sleep to limit loop rate [Unnecessary?]
+			std::chrono::milliseconds timespan(1000 / frameRate);
 			std::this_thread::sleep_for(timespan);
 		}
 

@@ -8,19 +8,19 @@ RJ_RobotMap::RJ_RobotMap() {
 
 	// Set Motor directions
 	DriveBase.MotorsLeft.SetInverted(false);
-	DriveBase.MotorsRight.SetInverted(true);
+	DriveBase.MotorsRight.SetInverted(false);
 
 	//Set Elevator Motor directions & Scale
 	DriveBase.Elevator1.SetInverted(true);
 	DriveBase.Elevator2.SetInverted(false);
-	DriveBase.EncoderElevator.SetDistancePerPulse(5000); //move one inch and measure pulses
+	DriveBase.EncoderElevator.SetDistancePerPulse((47.5)/-10197); //move one inch and measure pulses
 
 	// Set Encoder Direction & Scale
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
-	DriveBase.EncoderLeft.SetDistancePerPulse(100.0 / 11000.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(100.0 / 11000.0 * 4.0);
+	DriveBase.EncoderLeft.SetDistancePerPulse(167.0/ 16745.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(-167.0/ 16745.0 * 4.0);
 
 
 	// Set Default Gear
@@ -35,10 +35,13 @@ RJ_RobotMap::RJ_RobotMap() {
 
 
 	// Auto Program Chooser
-	DS.chooseAutoProgram.AddDefault(DS.AutoCenterSpot, DS.AutoCenterSpot);
-	DS.chooseAutoProgram.AddObject(DS.AutoLeftSpot, DS.AutoLeftSpot);
-	DS.chooseAutoProgram.AddObject(DS.AutoRightSpot, DS.AutoRightSpot);
+	DS.chooseAutoProgram.AddDefault(DS.AutoLine, DS.AutoLine);
+	DS.chooseAutoProgram.AddObject(DS.AutoSwitchCenter, DS.AutoSwitchCenter);
+	DS.chooseAutoProgram.AddObject(DS.AutoSwitchLeft, DS.AutoSwitchLeft);
+	DS.chooseAutoProgram.AddObject(DS.AutoSwitchRight, DS.AutoSwitchRight);
+	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
 	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoProgram);
+
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
@@ -47,10 +50,10 @@ RJ_RobotMap::RJ_RobotMap() {
 	frc::SmartDashboard::PutData("Auto Delay", &DS.chooseAutoDelay);
 
 	// Encoder Selection
-	DS.chooseAutoEncoder.AddDefault(DS.EncoderNone, "No Encoder");
-	DS.chooseAutoEncoder.AddObject(DS.EncoderAuto, "Auto Encoder");
-	DS.chooseAutoEncoder.AddObject(DS.EncoderLeft, "Left Encoder");
-	DS.chooseAutoEncoder.AddObject(DS.EncoderRight, "Right Encoder");
+	DS.chooseAutoEncoder.AddDefault(DS.EncoderNone, DS.EncoderNone);
+	DS.chooseAutoEncoder.AddObject(DS.EncoderAuto, DS.EncoderAuto);
+	DS.chooseAutoEncoder.AddObject(DS.EncoderLeft, DS.EncoderLeft);
+	DS.chooseAutoEncoder.AddObject(DS.EncoderRight, DS.EncoderRight);
 	frc::SmartDashboard::PutData("Drive Encoder", &DS.chooseAutoEncoder);
 
 }
