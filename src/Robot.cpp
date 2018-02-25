@@ -243,6 +243,7 @@ class Robot: public frc::TimedRobot {
 
 	}
 
+
 	void AutonomousInit() {
 		autoModeState = 1;
 
@@ -334,6 +335,11 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
+		case 3:
+			if (autoForward(48.0))
+				autoNextState();
+			break;
+
 		default:
 			stopMotors();
 
@@ -382,7 +388,7 @@ class Robot: public frc::TimedRobot {
 			ElevPosTarget = -6700;
 
 			// Drive to center of switch platform
-			if (autoForward(62.0))
+			if (autoForward(52.0))
 				autoNextState();
 			break;
 
@@ -392,12 +398,12 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
-			if (autoForward(18.0))
+			if (autoForward(23.0))
 				autoNextState();
 			break;
 
 		case 6:
-			if (timedDrive(1.5, 0.8, 0.8))
+			//if (timedDrive(0.5, 0.8, 0.8))
 				autoNextState();
 			break;
 
@@ -481,7 +487,7 @@ class Robot: public frc::TimedRobot {
 				}
 
 			if (SwitchFar)
-				if (autoForward(150))
+				if (autoForward(145))
 					autoNextState();
 
 			break;
@@ -502,7 +508,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 7:  // dont forget to update step 3!!!!!
-			if (timedDrive(1.5, 0.8, 0.8))
+			//if (timedDrive(0.5, 0.8, 0.8))
 				autoNextState();
 			break;
 
@@ -540,7 +546,8 @@ class Robot: public frc::TimedRobot {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
-		double elevatorPreset = -17500;
+		double elevatorPreset = -6500;
+		//double elevatorPreset = -17500;
 		double elevError;
 
 		bool targetNear;
@@ -581,7 +588,7 @@ class Robot: public frc::TimedRobot {
 			}
 
 			if (targetFar)
-				if (autoTurn(90 * rotDir))
+				if (autoTurn(-90 * rotDir))
 					autoNextState();
 			break;
 
@@ -779,7 +786,7 @@ class Robot: public frc::TimedRobot {
 		if (abs(yawError) > ROTATION_TOLERANCE) {
 			autoSettleTimer.Reset();
 		} else if (autoSettleTimer.Get() > ROTATIONAL_SETTLING_TIME) {
-			autoHeading = targetYaw;
+			autoHeading = -targetYaw;
 			return 1;
 		}
 
@@ -825,6 +832,23 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.LED0.Set(Relay::Value::kOn);
 	}
 
+	// Dead band function
+	// Scales output to accommodate for the loss of the deadband region
+	double deadband(double input, double minval) {
+
+		// If less than deadband value, return zero
+		if (fabs(input) < minval)
+			return 0.0;
+
+		// Transform input so that output has full range [0.0 - 1.0]
+		if (input < 0.0)
+			return input * (1 - minval) - minval;
+		else
+			return input * (1 - minval) + minval;
+
+	}
+
+
 	void SmartDashboardUpdate() {
 
 		// Motor Outputs
@@ -835,6 +859,7 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutString("Auto Posn", autoPosition);
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
+		SmartDashboard::PutNumber("Auto Heading", autoHeading);
 
 		// Drive Encoders
 		SmartDashboard::PutNumber("Drive Encoder Left (RAW)", IO.DriveBase.EncoderLeft.GetRaw());
@@ -865,58 +890,6 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 	}
 
-	// Dead band function
-	// Scales output to accommodate for the loss of the deadband region
-	double deadband(double input, double minval) {
-
-		// If less than deadband value, return zero
-		if (fabs(input) < minval)
-			return 0.0;
-
-		// Transform input so that output has full range [0.0 - 1.0]
-		if (input < 0.0)
-			return input * (1 - minval) - minval;
-		else
-			return input * (1 - minval) + minval;
-
-	}
-
-	// Vision Thread
-	// Runs in parallel to the main robot control program
-	static void VisionThread() {
-
-		// Frame Rate [Hz]
-		int frameRate = 30;
-
-		// Connect to the USB Camera
-		cs::UsbCamera camera = CameraServer::GetInstance()->StartAutomaticCapture();
-		camera.SetVideoMode(cs::VideoMode::kMJPEG, 320, 240, frameRate);
-		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-
-		// Start a webserver for viewing camera stream
-		cs::CvSource outputStreamStd = CameraServer::GetInstance()->PutVideo("RJ Vision", 320, 240);
-		outputStreamStd.SetVideoMode(cs::VideoMode::kMJPEG, 160, 120, frameRate);
-
-		// Vision Loop
-		while (true) {
-			cv::Mat source;
-			cv::Mat output;
-
-			// Get image from camera
-			cvSink.GrabFrame(source);
-
-			// Convert image format
-			cvtColor(source, output, cv::COLOR_BGR2GRAY);
-
-			// Send image to webserver
-			outputStreamStd.PutFrame(output);
-
-			// Sleep to limit loop rate [Unnecessary?]
-			std::chrono::milliseconds timespan(1000 / frameRate);
-			std::this_thread::sleep_for(timespan);
-		}
-
-	}
 };
 
 START_ROBOT_CLASS(Robot);
