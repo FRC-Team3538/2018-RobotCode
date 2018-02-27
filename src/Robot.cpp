@@ -49,10 +49,6 @@ class Robot: public frc::TimedRobot {
 
 		// Zeros the NavX Yaw
 		IO.DriveBase.ahrs.ZeroYaw();
-
-		// Start Vision Thread
-		//std::thread visionThread(VisionThread);
-		//visionThread.detach();
 	}
 
 	void RobotPeriodic() {
@@ -114,7 +110,7 @@ class Robot: public frc::TimedRobot {
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
 		// Drive Code (WPI Built-in)
-		Adrive.ArcadeDrive(OutputY, OutputX, true);
+		Adrive.ArcadeDrive(OutputY, OutputX);
 
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -153,7 +149,14 @@ class Robot: public frc::TimedRobot {
 		/*
 		 * MANIP CODE
 		 */
-		ElevOverride = false;
+
+		// Disable closed loop control and limit switches
+		// Command Override level 9
+		if (IO.DS.OperatorStick.GetStartButton())
+			ElevOverride = false;
+
+		if (IO.DS.OperatorStick.GetBackButton())
+			ElevOverride = true;
 
 		// reversing controller input so up gives positive input
 		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
@@ -163,25 +166,34 @@ class Robot: public frc::TimedRobot {
 		switch (IO.DS.OperatorStick.GetPOV()) {
 		case 270:
 			// Dpad Left - Portal height
-			ElevPosTarget = -10500;
+			ElevPosTarget = 10500;
 			break;
 		case 90:
 			// Dpad Right - Switch height
-			ElevPosTarget = -2600;
+			ElevPosTarget = 2600;
 			break;
 		case 180:
 			// Dpad Down - ground/intake level
-			ElevPosTarget = -1342;
+			ElevPosTarget = 1342;
 			break;
 		case 0:
 			// Dpad  Up - Scale Position
-			ElevPosTarget = -15000;
+			ElevPosTarget = 15000;
 			break;
 		}
 
 		if (fabs(ElevatorStick) > Control_Deadband) {
 			// Manual control of Joystick
-			ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
+			//ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
+
+
+			// Smoothing algorithm for x^3
+			if (ElevatorStick > 0.0)
+				ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
+			else
+				ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) - ElevDeadband;
+
+
 			elevatorSpeed(ElevatorStick);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 
@@ -190,7 +202,7 @@ class Robot: public frc::TimedRobot {
 			elevatorPosition(ElevPosTarget);
 		} else {
 			// Stop elevator movement when Elevator Override = true;
-			elevatorSpeed(0);
+			elevatorSpeed(0.0);
 		}
 
 		// Controller Rumble if the elevator motor current is high
@@ -242,7 +254,6 @@ class Robot: public frc::TimedRobot {
 		}
 
 	}
-
 
 	void AutonomousInit() {
 		autoModeState = 1;
@@ -385,7 +396,7 @@ class Robot: public frc::TimedRobot {
 
 		case 3:
 			// Start lifting the elevator
-			ElevPosTarget = -6700;
+			ElevPosTarget = 6700;
 
 			// Drive to center of switch platform
 			if (autoForward(52.0))
@@ -404,7 +415,7 @@ class Robot: public frc::TimedRobot {
 
 		case 6:
 			//if (timedDrive(0.5, 0.8, 0.8))
-				autoNextState();
+			autoNextState();
 			break;
 
 		case 7:
@@ -461,7 +472,7 @@ class Robot: public frc::TimedRobot {
 		// Auto Sequence
 		switch (autoModeState) {
 		case 1:
-			ElevPosTarget = -6500;
+			ElevPosTarget = 6500;
 			IO.DriveBase.Wrist1.Set(-0.35);
 
 			if (SwitchNear)
@@ -509,7 +520,7 @@ class Robot: public frc::TimedRobot {
 
 		case 7:  // dont forget to update step 3!!!!!
 			//if (timedDrive(0.5, 0.8, 0.8))
-				autoNextState();
+			autoNextState();
 			break;
 
 		case 8:
@@ -546,8 +557,8 @@ class Robot: public frc::TimedRobot {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
-		double elevatorPreset = -6500;
-		//double elevatorPreset = -17500;
+		double elevatorPreset = 6500;
+		//double elevatorPreset = 17500;
 		double elevError;
 
 		bool targetNear;
@@ -654,21 +665,24 @@ class Robot: public frc::TimedRobot {
 
 		if (ElevatorLowerLimit == false) {
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
+			ElevPosTarget = 0;
 		}
 
 		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
+
 		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
+
 		} else {
 			IO.DriveBase.Elevator1.Set(elevMotor);
 			IO.DriveBase.Elevator2.Set(elevMotor);
 		}
 	}
 
-#define Elevator_MAXSpeed (0.75)
+#define Elevator_MAXSpeed (1.0)
 #define Elevator_KP (0.002)
 #define ElevatorPositionTol (3)
 
@@ -676,7 +690,7 @@ class Robot: public frc::TimedRobot {
 
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 		double ElevError = ElevEncoderRead - Elev_position;
-		double ElevCmd = ElevError * Elevator_KP; // P term
+		double ElevCmd = ElevError * -Elevator_KP; // P term
 
 		//Limit Elevator Max Speed
 		if (ElevCmd > Elevator_MAXSpeed)
@@ -686,12 +700,10 @@ class Robot: public frc::TimedRobot {
 
 		SmartDashboard::PutNumber("Elev error", fabs(ElevError));
 
+		elevatorSpeed(ElevCmd);
+
 		// Check if we made it to the target
-		if (fabs(ElevError) <= ElevatorPositionTol) {
-			return true;
-		} else
-			elevatorSpeed(ElevCmd);
-		return false;
+		return (fabs(ElevError) <= ElevatorPositionTol);
 	}
 
 // Drivetrain functions
@@ -848,12 +860,13 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-
 	void SmartDashboardUpdate() {
 
 		// Motor Outputs
 		SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
 		SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
+
+		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
 
 		// Auto State
 		SmartDashboard::PutString("Auto Posn", autoPosition);
@@ -888,6 +901,7 @@ class Robot: public frc::TimedRobot {
 		// Elevator Limit Switches
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
+
 	}
 
 };
