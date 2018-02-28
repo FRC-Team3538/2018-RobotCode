@@ -35,12 +35,12 @@ RJ_RobotMap::RJ_RobotMap() {
 
 
 	// Auto Program Chooser
-	DS.chooseAutoProgram.AddDefault(DS.AutoLine, DS.AutoLine);
-	DS.chooseAutoProgram.AddObject(DS.AutoSwitchCenter, DS.AutoSwitchCenter);
+	DS.chooseAutoProgram.AddDefault(DS.AutoSwitchCenter, DS.AutoSwitchCenter);
 	DS.chooseAutoProgram.AddObject(DS.AutoSwitchLeft, DS.AutoSwitchLeft);
 	DS.chooseAutoProgram.AddObject(DS.AutoSwitchRight, DS.AutoSwitchRight);
 	DS.chooseAutoProgram.AddObject(DS.AutoScaleLeft, DS.AutoScaleLeft);
 	DS.chooseAutoProgram.AddObject(DS.AutoScaleRight, DS.AutoScaleRight);
+	DS.chooseAutoProgram.AddObject(DS.AutoLine, DS.AutoLine);
 	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
 	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoProgram);
 
@@ -52,10 +52,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	frc::SmartDashboard::PutData("Auto Delay", &DS.chooseAutoDelay);
 
 	// Encoder Selection
-	DS.chooseAutoEncoder.AddDefault(DS.EncoderNone, DS.EncoderNone);
-	DS.chooseAutoEncoder.AddObject(DS.EncoderAuto, DS.EncoderAuto);
+	DS.chooseAutoEncoder.AddDefault(DS.EncoderAuto, DS.EncoderAuto);
+	DS.chooseAutoEncoder.AddObject(DS.EncoderNone, DS.EncoderNone);
 	DS.chooseAutoEncoder.AddObject(DS.EncoderLeft, DS.EncoderLeft);
 	DS.chooseAutoEncoder.AddObject(DS.EncoderRight, DS.EncoderRight);
+	DS.chooseAutoEncoder.AddObject(DS.EncoderBoth, DS.EncoderBoth);
 	frc::SmartDashboard::PutData("Drive Encoder", &DS.chooseAutoEncoder);
 
 }

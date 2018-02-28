@@ -41,10 +41,11 @@ public:
 		const std::string AutoScaleRight = "Scale Right";
 
 		SendableChooser<std::string> chooseAutoEncoder;
-		const std::string EncoderAuto  = "Auto";
-		const std::string EncoderLeft  = "Left";
-		const std::string EncoderRight = "Right";
-		const std::string EncoderNone  = "None";
+		const std::string EncoderAuto  = "Enc Auto";
+		const std::string EncoderLeft  = "Enc Left";
+		const std::string EncoderRight = "Enc Right";
+		const std::string EncoderBoth  = "Enc Both";
+		const std::string EncoderNone  = "Enc None";
 
 	};
 	structDS DS;
