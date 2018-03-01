@@ -15,12 +15,16 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.Elevator2.SetInverted(false);
 	DriveBase.EncoderElevator.SetDistancePerPulse((47.5)/-10197); //move one inch and measure pulses
 
+
 	// Set Encoder Direction & Scale
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
-	DriveBase.EncoderLeft.SetDistancePerPulse(167.0/ 16745.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(-167.0/ 16745.0 * 4.0);
+	//DriveBase.EncoderLeft.SetDistancePerPulse(167.0/ 16745.0 * 4.0);
+	//DriveBase.EncoderRight.SetDistancePerPulse(-167.0/ 16745.0 * 4.0);
+
+	DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
 
 
 	// Set Default Gear

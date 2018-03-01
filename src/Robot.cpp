@@ -437,7 +437,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
-			if (timedDrive(0.5, 0.4, 0.4))
+			if (timedDrive(1.5, 0.3, 0.3))
 				//if (autoForward(20.0, 0.7))
 				autoNextState();
 			break;
@@ -537,15 +537,15 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(96, 1.0, 0.1)) {
+			if (autoForward(186+18, 1.0, 0.1)) {
 				autoNextState();
+				ElevPosTarget = 16000;
 			}
 			break;
 
 		case 4:
 			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
-				ElevPosTarget = 16000;
 			}
 			break;
 
