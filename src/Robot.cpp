@@ -316,6 +316,16 @@ class Robot: public frc::TimedRobot {
 
 	}
 
+	void FailSafe(){
+
+
+		if (AutonTimer.Get() > 10){
+			stopMotors();
+		}else{
+			autoNextState();
+		}
+
+	}
 	void AutonomousPeriodic() {
 
 		// Delay our auton program if required
@@ -378,17 +388,17 @@ class Robot: public frc::TimedRobot {
 		switch (autoModeState) {
 		case 1:
 			if (autoForward(12.0 * 10))
-				autoNextState();
+				FailSafe();
 			break;
 			/*
 			 case 2:
 			 if (autoTurn(-90.0))
-			 autoNextState();
+			 FailSafe();
 			 break;
 
 			 case 3:
 			 if (autoForward(48.0))
-			 autoNextState();
+			 FailSafe();
 			 break;
 			 */
 		default:
@@ -417,29 +427,29 @@ class Robot: public frc::TimedRobot {
 		case 1:
 
 			if (autoForward(18))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 2:
 			if (autoTurn(45.0 * direction))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 3:
 
 			if (autoForward(50.0))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 4:
 			if (autoTurn(0.0))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 5:
 			if (timedDrive(1.5, 0.3, 0.3))
 				//if (autoForward(20.0, 0.7))
-				autoNextState();
+				FailSafe();
 			break;
 		case 6:
 			// Eject!
@@ -448,7 +458,7 @@ class Robot: public frc::TimedRobot {
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake1.Set(0.0);
-				autoNextState();
+				FailSafe();
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
@@ -477,14 +487,14 @@ class Robot: public frc::TimedRobot {
 			elevatorSpeed(-0.2);
 
 			if (autoForward(300, 1.0, 0.1)) {
-				autoNextState();
+				FailSafe();
 				ElevPosTarget = 16000;
 			}
 			break;
 
 		case 2:
 			if (autoTurn(-90.0 * direction) && elevatorPosition(ElevPosTarget)) {
-				autoNextState();
+				FailSafe();
 			}
 			break;
 
@@ -526,32 +536,32 @@ class Robot: public frc::TimedRobot {
 			elevatorSpeed(-0.2);
 
 			if (autoForward(226, 1.0, 0.1)) {
-				autoNextState();
+				FailSafe();
 			}
 			break;
 
 		case 2:
 			if (autoTurn(-90.0 * direction)) {
-				autoNextState();
+				FailSafe();
 			}
 			break;
 
 		case 3:
 			if (autoForward(186+18, 1.0, 0.1)) {
-				autoNextState();
+				FailSafe();
 				ElevPosTarget = 16000;
 			}
 			break;
 
 		case 4:
 			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget)) {
-				autoNextState();
+				FailSafe();
 			}
 			break;
 
 		case 5:
 			if (autoForward(24, 1.0, 0.1)) {
-				autoNextState();
+				FailSafe();
 			}
 			break;
 
@@ -619,50 +629,50 @@ class Robot: public frc::TimedRobot {
 
 			if (SwitchNear)
 				if (autoForward(150))
-					autoNextState();
+					FailSafe();
 
 			if (SwitchFar)
 				if (autoForward(226))
-					autoNextState();
+					FailSafe();
 
 			break;
 
 		case 2:
 			if (autoTurn(-90 * rotDir))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 3:
 			if (SwitchNear)
 				if (autoForward(18)) {
-					autoNextState();
+					FailSafe();
 					autoModeState = 7; // Go To End
 				}
 
 			if (SwitchFar)
 				if (autoForward(145))
-					autoNextState();
+					FailSafe();
 
 			break;
 
 		case 4:
 			if (autoTurn((-90 - 25) * rotDir))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 5:
 			if (autoForward(36.0))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 6:
 			if (autoTurn(-180 * rotDir))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 7:  // dont forget to update step 3!!!!!
 			//if (timedDrive(0.5, 0.8, 0.8))
-			autoNextState();
+			FailSafe();
 			break;
 
 		case 8:
@@ -737,18 +747,18 @@ class Robot: public frc::TimedRobot {
 				ElevPosTarget = elevatorPreset;
 				elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
 				if (autoTurn(-90 * rotDir) && elevError < 100)
-					autoNextState();
+					FailSafe();
 			}
 
 			if (targetFar)
 				if (autoTurn(-90 * rotDir))
-					autoNextState();
+					FailSafe();
 			break;
 
 		case 3:
 			if (targetNear)
 				if (autoForward(6)) {
-					autoNextState();
+					FailSafe();
 					autoModeState = 6; // Go To End
 				}
 
@@ -764,12 +774,12 @@ class Robot: public frc::TimedRobot {
 			elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
 
 			if (autoTurn(0) && elevError < 100)
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 5:
 			if (autoForward(24.0))
-				autoNextState();
+				FailSafe();
 			break;
 
 		case 6: // dont forget to update step 3!!!!!
