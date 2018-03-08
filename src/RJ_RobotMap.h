@@ -31,14 +31,21 @@ public:
 		const std::string sAutoDelay3 = "3 Seconds";
 		const std::string sAutoDelay5 = "5 Seconds";
 
+		SendableChooser<std::string> chooseAutoFinisher;
+		const std::string sAutoYes = "Hell Yeah";
+		const std::string sAutoNo = "No";
+
+		SendableChooser<std::string> chooseAutoPosStart;
+		const std::string sAutoCenter = "Center";
+		const std::string sAutoLeft = "Left";
+		const std::string sAutoRight = "Right";
+
 		SendableChooser<std::string> chooseAutoProgram;
 		const std::string AutoNone = "None";
 		const std::string AutoLine = "Line";
-		const std::string AutoSwitchCenter = "Switch Center";
-		const std::string AutoSwitchLeft = "Switch Left";
-		const std::string AutoSwitchRight = "Switch Right";
-		const std::string AutoScaleLeft = "Scale Left";
-		const std::string AutoScaleRight = "Scale Right";
+		const std::string AutoSwitch = "Switch";
+		const std::string AutoScale = "Scale";
+		const std::string AutoNearest = "Nearest";
 
 		SendableChooser<std::string> chooseAutoEncoder;
 		const std::string EncoderAuto  = "Enc Auto";

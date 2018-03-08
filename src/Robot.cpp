@@ -35,7 +35,7 @@ class Robot: public frc::TimedRobot {
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
-	std::string autoGameData, autoDelay, autoPosition, autoEncoder;
+	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
@@ -57,7 +57,6 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.ahrs.ZeroYaw();
 	}
 
-
 	void RobotPeriodic() {
 
 		// Update Smart Dash
@@ -66,8 +65,10 @@ class Robot: public frc::TimedRobot {
 
 		// Get SmartDash Choosers
 		autoDelay = IO.DS.chooseAutoDelay.GetSelected();
-		autoPosition = IO.DS.chooseAutoProgram.GetSelected();
+		autoTarget = IO.DS.chooseAutoProgram.GetSelected();
 		autoEncoder = IO.DS.chooseAutoEncoder.GetSelected();
+		autoPosition = IO.DS.chooseAutoPosStart.GetSelected();
+		autoFinisher = IO.DS.chooseAutoFinisher.GetSelected();
 
 		// Calculate DriveBase Acceleration
 		DriveEncLeftAccel = IO.DriveBase.EncoderLeft.GetRate() - DriveEncLeftRatePrev;
@@ -78,7 +79,6 @@ class Robot: public frc::TimedRobot {
 		// Get the game-specific message (ex: RLL)
 		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
-
 
 		// Launchpad data
 		IO.DS.LaunchPad.SetOutput(3, frc::DriverStation::GetInstance().IsAutonomous());
@@ -325,10 +325,10 @@ class Robot: public frc::TimedRobot {
 			return;
 
 		// Select a Starting Location
-		if (autoPosition == IO.DS.AutoLine) {
+		if (autoTarget == IO.DS.AutoLine) {
 			autoLine();
 		}
-		if (autoPosition == IO.DS.AutoSwitchCenter) {
+		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoCenter) {
 			//autoCenter();
 
 			if (autoGameData[0] == 'L')
@@ -338,14 +338,16 @@ class Robot: public frc::TimedRobot {
 				autoCenterFast(-1);
 
 		}
-		if (autoPosition == IO.DS.AutoSwitchLeft) {
+		//Left Side
+		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoLeft) {
 			autoSwitchSide(false);
 		}
-		if (autoPosition == IO.DS.AutoSwitchRight) {
+		//Right Side
+		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoRight) {
 			autoSwitchSide(true);
 		}
-		if (autoPosition == IO.DS.AutoScaleLeft) {
-			//			autoScale(false);
+		if (autoTarget == IO.DS.AutoScale && autoPosition == IO.DS.sAutoLeft) {
+			//autoScale(false);
 
 			if (autoGameData[1] == 'L')
 				autoScaleFastNear(1);
@@ -353,8 +355,9 @@ class Robot: public frc::TimedRobot {
 			if (autoGameData[1] == 'R')
 				autoScaleFastFar(1);
 		}
-		if (autoPosition == IO.DS.AutoScaleRight) {
-			//autoScale(true);
+
+		if (autoTarget == IO.DS.AutoScale && autoPosition == IO.DS.sAutoRight) {
+			//autoScale(false);
 
 			if (autoGameData[1] == 'L')
 				autoScaleFastFar(-1);
@@ -362,6 +365,39 @@ class Robot: public frc::TimedRobot {
 			if (autoGameData[1] == 'R')
 				autoScaleFastNear(-1);
 		}
+		//Start of adam logic for scale autos
+		// Left Side
+		if (autoTarget == IO.DS.AutoNearest && autoPosition == IO.DS.sAutoRight) {
+			if (autoGameData[1] == 'R') {
+				autoScaleFastNear(-1);
+
+			} else if (autoGameData[1] == 'L') {
+
+				if (autoGameData[0] == 'R')
+					autoSwitchSide(true);
+
+				else if (autoGameData[0] == 'L')
+					autoLine();
+			}
+
+		}
+		//Right Side
+		if (autoTarget == IO.DS.AutoNearest && autoPosition == IO.DS.sAutoLeft) {
+			if (autoGameData[1] == 'L') {
+				autoScaleFastNear(1);
+
+			} else if (autoGameData[1] == 'R') {
+
+				if (autoGameData[0] == 'L')
+					autoSwitchSide(false);
+
+				else if (autoGameData[0] == 'R')
+					autoLine();
+			}
+		}
+
+
+		//end of adam screwing around
 
 	}
 
@@ -476,7 +512,7 @@ class Robot: public frc::TimedRobot {
 			// Auto home the elevator
 			elevatorSpeed(-0.2);
 
-			if (autoForward(300-24, 1.0, 0.1)) {
+			if (autoForward(300 - 24, 1.0, 0.1)) {
 				autoNextState();
 				ElevPosTarget = 16000;
 			}
@@ -537,7 +573,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(186+18, 1.0, 0.1)) {
+			if (autoForward(186 + 18, 1.0, 0.1)) {
 				autoNextState();
 				ElevPosTarget = 16000;
 			}
@@ -556,6 +592,13 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
+			if (autoFinisher == IO.DS.sAutoYes)
+				autoNextState();
+			else
+				autoModeState = 8;
+			break;
+
+		case 7:
 			// Eject!
 			IO.DriveBase.ClawIntake1.Set(-1.0);
 
@@ -565,9 +608,17 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 				ElevPosTarget = 800;
 
-				// Display auton Time
-				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 			}
+
+			break;
+
+		case 8:
+			stopMotors();
+
+			// Display auton Time
+			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+
+			autoNextState();
 
 			break;
 
@@ -578,7 +629,6 @@ class Robot: public frc::TimedRobot {
 
 		return;
 	}
-
 
 	/*
 	 * AUTO PROGRAM - SIDE SWITCH
@@ -826,7 +876,7 @@ class Robot: public frc::TimedRobot {
 		// Anti-bounce
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		if ((!ElevatorUpperLimit) and (!ElevOverride))
-			Elev_position =	ElevEncoderRead - 100;
+			Elev_position = ElevEncoderRead - 100;
 
 		// Motor Command Calculation
 		double ElevError = ElevEncoderRead - Elev_position;
@@ -1076,7 +1126,9 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
 
 		// Auto State
-		SmartDashboard::PutString("Auto Posn", autoPosition);
+		SmartDashboard::PutString("Auto Target", autoTarget);
+		SmartDashboard::PutString("Auto Position", autoPosition);
+		SmartDashboard::PutString("Auto Finisher", autoFinisher);
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 		SmartDashboard::PutNumber("Auto Heading", autoHeading);
@@ -1109,10 +1161,8 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 
-
 		// Sensor Override
 		SmartDashboard::PutBoolean("Elevator Override", ElevOverride);
-
 
 	}
 

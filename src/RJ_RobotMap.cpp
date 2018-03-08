@@ -39,15 +39,23 @@ RJ_RobotMap::RJ_RobotMap() {
 
 
 	// Auto Program Chooser
-	DS.chooseAutoProgram.AddDefault(DS.AutoSwitchCenter, DS.AutoSwitchCenter);
-	DS.chooseAutoProgram.AddObject(DS.AutoSwitchLeft, DS.AutoSwitchLeft);
-	DS.chooseAutoProgram.AddObject(DS.AutoSwitchRight, DS.AutoSwitchRight);
-	DS.chooseAutoProgram.AddObject(DS.AutoScaleLeft, DS.AutoScaleLeft);
-	DS.chooseAutoProgram.AddObject(DS.AutoScaleRight, DS.AutoScaleRight);
+	DS.chooseAutoProgram.AddDefault(DS.AutoSwitch, DS.AutoSwitch);
+	DS.chooseAutoProgram.AddObject(DS.AutoScale, DS.AutoScale);
 	DS.chooseAutoProgram.AddObject(DS.AutoLine, DS.AutoLine);
 	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
-	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoProgram);
+	DS.chooseAutoProgram.AddObject(DS.AutoNearest, DS.AutoNearest);
+	frc::SmartDashboard::PutData("Auto Target", &DS.chooseAutoProgram);
 
+	// Auto Position Chooser
+	DS.chooseAutoPosStart.AddDefault(DS.sAutoCenter, DS.sAutoCenter);
+	DS.chooseAutoPosStart.AddObject(DS.sAutoLeft, DS.sAutoLeft);
+	DS.chooseAutoPosStart.AddObject(DS.sAutoRight, DS.sAutoRight);
+	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoPosStart);
+
+	// Auto Finisher Chooser
+	DS.chooseAutoProgram.AddDefault(DS.sAutoYes, DS.sAutoYes);
+	DS.chooseAutoProgram.AddObject(DS.sAutoNo, DS.sAutoNo);
+	frc::SmartDashboard::PutData("Finisher", &DS.chooseAutoFinisher);
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
