@@ -45,7 +45,8 @@ public:
 		const std::string AutoLine = "Line";
 		const std::string AutoSwitch = "Switch";
 		const std::string AutoScale = "Scale";
-		const std::string AutoNearest = "Nearest";
+		const std::string AutoNearSide = "Near Only";
+		const std::string AutoNNF = "NSc NSw FSc";
 
 		SendableChooser<std::string> chooseAutoEncoder;
 		const std::string EncoderAuto  = "Enc Auto";

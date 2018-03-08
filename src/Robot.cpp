@@ -39,12 +39,6 @@ class Robot: public frc::TimedRobot {
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
-	// For Calculating Acceleration of the drive base
-	double DriveEncLeftRatePrev = 0.0;
-	double DriveEncRightRatePrev = 0.0;
-	double DriveEncLeftAccel = 0.0;
-	double DriveEncRightAccel = 0.0;
-
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
@@ -70,12 +64,6 @@ class Robot: public frc::TimedRobot {
 		autoPosition = IO.DS.chooseAutoPosStart.GetSelected();
 		autoFinisher = IO.DS.chooseAutoFinisher.GetSelected();
 
-		// Calculate DriveBase Acceleration
-		DriveEncLeftAccel = IO.DriveBase.EncoderLeft.GetRate() - DriveEncLeftRatePrev;
-		DriveEncLeftRatePrev = IO.DriveBase.EncoderLeft.GetRate();
-		DriveEncRightAccel = IO.DriveBase.EncoderRight.GetRate() - DriveEncRightRatePrev;
-		DriveEncRightRatePrev = IO.DriveBase.EncoderRight.GetRate();
-
 		// Get the game-specific message (ex: RLL)
 		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
@@ -85,8 +73,10 @@ class Robot: public frc::TimedRobot {
 		IO.DS.LaunchPad.SetOutput(4, frc::DriverStation::GetInstance().IsOperatorControl());
 
 		// Disable closed loop control and limit switches
-		// Command Override level 9
 		ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
+		//if (IO.DS.OperatorStick.GetStartButton()) ElevOverride = false;
+		//if (IO.DS.OperatorStick.GetBackButton()) ElevOverride = true;
+
 	}
 
 	void DisabledPeriodic() {
@@ -96,12 +86,12 @@ class Robot: public frc::TimedRobot {
 	void TeleopInit() {
 		// drive command averaging filter
 		OutputX = 0, OutputY = 0;
-		elevatorSpeed(0);
-		ElevPosTarget = 0;
 
+		// Hold current elevator position
 		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 
-		IO.DriveBase.SolenoidShifter.Set(true); // Low gear
+		// Low Gear by default
+		IO.DriveBase.SolenoidShifter.Set(true);
 	}
 
 	void TeleopPeriodic() {
@@ -142,19 +132,9 @@ class Robot: public frc::TimedRobot {
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
 			IO.DriveBase.SolenoidShifter.Set(true); // Low gear
 
-		if (IO.DS.DriveStick.GetAButton()) {
-			// A Button - Loose Intake
-			IO.DriveBase.Zbar.Set(true);
-		} else {
-			IO.DriveBase.Zbar.Set(false);
-		}
-
-		if (IO.DS.DriveStick.GetBButton()) {
-			// A Button - Loose Intake
-			IO.DriveBase.Zbar1.Set(true);
-		} else {
-			IO.DriveBase.Zbar1.Set(false);
-		}
+		// Z-Bar controls (Dont fit on the opperator stick, so they are on the drive stick...
+		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
+		IO.DriveBase.Zbar1.Set(IO.DS.DriveStick.GetBButton());
 
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
@@ -198,8 +178,6 @@ class Robot: public frc::TimedRobot {
 		}
 
 		if (fabs(ElevatorStick) > Control_Deadband) {
-			// Manual control of Joystick
-			//ElevatorStick = (1 - ElevDeadband) * pow(ElevatorStick, 3) + ElevDeadband;
 
 			// Smoothing algorithm for x^3
 			if (ElevatorStick > 0.0)
@@ -281,7 +259,7 @@ class Robot: public frc::TimedRobot {
 		autoTotalTime.Reset();
 		autoTotalTime.Start();
 
-		// Encoder based auton
+		// Reset Encoders
 		IO.DriveBase.EncoderLeft.Reset();
 		IO.DriveBase.EncoderRight.Reset();
 
@@ -293,13 +271,14 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.ahrs.ZeroYaw();
 		autoHeading = 0.0;
 
-		// Force robot into low gear
+		// Low gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
 
 		// Shut the claw by default
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
 		IO.DriveBase.ClawIntake1.Set(0);
 
+		// Reset the moving average filters for drive base
 		OutputY = 0;
 		OutputX = 0;
 	}
@@ -307,97 +286,139 @@ class Robot: public frc::TimedRobot {
 	// Reset all the stuff that needs to be reset at each state
 	void autoNextState() {
 		autoModeState++;
+
 		AutonTimer.Reset();
 		autoSettleTimer.Reset();
 		IO.DriveBase.EncoderLeft.Reset();
 		IO.DriveBase.EncoderRight.Reset();
 
 		stopMotors();
-
 	}
 
 	void AutonomousPeriodic() {
 
 		// Delay our auton program if required
-		if (autoDelay == IO.DS.sAutoDelay3 and AutonTimer.Get() < 3)
+		if (autoDelay == IO.DS.sAutoDelay3 and autoTotalTime.Get() < 3)
 			return;
-		if (autoDelay == IO.DS.sAutoDelay5 and AutonTimer.Get() < 5)
+		if (autoDelay == IO.DS.sAutoDelay5 and autoTotalTime.Get() < 5)
 			return;
 
-		// Select a Starting Location
+		// Cross the Line Auto
 		if (autoTarget == IO.DS.AutoLine) {
 			autoLine();
 		}
-		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoCenter) {
-			//autoCenter();
 
-			if (autoGameData[0] == 'L')
-				autoCenterFast(1);
+		// Center Start
+		if (autoPosition == IO.DS.sAutoCenter) {
 
-			if (autoGameData[0] == 'R')
-				autoCenterFast(-1);
-
-		}
-		//Left Side
-		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoLeft) {
-			autoSwitchSide(false);
-		}
-		//Right Side
-		if (autoTarget == IO.DS.AutoSwitch && autoPosition == IO.DS.sAutoRight) {
-			autoSwitchSide(true);
-		}
-		if (autoTarget == IO.DS.AutoScale && autoPosition == IO.DS.sAutoLeft) {
-			//autoScale(false);
-
-			if (autoGameData[1] == 'L')
-				autoScaleFastNear(1);
-
-			if (autoGameData[1] == 'R')
-				autoScaleFastFar(1);
-		}
-
-		if (autoTarget == IO.DS.AutoScale && autoPosition == IO.DS.sAutoRight) {
-			//autoScale(false);
-
-			if (autoGameData[1] == 'L')
-				autoScaleFastFar(-1);
-
-			if (autoGameData[1] == 'R')
-				autoScaleFastNear(-1);
-		}
-		//Start of adam logic for scale autos
-		// Left Side
-		if (autoTarget == IO.DS.AutoNearest && autoPosition == IO.DS.sAutoRight) {
-			if (autoGameData[1] == 'R') {
-				autoScaleFastNear(-1);
-
-			} else if (autoGameData[1] == 'L') {
-
-				if (autoGameData[0] == 'R')
-					autoSwitchSide(true);
-
-				else if (autoGameData[0] == 'L')
-					autoLine();
-			}
-
-		}
-		//Right Side
-		if (autoTarget == IO.DS.AutoNearest && autoPosition == IO.DS.sAutoLeft) {
-			if (autoGameData[1] == 'L') {
-				autoScaleFastNear(1);
-
-			} else if (autoGameData[1] == 'R') {
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
 
 				if (autoGameData[0] == 'L')
-					autoSwitchSide(false);
+					autoCenterFast(1);
 
-				else if (autoGameData[0] == 'R')
-					autoLine();
+				if (autoGameData[0] == 'R')
+					autoCenterFast(-1);
 			}
 		}
 
-		//end of adam screwing around
+		// Left Start
+		if (autoPosition == IO.DS.sAutoLeft) {
 
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
+				autoSwitchSide(false);
+			}
+
+			// Scale
+			if (autoTarget == IO.DS.AutoScale) {
+
+				if (autoGameData[1] == 'L')
+					autoScaleFastNear(false);
+
+				if (autoGameData[1] == 'R')
+					autoScaleFastFar(false);
+			}
+
+			// Our side
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'L') {
+					autoScaleFastNear(false);
+
+				} else if (autoGameData[0] == 'L') {
+					autoSwitchSide(false);
+
+				} else if (autoGameData[0] == 'R') {
+					autoLine();
+
+				}
+			}
+
+			// Near Scale, Near Switch, Far Scale
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'L') {
+					autoScaleFastNear(false);
+
+				} else if (autoGameData[0] == 'L') {
+					autoSwitchSide(false);
+
+				} else if (autoGameData[0] == 'R') {
+					autoScaleFastFar(false);
+
+				}
+			}
+		}
+
+		// Right Start
+		if (autoPosition == IO.DS.sAutoRight) {
+
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
+				autoSwitchSide(true);
+			}
+
+			// Scale
+			if (autoTarget == IO.DS.AutoScale) {
+
+				if (autoGameData[1] == 'R')
+					autoScaleFastNear(true);
+
+				if (autoGameData[1] == 'L')
+					autoScaleFastFar(true);
+			}
+
+			// Our side
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'R') {
+					autoScaleFastNear(true);
+
+				} else if (autoGameData[0] == 'R') {
+					autoSwitchSide(true);
+
+				} else if (autoGameData[0] == 'L') {
+					autoLine();
+
+				}
+			}
+
+			// Near Scale, Near Switch, Far Scale
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'R') {
+					autoScaleFastNear(true);
+
+				} else if (autoGameData[0] == 'R') {
+					autoSwitchSide(true);
+
+				} else if (autoGameData[0] == 'L') {
+					autoScaleFastFar(true);
+
+				}
+			}
+		}
 	}
 
 	/*
@@ -531,7 +552,12 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoScaleFastNear(double direction) {
+	void autoScaleFastNear(bool isStartRightPos) {
+
+		// Mirror rotations for right side start
+		double direction = 1;
+		if (isStartRightPos)
+			direction = -1;
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
@@ -616,7 +642,12 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoScaleFastFar(double direction) {
+	void autoScaleFastFar(bool isRightSide) {
+
+		// Mirror rotations for right side start
+		double direction = 1;
+		if (isRightSide)
+			direction = -1;
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
@@ -1076,7 +1107,7 @@ class Robot: public frc::TimedRobot {
 	double getEncoderDistance() {
 
 		// Inches per second-ish... (No encoder mode)
-		double encoderDistance = 0; // = AutonTimer.Get() * 48.0;
+		double encoderDistance = 0;		// = AutonTimer.Get() * 48.0;
 
 		// If an encoder is available, use it...
 		double encoderLeft = IO.DriveBase.EncoderLeft.GetDistance();
@@ -1234,7 +1265,8 @@ class Robot: public frc::TimedRobot {
 
 	}
 
-};
+}
+;
 
 START_ROBOT_CLASS(Robot);
 
