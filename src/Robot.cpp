@@ -580,8 +580,6 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
-			// TODO: If this works, go score it somewhere...
-
 			break;
 
 		default:
@@ -699,7 +697,6 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
-			// TODO: If this works, go score it somewhere...
 			break;
 
 		default:
@@ -742,7 +739,7 @@ class Robot: public frc::TimedRobot {
 		case 3:
 			if (autoForward(186 + 18, 1.0, 0.1)) {
 				autoNextState();
-				ElevPosTarget = 16000;
+				ElevPosTarget = 6000;  //TODO: Set back to Full Height (TESTING)
 			}
 			break;
 
@@ -833,7 +830,6 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
-			// TODO: If this works, go score it somewhere...
 			break;
 
 		default:
@@ -962,10 +958,7 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
-			// TODO: If this works, go score it somewhere...
 			break;
-
-
 
 
 		default:
@@ -1056,118 +1049,25 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	/*
-	 * AUTO PROGRAM -  SCALE
-	 *
-	 * Start robot in side of wall, with the corner of the robot touching the portal
-	 *
-	 * The robot will go the the proper side of the scale based on FMS data.
-	 * But it will score on the side or front of switch, so that we do not interfere with
-	 * our alliance partners doing the same program
-	 *
-	 * Input parameter is which side of the field the robot is starting on (left | right)
-	 */
-	void autoScale(bool isRightSide) {
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-		double elevatorPreset = 6500;
-		//double elevatorPreset = 17500;
-		double elevError;
-
-		bool targetNear;
-		bool targetFar;
-		double rotDir;
-
-		if (isRightSide) {
-			targetNear = (autoGameData[1] == 'R');
-			targetFar = (autoGameData[1] == 'L');
-			rotDir = -1.0;
-		} else {
-			targetNear = (autoGameData[1] == 'L');
-			targetFar = (autoGameData[1] == 'R');
-			rotDir = 1.0;
-		}
-
-		switch (autoModeState) {
-		case 1:
-
-			if (targetNear)
-				if (autoForward(304))
-					autoNextState();
-
-			if (targetFar)
-				if (autoForward(226))
-					autoNextState();
-
-			break;
-
-		case 2:
-
-			if (targetNear) {
-				IO.DriveBase.Wrist1.Set(-0.35);
-				ElevPosTarget = elevatorPreset;
-				elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
-				if (autoTurn(-90 * rotDir) && elevError < 100)
-					autoNextState();
-			}
-
-			if (targetFar)
-				if (autoTurn(-90 * rotDir))
-					autoNextState();
-			break;
-
-		case 3:
-			if (targetNear)
-				if (autoForward(6)) {
-					autoNextState();
-					autoModeState = 6; // Go To End
-				}
-
-			if (targetFar)
-				if (autoForward(186))
-					autoNextState();
-
-			break;
-
-		case 4:
-			IO.DriveBase.Wrist1.Set(-0.35);
-			ElevPosTarget = elevatorPreset;
-			elevError = fabs(IO.DriveBase.EncoderElevator.Get() - ElevPosTarget);
-
-			if (autoTurn(0) && elevError < 100)
-				autoNextState();
-			break;
-
-		case 5:
-			if (autoForward(24.0))
-				autoNextState();
-			break;
-
-		case 6: // dont forget to update step 3!!!!!
-
-			IO.DriveBase.ClawIntake1.Set(-1);
-
-			autoNextState();
-
-			break;
-		default:
-			stopMotors();
-
-		}
-
-		return;
-
-	}
-
 	void elevatorSpeed(double elevMotor) {
+
+		// Limit Switches
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
 		bool ElevatorLowerLimit = IO.DriveBase.SwitchElevatorLower.Get();
 
+		// Get Current Encoder Value
+		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
+
+		// Slow down if approaching limits
+		if(ElevEncoderRead < 800) elevMotor *= 0.3;
+		if(ElevEncoderRead > 17500) elevMotor *= 0.3;
+
+		// Zero the encoder if we hit the lower limit switch
 		if (ElevatorLowerLimit == false) {
 			IO.DriveBase.EncoderElevator.Reset(); // Reset encoder to 0
 		}
 
+		// If a limit switch is pressed, only allow a reverse motion
 		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!ElevOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
