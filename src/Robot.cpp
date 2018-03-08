@@ -708,14 +708,14 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 5:
+		case 6:
 			if (autoFinisher == IO.DS.sAutoYes)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
 			break;
 
-		case 6:
+		case 7:
 			IO.DriveBase.Wrist1.Set(0.45);
 			ElevPosTarget = 800;
 
@@ -723,27 +723,27 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 7:
+		case 8:
 			if (autoForward(-36))
 				autoNextState();
 			break;
 
-		case 8:
+		case 9:
 			if (autoTurn(15 * direction))
 				autoNextState();
 			break;
 
-		case 9:
+		case 10:
 			if (autoForward(-18))
 				autoNextState();
 			break;
 
-		case 10:
+		case 11:
 			if (autoTurn(0))
 				autoNextState();
 			break;
 
-		case 11:
+		case 12:
 			// Loose Intake
 			IO.DriveBase.ClawIntake1.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
@@ -752,7 +752,7 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 12:
+		case 13:
 			ElevPosTarget = 2200;
 			IO.DriveBase.ClawIntake1.Set(0.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
