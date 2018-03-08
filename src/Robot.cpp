@@ -603,11 +603,35 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 9:
-			IO.DriveBase.ClawIntake1.Set(-1.0);
-			if (true)
+			IO.DriveBase.Wrist1.Set(-0.1);
+			ElevPosTarget = 1000;
+				
+			if (elevatorPosition(ElevPosTarget))
 				autoNextState();
 			break;
-
+				
+		case 10:
+			if (autoTurn(15 * direction))
+				autoNextState();
+				
+			break;
+				
+		case 11:		
+			if (autoForward(36))
+				ElevPosTarget = 16000
+				autoNextState();
+				
+			break;
+				
+		case 12:
+			IO.DriveBase.Wrist1.Set(-0.3);
+			if (elevatorPosition(ElevPosTarget)){
+				IO.DriveBase.ClawIntake1.Set(-1.0);
+			
+			break;
+			autoModeState = 0;
+				
+				
 		default:
 			stopMotors();
 
