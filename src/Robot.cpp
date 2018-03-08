@@ -572,6 +572,42 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
+		case 4:
+			if (autoFinisher == IO.DS.sAutoYes)
+				autoNextState();
+			else
+				autoModeState = 0;
+			break;
+
+		case 5:
+			IO.DriveBase.Wrist1.Set(0.3);
+
+			if (elevatorPosition(ElevPosTarget))
+				autoNextState();
+			break;
+
+		case 6:
+			if (autoForward(-36))
+				autoNextState();
+			break;
+
+		case 7:
+			if (autoTurn(15 * direction))
+				autoNextState();
+			break;
+
+		case 8:
+			IO.DriveBase.ClawIntake1.Set(1.0);
+			if (timedDrive(1.3, -0.4, -0.4))
+				autoNextState();
+			break;
+
+		case 9:
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+			if (true)
+				autoNextState();
+			break;
+
 		default:
 			stopMotors();
 
