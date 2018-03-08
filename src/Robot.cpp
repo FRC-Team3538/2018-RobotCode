@@ -602,11 +602,12 @@ class Robot: public frc::TimedRobot {
 			if (autoFinisher == IO.DS.sAutoYes)
 				autoNextState();
 			else
-				autoModeState = 0;
+				autoModeState = 0; // We are done.
 			break;
 
 		case 5:
-			IO.DriveBase.Wrist1.Set(0.3);
+			IO.DriveBase.Wrist1.Set(0.45);
+			ElevPosTarget = 800;
 
 			if (elevatorPosition(ElevPosTarget))
 				autoNextState();
@@ -629,34 +630,42 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 9:
-			IO.DriveBase.Wrist1.Set(-0.1);
-			ElevPosTarget = 1000;
+			ElevPosTarget = 2000;
 				
 			if (elevatorPosition(ElevPosTarget))
 				autoNextState();
 			break;
 				
 		case 10:
-			if (autoTurn(15 * direction))
+			if (autoTurn(0))
 				autoNextState();
 				
 			break;
 				
 		case 11:		
 			if (autoForward(36))
-				ElevPosTarget = 16000
 				autoNextState();
 				
 			break;
 				
 		case 12:
+			ElevPosTarget = 17000;
 			IO.DriveBase.Wrist1.Set(-0.3);
 			if (elevatorPosition(ElevPosTarget)){
 				IO.DriveBase.ClawIntake1.Set(-1.0);
-			
+				autoNextState();
+			}
 			break;
-			autoModeState = 0;
+
+		case 13:
+			if (AutonTimer.Get() > 1.5){
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				autoNextState();
 				
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+			break;
 				
 		default:
 			stopMotors();
