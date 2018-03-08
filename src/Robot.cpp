@@ -493,8 +493,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
-			if (timedDrive(1.5, 0.3, 0.3))
-				//if (autoForward(20.0, 0.7))
+			if (timedDrive(0.6, 0.5, 0.5))
 				autoNextState();
 			break;
 		case 6:
@@ -514,6 +513,8 @@ class Robot: public frc::TimedRobot {
 
 		case 7:
 			if (autoFinisher == IO.DS.sAutoYes)
+				// Back up and go around to get the edge contested cube
+				// Probably going to scale it if possible.
 				autoNextState();
 			else
 				autoModeState = 0;
@@ -540,8 +541,48 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 12:
-			if (autoForward(70))
+			if (autoForward(80))
 				autoNextState();
+			break;
+
+		case 13:
+			if (autoTurn(-45))
+				autoNextState();
+			break;
+
+		case 14:
+			IO.DriveBase.Wrist1.Set(0.45);
+			ElevPosTarget = 800;
+
+			if (autoForward(36))
+				autoNextState();
+			break;
+
+		case 15:
+			if (autoTurn(0))
+				autoNextState();
+			break;
+
+		case 16:
+			// Loose Intake
+			IO.DriveBase.ClawIntake1.Set(1.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
+
+			if (autoForward(-18))
+				autoNextState();
+			break;
+
+		case 17:
+			ElevPosTarget = 2200;
+			IO.DriveBase.ClawIntake1.Set(0.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.Wrist1.Set(0.0);
+
+			if (autoForward(18))
+				autoNextState();
+
+				// TODO: If this works, go score it somewhere...
+
 			break;
 
 		default:
