@@ -396,7 +396,6 @@ class Robot: public frc::TimedRobot {
 			}
 		}
 
-
 		//end of adam screwing around
 
 	}
@@ -491,6 +490,39 @@ class Robot: public frc::TimedRobot {
 			}
 
 			break;
+
+		case 7:
+			if (autoFinisher == IO.DS.sAutoYes)
+				autoNextState();
+			else
+				autoModeState = 0;
+			break;
+
+		case 8:
+			if (autoForward(-24))
+				autoNextState();
+			break;
+
+		case 9:
+			if (autoTurn(45))
+				autoNextState();
+			break;
+
+		case 10:
+			if (autoForward(52))
+				autoNextState();
+			break;
+
+		case 11:
+			if (autoTurn(0))
+				autoNextState();
+			break;
+
+		case 12:
+			if (autoForward(70))
+				autoNextState();
+			break;
+
 		default:
 			stopMotors();
 
