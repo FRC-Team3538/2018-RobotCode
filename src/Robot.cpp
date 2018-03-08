@@ -1145,11 +1145,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6: // dont forget to update step 3!!!!!
-			AutonTimer.Reset();
-			AutonTimer.Stop();
-			stopMotors();
 
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
 			IO.DriveBase.ClawIntake1.Set(-1);
 
 			autoNextState();
