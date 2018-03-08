@@ -41,12 +41,13 @@ public:
 		const std::string sAutoRight = "Right";
 
 		SendableChooser<std::string> chooseAutoProgram;
-		const std::string AutoNone = "None";
-		const std::string AutoLine = "Line";
-		const std::string AutoSwitch = "Switch";
-		const std::string AutoScale = "Scale";
-		const std::string AutoNearSide = "NSc NSw L";
-		const std::string AutoNNF = "NSc NSw FSc";
+		const std::string AutoNone = "1 None";
+		const std::string AutoLine = "2 Line";
+		const std::string AutoSwitch = "3 Switch";
+		const std::string AutoScale = "4 Scale";
+		const std::string AutoNearSide = "5 NSc NSw L";
+		const std::string AutoNNF = "6 NSc NSw FSc";
+		const std::string AutoArcSwitch = "7 ArcSwitch";
 
 		SendableChooser<std::string> chooseAutoEncoder;
 		const std::string EncoderAuto  = "Enc Auto";

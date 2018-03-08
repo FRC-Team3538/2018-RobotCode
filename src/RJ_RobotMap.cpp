@@ -45,6 +45,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
 	DS.chooseAutoProgram.AddObject(DS.AutoNearSide, DS.AutoNearSide);
 	DS.chooseAutoProgram.AddObject(DS.AutoNNF, DS.AutoNNF);
+	DS.chooseAutoProgram.AddObject(DS.AutoArcSwitch, DS.AutoArcSwitch);
 	frc::SmartDashboard::PutData("Auto Target", &DS.chooseAutoProgram);
 
 	// Auto Position Chooser

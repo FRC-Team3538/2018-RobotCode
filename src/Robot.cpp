@@ -320,6 +320,16 @@ class Robot: public frc::TimedRobot {
 				if (autoGameData[0] == 'R')
 					autoCenterFast(-1);
 			}
+
+			// Arc Switch (Testing)
+			if (autoTarget == IO.DS.AutoArcSwitch) {
+
+				if (autoGameData[0] == 'L')
+					autoCenterArc(1);
+
+				if (autoGameData[0] == 'R')
+					autoCenterArc(-1);
+			}
 		}
 
 		// Left Start
@@ -579,6 +589,59 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(0.0);
 
 			autoNextState();
+
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoCenterArc(double direction) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+		ElevPosTarget = 800;
+
+		// High gear
+		IO.DriveBase.SolenoidShifter.Set(false);
+
+		switch (autoModeState) {
+		case 1:
+
+			if (autoArcDrive(48.0, 45.0 * direction, 1.0, 0.0))
+				autoNextState();
+			break;
+
+		case 2:
+			if (autoForward(18, 1.0, 0.0))
+				autoNextState();
+			break;
+
+		case 3:
+			if (autoArcDrive(48.0, 0.0, 1.0, 0.0))
+				autoNextState();
+			break;
+
+		case 4:
+			if (timedDrive(0.6, 0.5, 0.5))
+				autoNextState();
+			break;
+		case 5:
+			// Eject!
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
 
 			break;
 
@@ -895,7 +958,6 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-
 		case 5:
 			if (autoFinisher == IO.DS.sAutoYes)
 				autoNextState();
@@ -959,7 +1021,6 @@ class Robot: public frc::TimedRobot {
 			autoNextState();
 
 			break;
-
 
 		default:
 			stopMotors();
@@ -1059,8 +1120,10 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if(ElevEncoderRead < 800) elevMotor *= 0.3;
-		if(ElevEncoderRead > 17500) elevMotor *= 0.3;
+		if (ElevEncoderRead < 800)
+			elevMotor *= 0.3;
+		if (ElevEncoderRead > 17500)
+			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
 		if (ElevatorLowerLimit == false) {
@@ -1115,7 +1178,7 @@ class Robot: public frc::TimedRobot {
 
 	void motorSpeed(double leftMotor, double rightMotor) {
 
-		// Moving Average Filter
+		// Moving Average Filter (slip reduction attempt)
 		double cycles = 0.2;
 		OutputY = (cycles * OutputY) + (1.0 - cycles) * leftMotor;
 		OutputX = (cycles * OutputX) + (1.0 - cycles) * rightMotor;
@@ -1174,6 +1237,28 @@ class Robot: public frc::TimedRobot {
 	// Overload for backwards compatibility
 	int autoForward(double targetDistance) {
 		return autoForward(targetDistance, 1.0, 0.0);
+	}
+
+	// Drive the robot on an arc
+	// TODO: Make it drive the same regardless of which encoder is selected...
+	int arcState = -1;
+	double arcStartHeading;
+	int autoArcDrive(double targetDistance, double targetHeading, double max_speed, double settle_time) {
+
+		// Get starting heading
+		if (arcState != autoModeState) {
+			arcState = autoModeState;
+			arcStartHeading = autoHeading;
+		}
+
+		// Get Encoder Position
+		double encoderDistance = getEncoderDistance();
+
+		// update current heading
+		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (targetDistance - encoderDistance);
+
+		// Run Auto Drive per usual.
+		return autoForward(targetDistance, max_speed, settle_time);
 	}
 
 	int autoTurn(float targetYaw) {
