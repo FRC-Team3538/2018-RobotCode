@@ -32,8 +32,8 @@ public:
 		const std::string sAutoDelay5 = "5 Seconds";
 
 		SendableChooser<std::string> chooseAutoFinisher;
-		const std::string sAutoYes = "Hell Yeah";
-		const std::string sAutoNo = "No";
+		const std::string sAutoYes = "Hell Yeah!";
+		const std::string sAutoNo = "So boring";
 
 		SendableChooser<std::string> chooseAutoPosStart;
 		const std::string sAutoCenter = "Center";
@@ -45,7 +45,7 @@ public:
 		const std::string AutoLine = "Line";
 		const std::string AutoSwitch = "Switch";
 		const std::string AutoScale = "Scale";
-		const std::string AutoNearSide = "Near Only";
+		const std::string AutoNearSide = "NSc NSw L";
 		const std::string AutoNNF = "NSc NSw FSc";
 
 		SendableChooser<std::string> chooseAutoEncoder;
