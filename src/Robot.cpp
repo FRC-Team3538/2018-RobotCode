@@ -16,6 +16,7 @@ class Robot: public frc::TimedRobot {
 
 	// Built-In Drive code for teleop
 	DifferentialDrive Adrive { IO.DriveBase.MotorsLeft, IO.DriveBase.MotorsRight };
+	bool gearState; // For power-breaking feature
 
 	// create pdp variable
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
@@ -29,9 +30,6 @@ class Robot: public frc::TimedRobot {
 	// Teleop Elevator Position
 	double ElevPosTarget = 800;
 	bool ElevatorSetFlag = true;
-
-	// State Variables
-	double ElevIError = 0;
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
@@ -102,6 +100,9 @@ class Robot: public frc::TimedRobot {
 		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
 		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
+		// Power Brake
+		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
+
 		// Set dead band for control inputs
 		SpeedLinear = deadband(SpeedLinear, Control_Deadband);
 		SpeedRotate = deadband(SpeedRotate, Control_Deadband);
@@ -122,15 +123,24 @@ class Robot: public frc::TimedRobot {
 		OutputY = (0.8 * OutputY) + (0.2 * SpeedLinear);
 		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
 
-		// Drive Code (WPI Built-in)
-		Adrive.ArcadeDrive(OutputY, OutputX);
-
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
-			IO.DriveBase.SolenoidShifter.Set(false); // High gear
+			gearState = false; // High
 
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
-			IO.DriveBase.SolenoidShifter.Set(true); // Low gear
+			gearState = true; // Low
+
+		// Power Brake
+		if (bPowerBrake) {
+			double kP_PowerBrake = -1.0/5.0;
+			OutputY = getEncoderRate() * kP_PowerBrake;
+			IO.DriveBase.SolenoidShifter.Set(true);
+		} else {
+			IO.DriveBase.SolenoidShifter.Set(gearState);
+		}
+
+		// Drive Code (WPI Built-in)
+		Adrive.ArcadeDrive(OutputY, OutputX);
 
 		// Z-Bar controls (Dont fit on the opperator stick, so they are on the drive stick...
 		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
@@ -1336,6 +1346,32 @@ class Robot: public frc::TimedRobot {
 
 		return encoderDistance;
 
+	}
+
+	double getEncoderRate() {
+
+		// If an encoder is available, use it...
+		double encoderLeft = IO.DriveBase.EncoderLeft.GetRate();
+		double encoderRight = IO.DriveBase.EncoderRight.GetRate();
+
+		if (autoEncoder == IO.DS.EncoderAuto) {
+			// Automatically select the larger value (assume one was disconnected)
+			if (fabs(encoderLeft) > fabs(encoderRight))
+				return encoderLeft;
+			else
+				return encoderRight;
+		}
+
+		if (autoEncoder == IO.DS.EncoderBoth)
+			return (encoderLeft + encoderRight) / 2.0;
+
+		if (autoEncoder == IO.DS.EncoderLeft)
+			return encoderLeft;
+
+		if (autoEncoder == IO.DS.EncoderRight)
+			return encoderRight;
+
+		return 0;
 	}
 
 	frc::Relay::Value LEDcontrol(int LEDcontrolcode) {
