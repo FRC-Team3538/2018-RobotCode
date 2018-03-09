@@ -352,7 +352,7 @@ class Robot: public frc::TimedRobot {
 					autoSwitchNearSide(false);
 
 				if (autoGameData[1] == 'R')
-					autoSwitchBackSide(false);
+					autoSwitchBackShoot(false);
 			}
 
 			// Scale
@@ -406,7 +406,7 @@ class Robot: public frc::TimedRobot {
 					autoSwitchNearSide(true);
 
 				if (autoGameData[1] == 'L')
-					autoSwitchBackSide(true);
+					autoSwitchBackShoot(true);
 			}
 
 			// Scale
@@ -491,7 +491,6 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-
 			if (autoForward(18))
 				autoNextState();
 			break;
@@ -502,7 +501,6 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-
 			if (autoForward(60.0))
 				autoNextState();
 			break;
@@ -516,6 +514,7 @@ class Robot: public frc::TimedRobot {
 			if (timedDrive(0.6, 0.5, 0.5))
 				autoNextState();
 			break;
+
 		case 6:
 			// Eject!
 			IO.DriveBase.ClawIntake1.Set(-1.0);
@@ -1075,7 +1074,77 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoSwitchBackSide(bool isStartRightPos) {
+	void autoSwitchBackShoot(bool isStartRightPos) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+
+		// Rotate based on field start position
+		double rotDir = 1.0;
+		if (isStartRightPos) {
+			rotDir = -1.0;
+		}
+
+		// Auto Sequence
+		switch (autoModeState) {
+		case 1:
+			if (autoForward(223))
+				autoNextState();
+
+			break;
+
+		case 2:
+			if (autoTurn(-90 * rotDir))
+				autoNextState();
+
+			break;
+
+		case 3:
+			if (autoForward(125))
+				autoNextState();
+
+			break;
+
+		case 4:
+			ElevPosTarget = 7500;
+			IO.DriveBase.Wrist1.Set(-0.45);
+
+			if (autoTurn((-90 - 25) * rotDir))
+				autoNextState();
+
+			break;
+
+		case 5:
+			if (timedDrive(0.5, 0.8, 0.8))
+				autoNextState();
+			break;
+
+		case 6:
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			if (timedDrive(1.5, 0.3, 0.3))
+				autoNextState();
+			break;
+
+		case 7:
+			IO.DriveBase.Wrist1.Set(0.0);
+			IO.DriveBase.ClawIntake1.Set(0.0);
+			autoNextState();
+
+			// Display auton Time
+			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoSwitchBackLegal(bool isStartRightPos) {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
@@ -1140,11 +1209,10 @@ class Robot: public frc::TimedRobot {
 
 		case 9:
 			IO.DriveBase.ClawIntake1.Set(-1.0);
+			autoNextState();
 
 			// Display auton Time
 			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-
-			autoNextState();
 
 			break;
 		default:
