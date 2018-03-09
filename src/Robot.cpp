@@ -36,6 +36,7 @@ class Robot: public frc::TimedRobot {
 	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
+	bool auto2CubeStartRight = false; // What side of the field is the 2cube starting
 
 	void RobotInit() {
 		//disable drive watchdogs
@@ -123,8 +124,8 @@ class Robot: public frc::TimedRobot {
 		llvm::StringRef sDF = "DriveFilter";
 		double df = frc::SmartDashboard::GetNumber(sDF, 0.2);
 		frc::SmartDashboard::SetPersistent(sDF);
-		OutputY = (df * OutputY) + ((1.0-df) * SpeedLinear);
-		OutputX = (df * OutputX) + ((1.0-df) * SpeedRotate);
+		OutputY = (df * OutputY) + ((1.0 - df) * SpeedLinear);
+		OutputX = (df * OutputX) + ((1.0 - df) * SpeedRotate);
 
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -328,10 +329,10 @@ class Robot: public frc::TimedRobot {
 			if (autoTarget == IO.DS.AutoSwitch) {
 
 				if (autoGameData[0] == 'L')
-					autoCenterFast(1);
+					autoCenterFast(false);
 
 				if (autoGameData[0] == 'R')
-					autoCenterFast(-1);
+					autoCenterFast(true);
 			}
 
 			// Arc Switch (Testing)
@@ -452,6 +453,21 @@ class Robot: public frc::TimedRobot {
 				}
 			}
 		}
+
+		// 2Cube Auto
+		if (autoFinisher == IO.DS.sAutoCube2Score) {
+			if (!auto2CubeStartRight) {
+				if (autoGameData[1] == 'L')
+					autoCube2ScoreNear(1);
+				else
+					autoCube2ScoreFar(1);
+			} else {
+				if (autoGameData[1] == 'L')
+					autoCube2ScoreNear(-1);
+				else
+					autoCube2ScoreFar(-1);
+			}
+		}
 	}
 
 	/*
@@ -472,7 +488,6 @@ class Robot: public frc::TimedRobot {
 
 		default:
 			stopMotors();
-
 		}
 
 		return;
@@ -483,8 +498,12 @@ class Robot: public frc::TimedRobot {
 	 *
 	 *
 	 */
-	void autoCenterFast(double direction) {
+	void autoCenterFast(bool isGoRight) {
 
+		// Mirror path if starting on right
+		double rot = 1;
+		if (isGoRight)  rot = -1;
+		
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 		ElevPosTarget = 800;
@@ -499,7 +518,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 2:
-			if (autoTurn(45.0 * direction))
+			if (autoTurn(45.0 * rot))
 				autoNextState();
 			break;
 
@@ -607,7 +626,10 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(0.0);
 
 			autoNextState();
-			autoModeState = 0; // Done!
+
+			// Trigger the score cube 2 auto mode
+			auto2CubeStartRight = isGoRight;
+			autoModeState = 100;
 			break;
 
 		case 30:
@@ -634,6 +656,7 @@ class Robot: public frc::TimedRobot {
 		case 34:
 			if (autoForward(250))
 				autoNextState();
+			
 			break;
 
 		default:
@@ -807,6 +830,9 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
+			// Trigger the score cube 2 auto mode
+			auto2CubeStartRight = isStartRightPos;
+			autoModeState = 100;
 			break;
 
 		default:
@@ -940,6 +966,10 @@ class Robot: public frc::TimedRobot {
 
 			autoNextState();
 
+			// Trigger the score cube 2 auto mode
+			auto2CubeStartRight = !isRightSide;
+			autoModeState = 100;
+
 			break;
 
 		default:
@@ -1066,6 +1096,10 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(0.0);
 
 			autoNextState();
+
+			// Trigger the score cube 2 auto mode
+			auto2CubeStartRight = isStartRightPos;
+			autoModeState = 100;
 
 			break;
 
@@ -1218,6 +1252,134 @@ class Robot: public frc::TimedRobot {
 			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 
 			break;
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	/*
+	 * AUTO PROGRAM - Score Second Cube
+	 *
+	 * Assumes that the prior auto sequence acquired the cube on the end
+	 *
+	 */
+	void autoCube2ScoreNear(double rot) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+		ElevPosTarget = 800;
+
+		// High gear
+		IO.DriveBase.SolenoidShifter.Set(false);
+
+		switch (autoModeState) {
+		case 100:
+			if (autoForward(14))
+				autoNextState();
+			break;
+
+		case 101:
+			if (autoTurn(45.0 * rot))
+				autoNextState();
+			break;
+
+		case 102:
+			if (autoForward(24))
+				autoNextState();
+			break;
+
+		case 103:
+			ElevPosTarget = 6000; // TODO: Fix this for competition
+			IO.DriveBase.Wrist1.Set(-0.45);
+
+			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget))
+				autoNextState();
+			break;
+
+		case 104:
+			if (autoForward(18))
+				autoNextState();
+			break;
+
+		case 105:
+			// Eject!
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			// keep pushing!
+			if (AutonTimer.Get() > 1.0) {
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				IO.DriveBase.Wrist1.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoCube2ScoreFar(double rot) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+		ElevPosTarget = 800;
+
+		// High gear
+		IO.DriveBase.SolenoidShifter.Set(false);
+
+		switch (autoModeState) {
+		case 100:
+			if (autoForward(14))
+				autoNextState();
+			break;
+
+		case 101:
+			if (autoTurn(-90.0 * rot))
+				autoNextState();
+			break;
+
+		case 102:
+			if (autoForward(285))
+				autoNextState();
+			break;
+
+		case 103:
+			ElevPosTarget = 6000; // TODO: Fix this for competition
+			IO.DriveBase.Wrist1.Set(-0.45);
+
+			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget))
+				autoNextState();
+			break;
+
+		case 104:
+			if (autoForward(28))
+				autoNextState();
+			break;
+
+		case 105:
+			// Eject!
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			// keep pushing!
+			if (AutonTimer.Get() > 1.0) {
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				IO.DriveBase.Wrist1.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+			break;
+
 		default:
 			stopMotors();
 
