@@ -120,8 +120,11 @@ class Robot: public frc::TimedRobot {
 			SpeedRotate = (1 - Drive_Deadband) * pow(SpeedRotate, 3) - Drive_Deadband;
 
 		// Moving Average Filter (Previous 5 commands are averaged together.)
-		OutputY = (0.8 * OutputY) + (0.2 * SpeedLinear);
-		OutputX = (0.8 * OutputX) + (0.2 * SpeedRotate);
+		llvm::StringRef sDF = "DriveFilter";
+		double df = frc::SmartDashboard::GetNumber(sDF, 0.2);
+		frc::SmartDashboard::SetPersistent(sDF);
+		OutputY = (df * OutputY) + ((1.0-df) * SpeedLinear);
+		OutputX = (df * OutputX) + ((1.0-df) * SpeedRotate);
 
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -1568,9 +1571,9 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
 
 		// Auto State
-		SmartDashboard::PutString("Auto Target", autoTarget);
-		SmartDashboard::PutString("Auto Position", autoPosition);
-		SmartDashboard::PutString("Auto Finisher", autoFinisher);
+		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));
+		SmartDashboard::PutString(llvm::StringRef("Auto Position"), llvm::StringRef(autoPosition));
+		SmartDashboard::PutString(llvm::StringRef("Auto Finisher"), llvm::StringRef(autoFinisher));
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 		SmartDashboard::PutNumber("Auto Heading", autoHeading);
@@ -1594,7 +1597,7 @@ class Robot: public frc::TimedRobot {
 		}
 
 		// Game Specific Message
-		SmartDashboard::PutString("autoGameData", autoGameData);
+		SmartDashboard::PutString(llvm::StringRef("autoGameData"), llvm::StringRef(autoGameData));
 
 		// State Vars
 		SmartDashboard::PutNumber("ElevPosTarget", ElevPosTarget);

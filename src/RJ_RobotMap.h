@@ -26,38 +26,37 @@ public:
 		Joystick LaunchPad { 4 };
 
 
-		SendableChooser<std::string> chooseAutoDelay;
-		const std::string sAutoDelayOff = "No_Delay";
-		const std::string sAutoDelay3 = "3 Seconds";
-		const std::string sAutoDelay5 = "5 Seconds";
+		SendableChooser<llvm::StringRef> chooseAutoDelay;
+		const llvm::StringRef sAutoDelayOff = "No_Delay";
+		const llvm::StringRef sAutoDelay3 = "3 Seconds";
+		const llvm::StringRef sAutoDelay5 = "5 Seconds";
 
-		SendableChooser<std::string> chooseAutoPosStart;
-		const std::string sAutoCenter = "Center";
-		const std::string sAutoLeft = "Left";
-		const std::string sAutoRight = "Right";
+		SendableChooser<llvm::StringRef> chooseAutoPosStart;
+		const llvm::StringRef sAutoCenter = "Center";
+		const llvm::StringRef sAutoLeft = "Left";
+		const llvm::StringRef sAutoRight = "Right";
 
-		SendableChooser<std::string> chooseAutoProgram;
-		const std::string AutoNone = "1 None";
-		const std::string AutoLine = "2 Line";
-		const std::string AutoSwitch = "3 Switch";
-		const std::string AutoScale = "4 Scale";
-		const std::string AutoNearSide = "5 NSc NSw L";
-		const std::string AutoNNF = "6 NSc NSw FSc";
-		const std::string AutoArcSwitch = "7 ArcSwitch";
+		SendableChooser<llvm::StringRef> chooseAutoProgram;
+		const llvm::StringRef AutoNone = "1 None";
+		const llvm::StringRef AutoLine = "2 Line";
+		const llvm::StringRef AutoSwitch = "3 Switch";
+		const llvm::StringRef AutoScale = "4 Scale";
+		const llvm::StringRef AutoNearSide = "5 NSc NSw L";
+		const llvm::StringRef AutoNNF = "6 NSc NSw FSc";
+		const llvm::StringRef AutoArcSwitch = "7 ArcSwitch";
 
-		SendableChooser<std::string> chooseAutoFinisher;
-		const std::string sAutoNo = "1 None";
-		const std::string sAutoCube2Get = "2 Cube2Get";
-		const std::string sAutoCube2Score = "3 Cube2Score";
-		const std::string sAutoWallHug = "4 Wall Hug";
+		SendableChooser<llvm::StringRef> chooseAutoFinisher;
+		const llvm::StringRef sAutoNo = "1 None";
+		const llvm::StringRef sAutoCube2Get = "2 Cube2Get";
+		const llvm::StringRef sAutoCube2Score = "3 Cube2Score";
+		const llvm::StringRef sAutoWallHug = "4 Wall Hug";
 
-		SendableChooser<std::string> chooseAutoEncoder;
-		const std::string EncoderAuto  = "Enc Auto";
-		const std::string EncoderLeft  = "Enc Left";
-		const std::string EncoderRight = "Enc Right";
-		const std::string EncoderBoth  = "Enc Both";
-		const std::string EncoderNone  = "Enc None";
-
+		SendableChooser<llvm::StringRef> chooseAutoEncoder;
+		const llvm::StringRef EncoderAuto  = "Enc Auto";
+		const llvm::StringRef EncoderLeft  = "Enc Left";
+		const llvm::StringRef EncoderRight = "Enc Right";
+		const llvm::StringRef EncoderBoth  = "Enc Both";
+		const llvm::StringRef EncoderNone  = "Enc None";
 	};
 	structDS DS;
 
