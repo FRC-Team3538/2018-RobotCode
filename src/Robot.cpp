@@ -132,7 +132,7 @@ class Robot: public frc::TimedRobot {
 
 		// Power Brake
 		if (bPowerBrake) {
-			double kP_PowerBrake = -1.0/5.0;
+			double kP_PowerBrake = -1.0 / 5.0;
 			OutputY = getEncoderRate() * kP_PowerBrake;
 			IO.DriveBase.SolenoidShifter.Set(true);
 		} else {
@@ -532,12 +532,18 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 7:
-			if (autoFinisher == IO.DS.sAutoYes)
-				// Back up and go around to get the edge contested cube
-				// Probably going to scale it if possible.
+			if (autoFinisher == IO.DS.sAutoCube2Get) {
 				autoNextState();
-			else
+
+			} else if (autoFinisher == IO.DS.sAutoWallHug) {
+				autoNextState();
+				autoModeState = 30;
+
+			} else {
+				autoNextState();
 				autoModeState = 0;
+			}
+
 			break;
 
 		case 8:
@@ -599,7 +605,33 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(0.0);
 
 			autoNextState();
+			autoModeState = 0; // Done!
+			break;
 
+		case 30:
+			// Start of wall hug path
+			if (autoForward(60))
+				autoNextState();
+			break;
+
+		case 31:
+			if (autoTurn(60))
+				autoNextState();
+			break;
+
+		case 32:
+			if (autoForward(60))
+				autoNextState();
+			break;
+
+		case 33:
+			if (autoTurn(0))
+				autoNextState();
+			break;
+
+		case 34:
+			if (autoForward(250))
+				autoNextState();
 			break;
 
 		default:
@@ -621,7 +653,6 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-
 			if (autoArcDrive(48.0, 45.0 * direction, 1.0, 0.0))
 				autoNextState();
 			break;
@@ -632,6 +663,9 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
+			ElevPosTarget = 4200;
+			IO.DriveBase.Wrist1.Set(-0.45);
+
 			if (autoArcDrive(48.0, 0.0, 1.0, 0.0))
 				autoNextState();
 			break;
@@ -647,6 +681,7 @@ class Robot: public frc::TimedRobot {
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake1.Set(0.0);
+				IO.DriveBase.Wrist1.Set(0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -719,7 +754,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			if (autoFinisher == IO.DS.sAutoYes)
+			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
@@ -829,7 +864,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			if (autoFinisher == IO.DS.sAutoYes)
+			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 8;
@@ -852,7 +887,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 8:
-			if (autoFinisher == IO.DS.sAutoYes)
+			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
@@ -969,7 +1004,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
-			if (autoFinisher == IO.DS.sAutoYes)
+			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
