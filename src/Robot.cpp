@@ -72,9 +72,9 @@ class Robot: public frc::TimedRobot {
 		IO.DS.LaunchPad.SetOutput(4, frc::DriverStation::GetInstance().IsOperatorControl());
 
 		// Disable closed loop control and limit switches
-		ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
-		//if (IO.DS.OperatorStick.GetStartButton()) ElevOverride = false;
-		//if (IO.DS.OperatorStick.GetBackButton()) ElevOverride = true;
+		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
+		if (IO.DS.OperatorStick.GetStartButton()) ElevOverride = false;
+		if (IO.DS.OperatorStick.GetBackButton()) ElevOverride = true;
 
 	}
 
@@ -104,28 +104,40 @@ class Robot: public frc::TimedRobot {
 		// Power Brake
 		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
+		// Bad joystick compensation. :)
+		//if (SpeedLinear > 0.95) SpeedLinear = 1.0;
+		//if (SpeedLinear < -0.95) SpeedLinear = -1.0;
+
+		SpeedLinear *= 1.05;
+		SpeedRotate *= 1.05;
+
 		// Set dead band for control inputs
 		SpeedLinear = deadband(SpeedLinear, Control_Deadband);
 		SpeedRotate = deadband(SpeedRotate, Control_Deadband);
 
+		SmartDashboard::PutNumber("SL Deadband", SpeedLinear);
+		SmartDashboard::PutNumber("SR Deadband", SpeedRotate);
+
+
 		// Smoothing algorithm for x^3
 		if (SpeedLinear > 0.0)
 			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) + Drive_Deadband;
-		else
+		else if (SpeedLinear < 0.0)
 			SpeedLinear = (1 - Drive_Deadband) * pow(SpeedLinear, 3) - Drive_Deadband;
+		else
+			SpeedLinear = 0.0;  // added for clarity
 
 		// Smoothing algorithm for x^3
 		if (SpeedRotate > 0.0)
 			SpeedRotate = (1 - Drive_Deadband) * pow(SpeedRotate, 3) + Drive_Deadband;
-		else
+		else if (SpeedRotate < 0.0)
 			SpeedRotate = (1 - Drive_Deadband) * pow(SpeedRotate, 3) - Drive_Deadband;
+		else
+			SpeedRotate = 0.0; // added for clarity
 
-		// Moving Average Filter (Previous 5 commands are averaged together.)
-		llvm::StringRef sDF = "DriveFilter";
-		double df = frc::SmartDashboard::GetNumber(sDF, 0.2);
-		frc::SmartDashboard::SetPersistent(sDF);
-		OutputY = (df * OutputY) + ((1.0 - df) * SpeedLinear);
-		OutputX = (df * OutputX) + ((1.0 - df) * SpeedRotate);
+		SmartDashboard::PutNumber("SL Cubed", SpeedLinear);
+		SmartDashboard::PutNumber("SR Cubed", SpeedRotate);
+
 
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
@@ -136,15 +148,39 @@ class Robot: public frc::TimedRobot {
 
 		// Power Brake
 		if (bPowerBrake) {
-			double kP_PowerBrake = 1.0 / 20.0;
-			OutputY = getEncoderRate() * kP_PowerBrake;
+/*
+			double creepSpeed = 0.0; // Inches/second?
+
+			if (SpeedLinear > Control_Deadband) creepSpeed = 20;
+			if (SpeedLinear < Control_Deadband) creepSpeed = -20;
+
+			double kP_PowerBrake = 1.0 / 100.0;
+			SpeedLinear = (getEncoderRate() + creepSpeed) * kP_PowerBrake;
+
+			SpeedLinear = absMax(SpeedLinear, 0.6);
+*/
+			SpeedLinear *= 0.4;
 			IO.DriveBase.SolenoidShifter.Set(true);
 		} else {
 			IO.DriveBase.SolenoidShifter.Set(gearState);
 		}
 
+		// Moving Average Filter (Previous 5 commands are averaged together.)
+
+		llvm::StringRef sDF = "DriveFilter";
+		double df = frc::SmartDashboard::GetNumber(sDF, 0.2);
+		frc::SmartDashboard::PutNumber(sDF, df);
+		frc::SmartDashboard::SetPersistent(sDF);
+
+		OutputY = (df * OutputY) + ((1.0 - df) * SpeedLinear);
+		OutputX = (df * OutputX) + ((1.0 - df) * SpeedRotate);
+
+		SmartDashboard::PutNumber("SL OutputY", OutputY);
+		SmartDashboard::PutNumber("SR OutputX", OutputX);
+
+
 		// Drive Code (WPI Built-in)
-		Adrive.ArcadeDrive(OutputY, OutputX);
+		Adrive.ArcadeDrive(OutputY, OutputX, false);
 
 		// Z-Bar controls (Dont fit on the opperator stick, so they are on the drive stick...
 		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
@@ -157,8 +193,8 @@ class Robot: public frc::TimedRobot {
 
 		// rumble if current to high
 		double RbtThr = 0.0;		// Define value for total rumble current
-		if (driveCurrent > 125.0)		// Rumble if greater than 125 amps motor current
-			RbtThr = 1.0;
+		if (driveCurrent > 175.0)		// Rumble if greater than 125 amps motor current
+			RbtThr = 0.0;
 
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
@@ -183,11 +219,11 @@ class Robot: public frc::TimedRobot {
 			break;
 		case 180:
 			// Dpad Down - ground/intake level
-			ElevPosTarget = 1342;
+			ElevPosTarget = 500;
 			break;
 		case 0:
 			// Dpad  Up - Scale Position
-			ElevPosTarget = 15000;
+			ElevPosTarget = 17500;
 			break;
 		}
 
@@ -682,12 +718,12 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			if (autoArcDrive(48.0, 45.0 * direction, 1.0, 0.0))
+			if (autoArcDrive(24.0, 45.0 * direction, 0.5, 5.0))
 				autoNextState();
 			break;
 
 		case 2:
-			if (autoForward(18, 1.0, 0.0))
+			if (autoForward(14, 0.5, 5.0))
 				autoNextState();
 			break;
 
@@ -695,13 +731,13 @@ class Robot: public frc::TimedRobot {
 			ElevPosTarget = 4200;
 			IO.DriveBase.Wrist1.Set(-0.45);
 
-			if (autoArcDrive(48.0, 0.0, 1.0, 0.0))
+			if (autoArcDrive(24.0, 0.0, 0.5, 5.0))
 				autoNextState();
 			break;
 
 		case 4:
-			if (timedDrive(0.6, 0.5, 0.5))
-				autoNextState();
+			//if (timedDrive(0.1, 0.5, 0.5))
+			//	autoNextState();
 			break;
 		case 5:
 			// Eject!
@@ -810,7 +846,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(0.45);
 			ElevPosTarget = 800;
 
-			if (elevatorPosition(ElevPosTarget))
+			if (autoTurn(0) && elevatorPosition(ElevPosTarget))
 				autoNextState();
 			break;
 
@@ -1437,9 +1473,10 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if (ElevEncoderRead < 800 && elevMotor < 0)
+		if (ElevEncoderRead < 800 and elevMotor < 0  and (!ElevOverride))
 			elevMotor *= 0.3;
-		if (ElevEncoderRead > 17500 && elevMotor > 0)
+
+		if (ElevEncoderRead > 17500 and elevMotor > 0  and (!ElevOverride))
 			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
@@ -1463,7 +1500,7 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Elevator_MAXSpeed (1.0)
-#define Elevator_KP (0.002)
+#define Elevator_KP (0.0005)
 #define ElevatorPositionTol (60)
 
 	bool elevatorPosition(double Elev_position) {
@@ -1573,7 +1610,10 @@ class Robot: public frc::TimedRobot {
 		double encoderDistance = getEncoderDistance();
 
 		// update current heading
-		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (targetDistance - encoderDistance);
+		double encProgress = (targetDistance - encoderDistance);
+		if (encProgress > 1.0) encProgress = 1.0;
+		if (encProgress <= 0) encProgress = 0.001;
+		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (encProgress);
 
 		// Run Auto Drive per usual.
 		return autoForward(targetDistance, max_speed, settle_time);
@@ -1769,6 +1809,10 @@ class Robot: public frc::TimedRobot {
 		// Motor Outputs
 		SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
 		SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
+
+		// Drive Joystick Inputs
+		SmartDashboard::PutNumber("Speed Linear", IO.DS.DriveStick.GetY(GenericHID::kLeftHand));
+		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand)*-1);
 
 		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
 
