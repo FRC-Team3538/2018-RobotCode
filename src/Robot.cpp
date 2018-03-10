@@ -136,7 +136,7 @@ class Robot: public frc::TimedRobot {
 
 		// Power Brake
 		if (bPowerBrake) {
-			double kP_PowerBrake = -1.0 / 5.0;
+			double kP_PowerBrake = 1.0 / 20.0;
 			OutputY = getEncoderRate() * kP_PowerBrake;
 			IO.DriveBase.SolenoidShifter.Set(true);
 		} else {
@@ -295,6 +295,9 @@ class Robot: public frc::TimedRobot {
 		// Reset the moving average filters for drive base
 		OutputY = 0;
 		OutputX = 0;
+
+		// Default Elevator default
+		ElevPosTarget = 800;
 	}
 
 	// Reset all the stuff that needs to be reset at each state
@@ -502,8 +505,9 @@ class Robot: public frc::TimedRobot {
 
 		// Mirror path if starting on right
 		double rot = 1;
-		if (isGoRight)  rot = -1;
-		
+		if (isGoRight)
+			rot = -1;
+
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 		ElevPosTarget = 800;
@@ -656,7 +660,7 @@ class Robot: public frc::TimedRobot {
 		case 34:
 			if (autoForward(250))
 				autoNextState();
-			
+
 			break;
 
 		default:
@@ -738,26 +742,35 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			if (autoForward(200)) {
-				autoNextState();
+			if (autoForward(260)) {
+				//autoNextState();
+				ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
+
+				if (elevatorPosition(ElevPosTarget)) {
+					autoNextState();
+				}
+
 			}
 			break;
 
 		case 2:
-			if (autoTurn(-35.0 * direction)) {
-				autoNextState();
-			}
+			//autoForward(0);
+//			ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
+//			if (elevatorPosition(ElevPosTarget)) {
+//				autoNextState();
+//			}
+			autoNextState();
 			break;
 
 		case 3:
-			if (autoForward(48)) {
+			if (autoTurn(-45 * direction)) {
 				autoNextState();
 			}
 			break;
 
 		case 4:
-			ElevPosTarget = 6000;  //TODO: Set back to Full Height (TESTING)
-			if (autoTurn(0) && elevatorPosition(ElevPosTarget)) {
+
+			if (autoForward(15)) {
 				autoNextState();
 			}
 			break;
@@ -770,7 +783,6 @@ class Robot: public frc::TimedRobot {
 			if (AutonTimer.Get() > 1.0) {
 				IO.DriveBase.ClawIntake1.Set(0.0);
 				autoNextState();
-				ElevPosTarget = 800;
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
@@ -779,13 +791,22 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
+			//190
+			if (autoForward(-15)) {
+				autoNextState();
+				ElevPosTarget = 1000;
+			}
+
+			break;
+
+		case 7:
 			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
 			break;
 
-		case 7:
+		case 8:
 			IO.DriveBase.Wrist1.Set(0.45);
 			ElevPosTarget = 800;
 
@@ -793,27 +814,27 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 8:
+		case 9:
 			if (autoForward(-36))
 				autoNextState();
 			break;
 
-		case 9:
+		case 10:
 			if (autoTurn(15 * direction))
 				autoNextState();
 			break;
 
-		case 10:
+		case 11:
 			if (autoForward(-18))
 				autoNextState();
 			break;
 
-		case 11:
+		case 12:
 			if (autoTurn(0))
 				autoNextState();
 			break;
 
-		case 12:
+		case 13:
 			// Loose Intake
 			IO.DriveBase.ClawIntake1.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
@@ -822,7 +843,7 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 13:
+		case 14:
 			ElevPosTarget = 2200;
 			IO.DriveBase.ClawIntake1.Set(0.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
@@ -861,7 +882,8 @@ class Robot: public frc::TimedRobot {
 			// Auto home the elevator
 			elevatorSpeed(-0.2);
 
-			if (autoForward(226, 1.0, 0.1)) {
+			//210
+			if (autoForward(228, 1.0, 0.1)) {
 				autoNextState();
 			}
 			break;
@@ -873,40 +895,45 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(186 + 18, 1.0, 0.1)) {
+			//190
+			if (autoForward(212, 1.0, 0.1)) {
 				autoNextState();
-				ElevPosTarget = 6000;  //TODO: Set back to Full Height (TESTING)
+
 			}
 			break;
 
 		case 4:
-			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget)) {
+			if (autoTurn(20 * direction)) {
 				autoNextState();
 			}
 			break;
 
 		case 5:
-			if (autoForward(24, 1.0, 0.1)) {
+			ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
+			autoTurn(30 * direction);
+			if (elevatorPosition(ElevPosTarget)) {
 				autoNextState();
+
 			}
 			break;
 
 		case 6:
-			if (autoFinisher == IO.DS.sAutoCube2Get)
+			IO.DriveBase.SolenoidShifter.Set(true);
+			if (autoForward(48, 0.5, 0.1)) {
 				autoNextState();
-			else
-				autoModeState = 8;
+			}
 			break;
 
 		case 7:
 			// Eject!
 			IO.DriveBase.ClawIntake1.Set(-1.0);
 
+			//autoTurn(20 * direction);
+
 			// The Crowd Goes Wild!
 			if (AutonTimer.Get() > 1.0) {
 				IO.DriveBase.ClawIntake1.Set(0.0);
 				autoNextState();
-				ElevPosTarget = 800;
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
@@ -915,13 +942,22 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 8:
+			//190
+			if (autoForward(-20, 0.5, 0.1)) {
+				autoNextState();
+				ElevPosTarget = 800;
+			}
+
+			break;
+
+		case 9:
 			if (autoFinisher == IO.DS.sAutoCube2Get)
 				autoNextState();
 			else
 				autoModeState = 0; // We are done.
 			break;
 
-		case 9:
+		case 10:
 			IO.DriveBase.Wrist1.Set(0.45);
 			ElevPosTarget = 800;
 
@@ -929,27 +965,27 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 10:
+		case 11:
 			if (autoForward(-36))
 				autoNextState();
 			break;
 
-		case 11:
+		case 12:
 			if (autoTurn(15 * direction))
 				autoNextState();
 			break;
 
-		case 12:
+		case 13:
 			if (autoForward(-18))
 				autoNextState();
 			break;
 
-		case 13:
+		case 14:
 			if (autoTurn(0))
 				autoNextState();
 			break;
 
-		case 14:
+		case 15:
 			// Loose Intake
 			IO.DriveBase.ClawIntake1.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
@@ -958,7 +994,7 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 15:
+		case 16:
 			ElevPosTarget = 2200;
 			IO.DriveBase.ClawIntake1.Set(0.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
@@ -1005,7 +1041,9 @@ class Robot: public frc::TimedRobot {
 		// Auto Sequence
 		switch (autoModeState) {
 		case 1:
-			if (autoForward(150))
+			IO.DriveBase.SolenoidShifter.Set(false); //High Gear
+
+			if (autoForward(123))
 				autoNextState();
 
 			break;
@@ -1017,6 +1055,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
+			IO.DriveBase.SolenoidShifter.Set(true); // Low Gear
 			if (timedDrive(0.6, 0.5, 0.5))
 				autoNextState();
 
@@ -1025,7 +1064,7 @@ class Robot: public frc::TimedRobot {
 		case 4:
 			IO.DriveBase.ClawIntake1.Set(-1);
 
-			if (timedDrive(1.0, 0.3, 0.3)) {
+			if (timedDrive(0.75, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake1.Set(0.0);
 				autoNextState();
 
@@ -1137,7 +1176,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(125))
+			if (autoForward(105))
 				autoNextState();
 
 			break;
@@ -1398,9 +1437,9 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if (ElevEncoderRead < 800)
+		if (ElevEncoderRead < 800 && elevMotor < 0)
 			elevMotor *= 0.3;
-		if (ElevEncoderRead > 17500)
+		if (ElevEncoderRead > 17500 && elevMotor > 0)
 			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
@@ -1472,10 +1511,11 @@ class Robot: public frc::TimedRobot {
 	}
 
 	// Go AutoForward autonomously...
-#define KP_LINEAR (0.056)
+
+#define KP_LINEAR (0.056 / 1.8)
 #define LINEAR_TOLERANCE (1.0)
 
-#define ROTATION_kP (0.04)
+#define ROTATION_kP (0.07)
 #define ROTATION_TOLERANCE (10.0)
 #define ROTATIONAL_SETTLING_TIME (0.0)
 #define ROTATIONAL_MAX_SPEED (0.40)
@@ -1735,7 +1775,7 @@ class Robot: public frc::TimedRobot {
 		// Auto State
 		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));
 		SmartDashboard::PutString(llvm::StringRef("Auto Position"), llvm::StringRef(autoPosition));
-		SmartDashboard::PutString(llvm::StringRef("Auto Finisher"), llvm::StringRef(autoFinisher));
+		SmartDashboard::PutString(llvm::StringRef("Auto Fin"), llvm::StringRef(autoFinisher));
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 		SmartDashboard::PutNumber("Auto Heading", autoHeading);

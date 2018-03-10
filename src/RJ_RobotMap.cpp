@@ -20,11 +20,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
-	//DriveBase.EncoderLeft.SetDistancePerPulse(167.0/ 16745.0 * 4.0);
-	//DriveBase.EncoderRight.SetDistancePerPulse(-167.0/ 16745.0 * 4.0);
+	DriveBase.EncoderLeft.SetDistancePerPulse(167.0/ 16745.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(-167.0/ 16745.0 * 4.0);
 
-	DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	//DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	//DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
 
 
 	// Set Default Gear
@@ -46,20 +46,20 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoProgram.AddObject(DS.AutoNearSide, DS.AutoNearSide);
 	DS.chooseAutoProgram.AddObject(DS.AutoNNF, DS.AutoNNF);
 	DS.chooseAutoProgram.AddObject(DS.AutoArcSwitch, DS.AutoArcSwitch);
-	frc::SmartDashboard::PutData("Auto Target", &DS.chooseAutoProgram);
+	frc::SmartDashboard::PutData("Auto OBJ", &DS.chooseAutoProgram);
 
 	// Auto Position Chooser
 	DS.chooseAutoPosStart.AddDefault(DS.sAutoCenter, DS.sAutoCenter);
 	DS.chooseAutoPosStart.AddObject(DS.sAutoLeft, DS.sAutoLeft);
 	DS.chooseAutoPosStart.AddObject(DS.sAutoRight, DS.sAutoRight);
-	frc::SmartDashboard::PutData("Auto Position", &DS.chooseAutoPosStart);
+	frc::SmartDashboard::PutData("Auto Pos", &DS.chooseAutoPosStart);
 
 	// Auto Finisher Chooser
-	DS.chooseAutoProgram.AddDefault(DS.sAutoCube2Get, DS.sAutoCube2Get);
-	DS.chooseAutoProgram.AddObject(DS.sAutoNo, DS.sAutoNo);
-	DS.chooseAutoProgram.AddObject(DS.sAutoCube2Score, DS.sAutoCube2Score);
-	DS.chooseAutoProgram.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
-	frc::SmartDashboard::PutData("Finisher", &DS.chooseAutoFinisher);
+	DS.chooseAutoFinisher.AddDefault(DS.sAutoCube2Get, DS.sAutoCube2Get);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoNo, DS.sAutoNo);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoCube2Score, DS.sAutoCube2Score);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
+	frc::SmartDashboard::PutData("Fin", &DS.chooseAutoFinisher);
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
