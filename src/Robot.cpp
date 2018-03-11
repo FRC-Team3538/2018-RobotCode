@@ -105,19 +105,12 @@ class Robot: public frc::TimedRobot {
 		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
 		// Bad joystick compensation. :)
-		//if (SpeedLinear > 0.95) SpeedLinear = 1.0;
-		//if (SpeedLinear < -0.95) SpeedLinear = -1.0;
-
 		SpeedLinear *= 1.05;
 		SpeedRotate *= 1.05;
 
 		// Set dead band for control inputs
 		SpeedLinear = deadband(SpeedLinear, Control_Deadband);
 		SpeedRotate = deadband(SpeedRotate, Control_Deadband);
-
-		SmartDashboard::PutNumber("SL Deadband", SpeedLinear);
-		SmartDashboard::PutNumber("SR Deadband", SpeedRotate);
-
 
 		// Smoothing algorithm for x^3
 		if (SpeedLinear > 0.0)
@@ -135,10 +128,6 @@ class Robot: public frc::TimedRobot {
 		else
 			SpeedRotate = 0.0; // added for clarity
 
-		SmartDashboard::PutNumber("SL Cubed", SpeedLinear);
-		SmartDashboard::PutNumber("SR Cubed", SpeedRotate);
-
-
 		// Drive Shifter Controls
 		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
 			gearState = false; // High
@@ -148,17 +137,6 @@ class Robot: public frc::TimedRobot {
 
 		// Power Brake
 		if (bPowerBrake) {
-/*
-			double creepSpeed = 0.0; // Inches/second?
-
-			if (SpeedLinear > Control_Deadband) creepSpeed = 20;
-			if (SpeedLinear < Control_Deadband) creepSpeed = -20;
-
-			double kP_PowerBrake = 1.0 / 100.0;
-			SpeedLinear = (getEncoderRate() + creepSpeed) * kP_PowerBrake;
-
-			SpeedLinear = absMax(SpeedLinear, 0.6);
-*/
 			SpeedLinear *= 0.4;
 			IO.DriveBase.SolenoidShifter.Set(true);
 		} else {
@@ -174,10 +152,6 @@ class Robot: public frc::TimedRobot {
 
 		OutputY = (df * OutputY) + ((1.0 - df) * SpeedLinear);
 		OutputX = (df * OutputX) + ((1.0 - df) * SpeedRotate);
-
-		SmartDashboard::PutNumber("SL OutputY", OutputY);
-		SmartDashboard::PutNumber("SR OutputX", OutputX);
-
 
 		// Drive Code (WPI Built-in)
 		Adrive.ArcadeDrive(OutputY, OutputX, false);
@@ -260,38 +234,47 @@ class Robot: public frc::TimedRobot {
 		//
 		// Wrist control
 		//
+		double wristStick = IO.DS.OperatorStick.GetX(frc::GenericHID::kRightHand);
+		wristStick = deadband(wristStick, Control_Deadband);
+		IO.DriveBase.Wrist1.Set(wristStick);
+
+		// IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
+
+
+		// Intake Control
 		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
-
-		IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
+		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
+		intakeCommand = deadband(intakeCommand, Control_Deadband);
+		IO.DriveBase.ClawIntake1.Set(intakeCommand);
 
 		//
 		// Claw control
 		//
-		if (IO.DS.OperatorStick.GetAButton()) {
+		if (IO.DS.OperatorStick.GetAButton() or IO.DS.OperatorStick.GetStickButton(frc::GenericHID::kRightHand)) {
 			// A Button - Loose Intake
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
-			IO.DriveBase.ClawIntake1.Set(1);
+			//IO.DriveBase.ClawIntake1.Set(1);
 
 		} else if (IO.DS.OperatorStick.GetBButton()) {
 			// B Button - Forceful Eject
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.ClawIntake1.Set(-1);
+			//IO.DriveBase.ClawIntake1.Set(-1);
 
 		} else if (IO.DS.OperatorStick.GetXButton()) {
 			// X Button - Tight Intake
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.ClawIntake1.Set(1);
+			//IO.DriveBase.ClawIntake1.Set(1);
 
 		} else if (IO.DS.OperatorStick.GetYButton()) {
 			// Y Button - Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
-			IO.DriveBase.ClawIntake1.Set(0);
+			//IO.DriveBase.ClawIntake1.Set(0);
 
 		} else {
 			// Default Hold Cube
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.ClawIntake1.Set(0);
+			//IO.DriveBase.ClawIntake1.Set(intakeCommand);
 		}
 
 	}
