@@ -1743,9 +1743,9 @@ class Robot: public frc::TimedRobot {
 
 		// Transform input so that output has full range [0.0 - 1.0]
 		if (input < 0.0)
-			return input * (1 - minval) - minval;
+			return absMax(input * (1 - minval) - minval, 1.0);
 		else
-			return input * (1 - minval) + minval;
+			return absMax(input * (1 - minval) + minval, 1.0);
 
 	}
 
@@ -1792,12 +1792,14 @@ class Robot: public frc::TimedRobot {
 		// Motor Outputs
 		SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
 		SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
+		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
+		SmartDashboard::PutNumber("Wrist PWM", IO.DriveBase.Wrist1.Get());
+		SmartDashboard::PutNumber("Inkate PWM", IO.DriveBase.ClawIntake1.Get());
 
 		// Drive Joystick Inputs
 		SmartDashboard::PutNumber("Speed Linear", IO.DS.DriveStick.GetY(GenericHID::kLeftHand));
 		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand)*-1);
 
-		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
 
 		// Auto State
 		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));
