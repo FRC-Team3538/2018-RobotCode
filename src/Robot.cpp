@@ -244,36 +244,27 @@ class Robot: public frc::TimedRobot {
 		// Intake Control
 		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+		bool OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
+		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
+
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
 		intakeCommand = deadband(intakeCommand, Control_Deadband);
-
 
 		//
 		// Claw control
 		//
-		if (IO.DS.OperatorStick.GetAButton() or IO.DS.OperatorStick.GetStickButton(frc::GenericHID::kRightHand)) {
-			// A Button - Loose Intake
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
-			IO.DriveBase.ClawIntake.Set(1);
+		if (OpRightBumper) {
+			// Loose Intake
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+			IO.DriveBase.ClawIntake.Set(1.0);
 
-		} else if (IO.DS.OperatorStick.GetBButton()) {
-			// B Button - Forceful Eject
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.ClawIntake.Set(-1);
-
-		} else if (IO.DS.OperatorStick.GetXButton()) {
-			// X Button - Tight Intake
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.ClawIntake.Set(1);
-
-		} else if (IO.DS.OperatorStick.GetYButton()) {
-			// Y Button - Drop it like it's hot
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);
-			IO.DriveBase.ClawIntake.Set(0);
+		} else if (OpLeftBumper) {
+			// Drop it like it's hot
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 		} else {
 			// Default Hold Cube
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(intakeCommand);
 		}
 
