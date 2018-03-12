@@ -261,6 +261,7 @@ class Robot: public frc::TimedRobot {
 		} else if (OpLeftBumper) {
 			// Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+			IO.DriveBase.ClawIntake.Set(0.0);
 
 		} else {
 			// Default Hold Cube
