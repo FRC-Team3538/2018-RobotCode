@@ -114,7 +114,8 @@ public:
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };
-		VictorSP ClawIntake2 { 10 }; // TODO: Probably Unused
+		VictorSP ClawIntake2 { 10 };
+		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
 
 		//LED Control
