@@ -526,7 +526,6 @@ class Robot: public frc::TimedRobot {
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
-		ElevPosTarget = 800;
 
 		// High gear
 		IO.DriveBase.SolenoidShifter.Set(false);
@@ -534,7 +533,8 @@ class Robot: public frc::TimedRobot {
 		switch (autoModeState) {
 		case 1:
 			if (autoForward(18))
-				autoNextState();
+				ElevPosTarget = 800;
+			autoNextState();
 			break;
 
 		case 2:
@@ -590,11 +590,12 @@ class Robot: public frc::TimedRobot {
 
 		case 9:
 			if (autoTurn(45 * rot))
+
 				autoNextState();
 			break;
 
 		case 10:
-			if (autoForward(75))
+			if (autoForward(73))
 				autoNextState();
 			break;
 
@@ -604,24 +605,67 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 12:
-			if (autoForward(92))
+			ElevPosTarget = 0;
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+			IO.DriveBase.Wrist1.Set(0.45);
+			if (autoForward(92 + 42, 1.0, 0.2))
 				autoNextState();
 			break;
 
 		case 13:
-			if (autoTurn(-45 * rot))
+			if (autoTurn(58 * rot, 1.0, 0.1))
 				autoNextState();
 			break;
 
 		case 14:
-			if (autoForward(48))
+			IO.DriveBase.SolenoidShifter.Set(true);
+			IO.DriveBase.ClawIntake.Set(1.0);
+			if (autoForward(-54, 0.4, 0))
 				autoNextState();
 			break;
 
+//			if (true)
+//				stopMotors();
+//				autoModeState = 0;
+//			break;
+
 		case 15:
+			IO.DriveBase.Wrist1.Set(0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(0);
 			//IO.DriveBase.Wrist1.Set(-0.35);
-			if (autoTurn(-135 * rot))
+			if (true)
 				autoNextState();
+			break;
+
+		case 16:
+			IO.DriveBase.Wrist1.Set(-1.0);
+			if (autoForward(10))
+				autoNextState();
+			break;
+
+		case 17:
+
+			if (autoTurn(-30))
+				autoNextState();
+			ElevPosTarget = 14000;
+			break;
+
+		case 18:
+
+			if (autoForward(30))
+				autoNextState();
+			IO.DriveBase.ClawIntake.Set(-1.0);
+			break;
+
+		case 19:
+
+			//190
+			if (autoForward(-15)) {
+				autoNextState();
+				ElevPosTarget = 1000;
+			}
+
 			break;
 
 		default:
