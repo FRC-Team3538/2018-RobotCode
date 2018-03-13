@@ -108,9 +108,11 @@ public:
 
 		// Wrist Sensing Package
 		Encoder EncoderWrist { 6, 7 };
-		DigitalInput SwitchWrist1 { 10 };
-		DigitalInput SwitchWrist2 { 11 };
+		DigitalInput SwitchWrist1 { 11 };
+		DigitalInput SwitchWrist2 { 12 };
 		AnalogInput PotentiometerWrist { 1 };
+		// Dio are faster that pwm so make sure that these do not have the same port as victors
+		// when talking to the navx other wise the pwm signal will not be sent.
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };

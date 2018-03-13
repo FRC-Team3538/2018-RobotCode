@@ -10,6 +10,9 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.MotorsLeft.SetInverted(false);
 	DriveBase.MotorsRight.SetInverted(false);
 
+	DriveBase.ClawIntake1.SetInverted(false);
+	DriveBase.ClawIntake2.SetInverted(true);
+
 	//Set Elevator Motor directions & Scale
 	DriveBase.Elevator1.SetInverted(true);
 	DriveBase.Elevator2.SetInverted(false);
@@ -58,9 +61,8 @@ RJ_RobotMap::RJ_RobotMap() {
 
 	// Auto Finisher Chooser
 	DS.chooseAutoFinisher.AddDefault(DS.sAutoCube2Get, DS.sAutoCube2Get);
-	DS.chooseAutoFinisher.AddObject(DS.sAutoNo, DS.sAutoNo);
 	DS.chooseAutoFinisher.AddObject(DS.sAutoCube2Score, DS.sAutoCube2Score);
-	DS.chooseAutoFinisher.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoNo, DS.sAutoNo);
 	frc::SmartDashboard::PutData("Fin", &DS.chooseAutoFinisher);
 
 	// Auto Program Delay

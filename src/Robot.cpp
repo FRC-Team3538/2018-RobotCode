@@ -73,8 +73,15 @@ class Robot: public frc::TimedRobot {
 
 		// Disable closed loop control and limit switches
 		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
-		if (IO.DS.OperatorStick.GetStartButton()) ElevOverride = false;
-		if (IO.DS.OperatorStick.GetBackButton()) ElevOverride = true;
+		if (IO.DS.OperatorStick.GetStartButton())
+			ElevOverride = false;
+		if (IO.DS.OperatorStick.GetBackButton())
+			ElevOverride = true;
+
+		// If the lower limit switch is hit reset the encoder to 0
+		if (!IO.DriveBase.SwitchElevatorLower.Get()) {
+			IO.DriveBase.EncoderElevator.Reset();
+		}
 
 	}
 
@@ -240,7 +247,6 @@ class Robot: public frc::TimedRobot {
 
 		// IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
 
-
 		// Intake Control
 		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
@@ -248,7 +254,7 @@ class Robot: public frc::TimedRobot {
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
-		intakeCommand = deadband(intakeCommand, Control_Deadband);
+		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.7;
 
 		//
 		// Claw control
@@ -570,107 +576,52 @@ class Robot: public frc::TimedRobot {
 			if (autoFinisher == IO.DS.sAutoCube2Get) {
 				autoNextState();
 
-			} else if (autoFinisher == IO.DS.sAutoWallHug) {
-				autoNextState();
-				autoModeState = 30;
-
 			} else {
 				autoNextState();
 				autoModeState = 0;
 			}
 
 			break;
-
 		case 8:
-			if (autoForward(-24))
+			// Start of wall hug path
+			if (autoForward(-70))
 				autoNextState();
 			break;
 
 		case 9:
-			if (autoTurn(45))
+			if (autoTurn(45 * rot))
 				autoNextState();
 			break;
 
 		case 10:
-			if (autoForward(52))
+			if (autoForward(75))
 				autoNextState();
 			break;
 
 		case 11:
-			if (autoTurn(0))
+			if (autoTurn(0, 0.6, 0.2))
 				autoNextState();
 			break;
 
 		case 12:
-			if (autoForward(80))
+			if (autoForward(92))
 				autoNextState();
 			break;
 
 		case 13:
-			if (autoTurn(-45))
+			if (autoTurn(-45 * rot))
 				autoNextState();
 			break;
 
 		case 14:
-			IO.DriveBase.Wrist1.Set(0.45);
-			ElevPosTarget = 800;
-
-			if (autoForward(36))
+			if (autoForward(48))
 				autoNextState();
 			break;
 
 		case 15:
-			if (autoTurn(0))
+			//IO.DriveBase.Wrist1.Set(-0.35);
+			if (autoTurn(-135 * rot))
 				autoNextState();
-			break;
-
-		case 16:
-			// Loose Intake
-			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
-
-			if (timedDrive(1.5, -0.4, -0.4))
-				autoNextState();
-			break;
-
-		case 17:
-			ElevPosTarget = 2200;
-			IO.DriveBase.ClawIntake.Set(0.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Wrist1.Set(0.0);
-
-			autoNextState();
-
-			// Trigger the score cube 2 auto mode
-			auto2CubeStartRight = isGoRight;
-			autoModeState = 100;
-			break;
-
-		case 30:
-			// Start of wall hug path
-			if (autoForward(60))
-				autoNextState();
-			break;
-
-		case 31:
-			if (autoTurn(60))
-				autoNextState();
-			break;
-
-		case 32:
-			if (autoForward(60))
-				autoNextState();
-			break;
-
-		case 33:
-			if (autoTurn(0))
-				autoNextState();
-			break;
-
-		case 34:
-			if (autoForward(250))
-				autoNextState();
-
 			break;
 
 		default:
@@ -752,7 +703,7 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			if (autoForward(260)) {
+			if (autoForward(260, 0.9, 0.1)) {
 				//autoNextState();
 				ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
 
@@ -773,7 +724,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoTurn(-45 * direction)) {
+			if (autoTurn(-45 * direction, 0.5, 0.1)) {
 				autoNextState();
 			}
 			break;
@@ -786,6 +737,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
+
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-1.0);
 
@@ -801,6 +753,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
+
 			//190
 			if (autoForward(-15)) {
 				autoNextState();
@@ -929,12 +882,14 @@ class Robot: public frc::TimedRobot {
 
 		case 6:
 			IO.DriveBase.SolenoidShifter.Set(true);
-			if (autoForward(48, 0.5, 0.1)) {
+			if (autoForward(48, 0.5, 0)) {
 				autoNextState();
 			}
 			break;
 
 		case 7:
+			IO.DriveBase.Wrist1.Set(-0.11);
+
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-1.0);
 
@@ -943,6 +898,7 @@ class Robot: public frc::TimedRobot {
 			// The Crowd Goes Wild!
 			if (AutonTimer.Get() > 1.0) {
 				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.Wrist1.Set(0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1059,7 +1015,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 2:
-			if (autoTurn(-90 * rotDir))
+			if (autoTurn(-90 * rotDir, 0.5, 0.1))
 				autoNextState();
 
 			break;
@@ -1074,7 +1030,7 @@ class Robot: public frc::TimedRobot {
 		case 4:
 			IO.DriveBase.ClawIntake.Set(-1);
 
-			if (timedDrive(0.75, 0.15, 0.15)) {
+			if (timedDrive(0.75, 0.2, 0.2)) {
 				IO.DriveBase.ClawIntake.Set(0.0);
 				autoNextState();
 
@@ -1447,10 +1403,10 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if (ElevEncoderRead < 800 and elevMotor < 0  and (!ElevOverride))
+		if (ElevEncoderRead < 800 and elevMotor < 0 and (!ElevOverride))
 			elevMotor *= 0.3;
 
-		if (ElevEncoderRead > 17500 and elevMotor > 0  and (!ElevOverride))
+		if (ElevEncoderRead > 17500 and elevMotor > 0 and (!ElevOverride))
 			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
@@ -1475,7 +1431,7 @@ class Robot: public frc::TimedRobot {
 
 #define Elevator_MAXSpeed (1.0)
 #define Elevator_KP (0.0005)
-#define ElevatorPositionTol (60)
+#define ElevatorPositionTol (500)
 
 	bool elevatorPosition(double Elev_position) {
 
@@ -1526,7 +1482,8 @@ class Robot: public frc::TimedRobot {
 #define KP_LINEAR (0.056 / 1.8)
 #define LINEAR_TOLERANCE (1.0)
 
-#define ROTATION_kP (0.07)
+//1.25
+#define ROTATION_kP (0.07 / 1.15)
 #define ROTATION_TOLERANCE (10.0)
 #define ROTATIONAL_SETTLING_TIME (0.0)
 #define ROTATIONAL_MAX_SPEED (0.40)
@@ -1585,15 +1542,17 @@ class Robot: public frc::TimedRobot {
 
 		// update current heading
 		double encProgress = (targetDistance - encoderDistance);
-		if (encProgress > 1.0) encProgress = 1.0;
-		if (encProgress <= 0) encProgress = 0.001;
+		if (encProgress > 1.0)
+			encProgress = 1.0;
+		if (encProgress <= 0)
+			encProgress = 0.001;
 		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (encProgress);
 
 		// Run Auto Drive per usual.
 		return autoForward(targetDistance, max_speed, settle_time);
 	}
 
-	int autoTurn(float targetYaw) {
+	int autoTurn(float targetYaw, double maxSpeed, double settlingTime) {
 
 		// For linear drive function
 		autoHeading = -targetYaw;
@@ -1604,7 +1563,7 @@ class Robot: public frc::TimedRobot {
 		float yawCommand = yawError * -ROTATION_kP;
 
 		// Limit max rotation speed
-		yawCommand = absMax(yawCommand, ROTATIONAL_MAX_SPEED);
+		yawCommand = absMax(yawCommand, maxSpeed);
 
 		// dooo it!
 		motorSpeed(-yawCommand, yawCommand);
@@ -1613,10 +1572,14 @@ class Robot: public frc::TimedRobot {
 		if (abs(yawError) > ROTATION_TOLERANCE)
 			autoSettleTimer.Reset();
 
-		else if (autoSettleTimer.Get() > ROTATIONAL_SETTLING_TIME)
+		else if (autoSettleTimer.Get() > settlingTime)
 			return 1;
 
 		return 0;
+	}
+
+	int autoTurn(float targetYaw) {
+		return autoTurn(targetYaw, ROTATIONAL_MAX_SPEED, ROTATIONAL_SETTLING_TIME);
 	}
 
 	int timedDrive(double driveTime, double leftMotorSpeed, double rightMotorSpeed) {
@@ -1789,8 +1752,7 @@ class Robot: public frc::TimedRobot {
 
 		// Drive Joystick Inputs
 		SmartDashboard::PutNumber("Speed Linear", IO.DS.DriveStick.GetY(GenericHID::kLeftHand));
-		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand)*-1);
-
+		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1);
 
 		// Auto State
 		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));
