@@ -38,6 +38,11 @@ class Robot: public frc::TimedRobot {
 	double autoHeading; // current gyro heading to maintain
 	bool auto2CubeStartRight = false; // What side of the field is the 2cube starting
 
+	// Status of Auto and Teleop
+	bool AutoStateCheck = false;
+	bool TeleopStateCheck = false;
+
+
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
@@ -68,8 +73,8 @@ class Robot: public frc::TimedRobot {
 		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
 
 		// Launchpad data
-		IO.DS.LaunchPad.SetOutput(3, frc::DriverStation::GetInstance().IsAutonomous());
-		IO.DS.LaunchPad.SetOutput(4, frc::DriverStation::GetInstance().IsOperatorControl());
+		IO.DS.LaunchPad.SetOutput(3,  AutoStateCheck);
+		IO.DS.LaunchPad.SetOutput(4,  TeleopStateCheck);
 
 		// Disable closed loop control and limit switches
 		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
@@ -83,10 +88,14 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.EncoderElevator.Reset();
 		}
 
+
 	}
 
 	void DisabledPeriodic() {
 		// NOP
+		// Set Auto and Teleop state to false
+		AutoStateCheck = false;
+		TeleopStateCheck = false;
 	}
 
 	void TeleopInit() {
@@ -98,6 +107,10 @@ class Robot: public frc::TimedRobot {
 
 		// Low Gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
+
+		// turn on teleOp State to true
+		TeleopStateCheck = true;
+
 	}
 
 	void TeleopPeriodic() {
@@ -267,6 +280,7 @@ class Robot: public frc::TimedRobot {
 		} else if (OpLeftBumper) {
 			// Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+			IO.DriveBase.ClawIntake.Set(0.0);
 
 		} else {
 			// Default Hold Cube
@@ -314,6 +328,10 @@ class Robot: public frc::TimedRobot {
 
 		// Default Elevator default
 		ElevPosTarget = 800;
+
+		// turn on Auto State to true
+		AutoStateCheck = true;
+
 	}
 
 	// Reset all the stuff that needs to be reset at each state
@@ -1833,6 +1851,10 @@ class Robot: public frc::TimedRobot {
 		// Elevator Limit Switches
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
+
+		// Game State
+		SmartDashboard::PutBoolean("Autonomous Running", AutoStateCheck);
+		SmartDashboard::PutBoolean("TeleOp Running", TeleopStateCheck);
 
 		// Sensor Override
 		SmartDashboard::PutBoolean("Elevator Override", ElevOverride);
