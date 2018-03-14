@@ -107,16 +107,16 @@ public:
 		VictorSP Wrist1 { 8 };
 
 		// Wrist Sensing Package
-		Encoder EncoderWrist { 6, 7 };
-		DigitalInput SwitchWrist1 { 10 };
-		DigitalInput SwitchWrist2 { 11 };
-		AnalogInput PotentiometerWrist { 1 };
+		AnalogPotentiometer WristPot { 0, 270, -270 / 2};
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };
 		VictorSP ClawIntake2 { 10 };
+		DigitalInput IntakeSwitch1 { 6 };
+		DigitalInput IntakeSwitch2 { 7 };
 		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
+
 
 		//LED Control
 		Relay LED0 { 0 };
@@ -126,29 +126,6 @@ public:
 
 	};
 	structDriveBase DriveBase;
-
-
-	// Default junk for testing
-	struct structTesting {
-		VictorSP RightStick1 { 6 };
-		VictorSP RightStick2 { 7 };
-		VictorSP Dpad1 { 8 };
-		VictorSP Dpad2 { 9 };
-
-		// Solenoids
-		Solenoid IntakeButton { 1 };
-		Solenoid Abutton { 2 };
-		Solenoid Bbutton { 3 };
-		Solenoid XYbutton { 4 };
-
-		// Limit Switches
-		//DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
-
-		//Encoder Init
-		//bool useRightEncoder = false;
-	};
-	structTesting TestJunk;
-
 
 	// Default Constructor
 	RJ_RobotMap();

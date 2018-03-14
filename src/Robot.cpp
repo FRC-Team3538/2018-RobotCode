@@ -312,6 +312,9 @@ class Robot: public frc::TimedRobot {
 		// Low gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
 
+		// Default Wrist motor to not move
+		IO.DriveBase.Wrist1.Set(0.0);
+
 		// Shut the claw by default
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
 		IO.DriveBase.ClawIntake.Set(0);
@@ -1845,6 +1848,13 @@ class Robot: public frc::TimedRobot {
 		// Elevator Limit Switches
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
+
+		//Claw Limit switches
+		SmartDashboard::PutBoolean("Intake Switch1", IO.DriveBase.IntakeSwitch1.Get());
+		SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
+
+		//Wrist Pot
+		SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
 
 		// Game State
 		SmartDashboard::PutBoolean("Autonomous Running", AutoStateCheck);
