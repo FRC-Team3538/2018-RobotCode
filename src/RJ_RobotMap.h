@@ -117,6 +117,9 @@ public:
 		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
 
+		VictorSP Winch1 { 11 };
+		VictorSP Winch2 { 12 };
+		SpeedControllerGroup Winches { Winch1, Winch2 };
 
 		//LED Control
 		Relay LED0 { 0 };

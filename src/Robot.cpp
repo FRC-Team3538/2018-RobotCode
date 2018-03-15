@@ -42,7 +42,6 @@ class Robot: public frc::TimedRobot {
 	bool AutoStateCheck = false;
 	bool TeleopStateCheck = false;
 
-
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
@@ -73,14 +72,16 @@ class Robot: public frc::TimedRobot {
 		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
 
 		// Launchpad data
-		IO.DS.LaunchPad.SetOutput(3,  AutoStateCheck);
-		IO.DS.LaunchPad.SetOutput(4,  TeleopStateCheck);
+		IO.DS.LaunchPad.SetOutput(3, AutoStateCheck);
+		IO.DS.LaunchPad.SetOutput(4, TeleopStateCheck);
 
 		// Disable closed loop control and limit switches
 		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
 
-		if (IO.DS.OperatorStick.GetStartButton()) ElevOverride = false;
-		if (IO.DS.OperatorStick.GetBackButton()) ElevOverride = true;
+		if (IO.DS.OperatorStick.GetStartButton())
+			ElevOverride = false;
+		if (IO.DS.OperatorStick.GetBackButton())
+			ElevOverride = true;
 
 	}
 
@@ -186,6 +187,25 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
 
+		// Elevator Preset Positions [DPAD]
+		switch (IO.DS.DriveStick.GetPOV()) {
+		case 180:
+			// Dpad Down - ground/intake level
+			IO.DriveBase.Winches.Set(1.0);
+			break;
+		case 0:
+			// Dpad  Up - Scale Position
+			IO.DriveBase.Winches.Set(-1.0);
+			break;
+
+		default:
+			IO.DriveBase.Winches.Set(0);
+			break;
+		}
+
+
+
+
 		/*
 		 * MANIP CODE
 		 */
@@ -252,7 +272,6 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.Wrist1.Set(wristStick);
 
 		// IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
-
 
 		// Intake Control
 		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
@@ -1468,10 +1487,10 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if (ElevEncoderRead < 800 and elevMotor < 0  and (!ElevOverride))
+		if (ElevEncoderRead < 800 and elevMotor < 0 and (!ElevOverride))
 			elevMotor *= 0.3;
 
-		if (ElevEncoderRead > 17500 and elevMotor > 0  and (!ElevOverride))
+		if (ElevEncoderRead > 17500 and elevMotor > 0 and (!ElevOverride))
 			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
@@ -1606,8 +1625,10 @@ class Robot: public frc::TimedRobot {
 
 		// update current heading
 		double encProgress = (targetDistance - encoderDistance);
-		if (encProgress > 1.0) encProgress = 1.0;
-		if (encProgress <= 0) encProgress = 0.001;
+		if (encProgress > 1.0)
+			encProgress = 1.0;
+		if (encProgress <= 0)
+			encProgress = 0.001;
 		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (encProgress);
 
 		// Run Auto Drive per usual.
@@ -1810,8 +1831,7 @@ class Robot: public frc::TimedRobot {
 
 		// Drive Joystick Inputs
 		SmartDashboard::PutNumber("Speed Linear", IO.DS.DriveStick.GetY(GenericHID::kLeftHand));
-		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand)*-1);
-
+		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1);
 
 		// Auto State
 		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));

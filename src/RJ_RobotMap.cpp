@@ -16,6 +16,9 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.EncoderElevator.SetDistancePerPulse((47.5)/-10197); //move one inch and measure pulses
 
 
+	DriveBase.Winch1.SetInverted(true);
+	DriveBase.Winch2.SetInverted(false);
+
 	// Set Encoder Direction & Scale
 	DriveBase.EncoderLeft.SetReverseDirection(true);
 	DriveBase.EncoderRight.SetReverseDirection(false);
