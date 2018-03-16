@@ -608,7 +608,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
-			if (timedDrive(0.7, 0.5, 0.5))
+			if (timedDrive(1.7, 0.5, 0.5))
 				autoNextState();
 			break;
 
