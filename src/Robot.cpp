@@ -110,6 +110,7 @@ class Robot: public frc::TimedRobot {
 
 		// Low Gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
+		gearState = true;
 
 		// turn on teleOp State to true
 		TeleopStateCheck = true;
@@ -581,6 +582,9 @@ class Robot: public frc::TimedRobot {
 		// High gear
 		IO.DriveBase.SolenoidShifter.Set(false);
 
+		//Hold Cube
+		//IO.DriveBase.ClawIntake.Set(0.2);
+
 		switch (autoModeState) {
 		case 1:
 			if (autoForward(18))
@@ -599,7 +603,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 4:
-			if (autoTurn(0.0, 1.0, 0.1))
+			if (autoTurn(0.0, 0.40, 0.1))
 				autoNextState();
 			break;
 
