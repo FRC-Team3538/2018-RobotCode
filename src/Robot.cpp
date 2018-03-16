@@ -598,7 +598,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(70.0))
+			if (autoForward(67.0))
 				autoNextState();
 			break;
 
