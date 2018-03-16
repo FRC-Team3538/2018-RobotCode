@@ -290,7 +290,7 @@ class Robot: public frc::TimedRobot {
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
-		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.7;
+		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
 
 		//
 		// Claw control
@@ -592,18 +592,18 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 4:
-			if (autoTurn(0.0))
+			if (autoTurn(0.0, 1.0, 0.1))
 				autoNextState();
 			break;
 
 		case 5:
-			if (timedDrive(0.6, 0.5, 0.5))
+			if (timedDrive(0.7, 0.5, 0.5))
 				autoNextState();
 			break;
 
 		case 6:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
@@ -699,7 +699,7 @@ class Robot: public frc::TimedRobot {
 
 			if (autoForward(30))
 				autoNextState();
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 			break;
 
 		case 19:
@@ -754,7 +754,7 @@ class Robot: public frc::TimedRobot {
 			break;
 		case 5:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
@@ -827,7 +827,7 @@ class Robot: public frc::TimedRobot {
 		case 5:
 
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			// The Crowd Goes Wild!
 			if (AutonTimer.Get() > 1.0) {
@@ -979,7 +979,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.Wrist1.Set(-0.11);
 
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			//autoTurn(20 * direction);
 
@@ -1116,7 +1116,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 4:
-			IO.DriveBase.ClawIntake.Set(-1);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			if (timedDrive(0.75, 0.2, 0.2)) {
 				IO.DriveBase.ClawIntake.Set(0.0);
@@ -1250,7 +1250,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			if (timedDrive(1.5, 0.3, 0.3))
 				autoNextState();
@@ -1338,7 +1338,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 9:
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 			autoNextState();
 
 			// Display auton Time
@@ -1399,7 +1399,7 @@ class Robot: public frc::TimedRobot {
 
 		case 105:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			// keep pushing!
 			if (AutonTimer.Get() > 1.0) {
@@ -1460,7 +1460,7 @@ class Robot: public frc::TimedRobot {
 
 		case 105:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			// keep pushing!
 			if (AutonTimer.Get() > 1.0) {
@@ -1879,8 +1879,8 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 
 		//Claw Limit switches
-		SmartDashboard::PutBoolean("Intake Switch1", IO.DriveBase.IntakeSwitch1.Get());
-		SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
+		//SmartDashboard::PutBoolean("Intake Switch1", IO.DriveBase.IntakeSwitch1.Get());
+		//SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
 
 		//Wrist Pot
 	//	SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());

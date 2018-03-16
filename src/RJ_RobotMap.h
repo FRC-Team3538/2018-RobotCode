@@ -120,8 +120,8 @@ public:
 		//Claw
 		VictorSP ClawIntake1 { 9 };
 		VictorSP ClawIntake2 { 10 };
-		DigitalInput IntakeSwitch1 { 6 };
-		DigitalInput IntakeSwitch2 { 7 };
+		//DigitalInput IntakeSwitch1 { 6 };
+		//DigitalInput IntakeSwitch2 { 7 };
 		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
 
