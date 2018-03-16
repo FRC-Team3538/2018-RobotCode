@@ -598,12 +598,12 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(60.0))
+			if (autoForward(70.0))
 				autoNextState();
 			break;
 
 		case 4:
-			if (autoTurn(0.0, 0.40, 0.1))
+			if (autoTurn(0.0, 0.40, 0.15))
 				autoNextState();
 			break;
 
