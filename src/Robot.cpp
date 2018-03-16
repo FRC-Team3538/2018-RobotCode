@@ -127,10 +127,13 @@ class Robot: public frc::TimedRobot {
 		// Power Brake
 		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
+
+		//Swap below deadband
 		// Bad joystick compensation. :)
 		SpeedLinear *= 1.05;
 		SpeedRotate *= 1.05;
 
+		//Swap Above ^^^^
 		// Set dead band for control inputs
 		SpeedLinear = deadband(SpeedLinear, Control_Deadband);
 		SpeedRotate = deadband(SpeedRotate, Control_Deadband);
