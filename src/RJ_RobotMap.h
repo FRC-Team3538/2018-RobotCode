@@ -107,18 +107,27 @@ public:
 		VictorSP Wrist1 { 8 };
 
 		// Wrist Sensing Package
+
 		Encoder EncoderWrist { 6, 7 };
 		DigitalInput SwitchWrist1 { 11 };
 		DigitalInput SwitchWrist2 { 12 };
 		AnalogInput PotentiometerWrist { 1 };
 		// Dio are faster that pwm so make sure that these do not have the same port as victors
 		// when talking to the navx other wise the pwm signal will not be sent.
+		AnalogPotentiometer WristPot { 0, 270, -270 / 2};
+
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };
 		VictorSP ClawIntake2 { 10 };
+		DigitalInput IntakeSwitch1 { 6 };
+		DigitalInput IntakeSwitch2 { 7 };
 		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
+
+		VictorSP Winch1 { 11 };
+		VictorSP Winch2 { 12 };
+		SpeedControllerGroup Winches { Winch1, Winch2 };
 
 		//LED Control
 		Relay LED0 { 0 };
@@ -128,29 +137,6 @@ public:
 
 	};
 	structDriveBase DriveBase;
-
-
-	// Default junk for testing
-	struct structTesting {
-		VictorSP RightStick1 { 6 };
-		VictorSP RightStick2 { 7 };
-		VictorSP Dpad1 { 8 };
-		VictorSP Dpad2 { 9 };
-
-		// Solenoids
-		Solenoid IntakeButton { 1 };
-		Solenoid Abutton { 2 };
-		Solenoid Bbutton { 3 };
-		Solenoid XYbutton { 4 };
-
-		// Limit Switches
-		//DigitalInput DiIn8 { 8 }, DiIn9 { 9 };
-
-		//Encoder Init
-		//bool useRightEncoder = false;
-	};
-	structTesting TestJunk;
-
 
 	// Default Constructor
 	RJ_RobotMap();

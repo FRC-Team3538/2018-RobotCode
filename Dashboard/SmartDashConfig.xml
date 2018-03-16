@@ -1,274 +1,275 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="Shooter Motor0 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1444" y="432"/>
-	</widget>
-	<widget field="Shooter Encoder (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.LinePlot">
-		<location x="249" y="514"/>
-		<width>1624</width>
-	</widget>
-	<widget field="Shooter Motor1 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="905" y="425"/>
-	</widget>
-	<widget field="CLOSED LOOP ENABLED" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="261" y="205"/>
-	</widget>
-	<widget field="Deflector Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="261" y="182"/>
-	</widget>
-	<widget field="Conveyor Speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="261" y="159"/>
-	</widget>
-	<widget field="Shooter Speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="261" y="136"/>
-	</widget>
-	<widget field="DBG climber current" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1131" y="13"/>
-	</widget>
-	<widget field="Agitator Motor1 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="505"/>
-	</widget>
-	<widget field="Agitator Motor0 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="482"/>
-	</widget>
-	<widget field="Auto Backup Distance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="220"/>
-	</widget>
-	<widget field="Deflector Motor Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="299" y="405"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="IN: Deflector CMD (DEG)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="290" y="273"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="IN: Intake CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="20" y="305"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="IN: Agitator CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="11" y="361"/>
-		<height>22</height>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="IN: Kicker CMD (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="579" y="290"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
-		<location x="38" y="188"/>
-		<property name="Text" value="Encoder Selection:"/>
+		<location x="1222" y="14"/>
+		<property name="Text" value="Auto Delay"/>
 	</static-widget>
-	<widget field="Auto Modes" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="4" y="69"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Auto Delay" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="1201" y="22"/>
 	</widget>
-	<widget field="Kicker" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="646" y="224"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Auto Pos" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="854" y="124"/>
 	</widget>
-	<widget field="Deflector Limits" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="313" y="233"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Auto OBJ" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="1016" y="125"/>
 	</widget>
-	<widget field="Encoder" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="142" y="177"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Drive Encoder" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="1205" y="132"/>
 	</widget>
-	<widget field="Shooter" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="947" y="190"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Fin" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
+		<location x="1201" y="278"/>
 	</widget>
-	<widget field="Deflector" type="String Chooser" class="edu.wpi.first.smartdashboard.gui.elements.Chooser">
-		<location x="426" y="229"/>
-		<property name="Use Radio Buttons" value="false"/>
+	<widget field="Wrist PWM" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="348"/>
 	</widget>
-	<widget field="Kicker CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="593" y="318"/>
-		<property name="Background" value="204.204.204.255"/>
+	<widget field="Elev PWM" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="3" y="328"/>
 	</widget>
-	<widget field="Winch Stop Switch" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="42" y="414"/>
-		<property name="Background" value="51.255.0.255"/>
+	<widget field="SwitchElevatorLower" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="281" y="60"/>
 	</widget>
-	<widget field="Kicker CMD (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="597" y="343"/>
-		<height>22</height>
-		<property name="Background" value="204.204.204.255"/>
+	<widget field="DriveFilter" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="579" y="65"/>
 	</widget>
-	<widget field="Auto State (#)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="60" y="127"/>
-		<height>22</height>
+	<widget field="Autonomous Running" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="267" y="180"/>
 	</widget>
-	<widget field="Agitator Motor Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="25" y="383"/>
-		<property name="Background" value="255.255.0.255"/>
+	<widget field="Auto Position" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="799" y="87"/>
 	</widget>
-	<widget field="Kicker Motor Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="589" y="455"/>
-		<property name="Background" value="255.255.0.255"/>
+	<widget field="Elevator Encoder [INCH]" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="249"/>
 	</widget>
-	<widget field="Conveyor Motor  Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="14" y="272"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Deflector Limit High" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="318" y="370"/>
-	</widget>
-	<widget field="Drive Encoder Right (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="575" y="9"/>
-	</widget>
-	<widget field="Drive R0 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="639" y="61"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Winch Motor0 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="28" y="437"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Deflector Limit Low" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="320" y="349"/>
-	</widget>
-	<widget field="Drive L0 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="350" y="66"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Shooter Encoder (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="858" y="343"/>
-	</widget>
-	<widget field="IN: Conveyor CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="3" y="251"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="Auto Timer (s)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="60" y="102"/>
-	</widget>
-	<widget field="Kicker Encoder (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="580" y="427"/>
-		<property name="Background" value="51.255.0.255"/>
-	</widget>
-	<widget field="Kicker Encoder (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="574" y="368"/>
-	</widget>
-	<widget field="Drive R1 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="639" y="85"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="IN: Shooter CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="855" y="243"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="Deflector CMD (Deg)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="313" y="297"/>
-		<property name="Background" value="204.204.204.255"/>
-	</widget>
-	<widget field="Winch Motor1 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="28" y="459"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Drive Encoder Right (Inch)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="579" y="34"/>
-		<property name="Background" value="102.255.0.255"/>
-	</widget>
-	<widget field="IN: Shooter CMD (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="858" y="265"/>
-		<property name="Background" value="0.255.204.255"/>
-	</widget>
-	<widget field="Gyro Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="81" y="153"/>
-		<property name="Background" value="51.255.0.255"/>
-	</widget>
-	<widget field="Drive L1 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="350" y="89"/>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Floor Intake Motor Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="2" y="328"/>
-		<height>22</height>
-		<property name="Background" value="255.255.0.255"/>
-	</widget>
-	<widget field="Shooter Encoder (REV)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="863" y="365"/>
-	</widget>
-	<widget field="Drive Encoder Left (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="292" y="10"/>
-	</widget>
-	<widget field="Kicker Encoder (REV)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="578" y="391"/>
-	</widget>
-	<widget field="Auto Program" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="65" y="75"/>
-		<property name="Background" value="204.204.204.255"/>
+	<widget field="Speed Rotate" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="563" y="18"/>
 	</widget>
 	<widget field="Drive Encoder Left (Inches)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="283" y="37"/>
-		<property name="Background" value="51.255.0.255"/>
+		<location x="0" y="99"/>
 	</widget>
-	<widget field="Drive R2 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="638" y="110"/>
-		<property name="Background" value="255.255.0.255"/>
+	<widget field="SwitchElevatorUpper" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="281" y="38"/>
 	</widget>
-	<widget field="Drive L2 Output" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="350" y="113"/>
-		<property name="Background" value="255.255.0.255"/>
+	<widget field="Auto Fin" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="823" y="64"/>
 	</widget>
-	<widget field="IN: Kicker CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="575" y="270"/>
-		<property name="Background" value="0.255.204.255"/>
+	<widget field="Auto State (#)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="977" y="42"/>
 	</widget>
-	<widget field="Auto Switch (#)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="53" y="49"/>
-		<width>206</width>
-		<property name="Background" value="51.255.0.255"/>
+	<widget field="autoGameData" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="791" y="18"/>
 	</widget>
-	<widget field="Shooter CMD (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="876" y="294"/>
-		<property name="Background" value="204.204.204.255"/>
+	<widget field="Auto Timer (s)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="979" y="18"/>
 	</widget>
-	<widget field="Shooter CMD (RPM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="880" y="318"/>
-		<property name="Background" value="204.204.204.255"/>
+	<widget field="Drive Right (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="5" y="34"/>
 	</widget>
-	<widget field="Deflector Angle POT (DEG)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="278" y="320"/>
-		<property name="Background" value="102.255.0.255"/>
+	<widget field="Speed Linear" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="566" y="41"/>
 	</widget>
-	<widget field="DBG POV" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="957" y="64"/>
+	<widget field="Gyro Angle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="171"/>
 	</widget>
-	<widget field="IN: Auto Backup Distance (Inch)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="484" y="141"/>
+	<widget field="ElevPosTarget" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="312" y="16"/>
 	</widget>
-	<widget field="ShootKP" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1385" y="252"/>
-		<width>140</width>
+	<widget field="Drive Left (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="8" y="11"/>
 	</widget>
-	<widget field="ShootKF" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1383" y="331"/>
+	<widget field="TeleOp Running" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="283" y="158"/>
 	</widget>
-	<widget field="ShootKI" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1385" y="278"/>
+	<widget field="Elevator Encoder [RAW]" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="3" y="228"/>
 	</widget>
-	<widget field="ShootKD" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1381" y="305"/>
+	<widget field="Elevator Override" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="295" y="82"/>
 	</widget>
-	<widget field="IN: ShootKP" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1180" y="257"/>
+	<widget field="Drive Encoder Right (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="1" y="78"/>
 	</widget>
-	<widget field="IN: ShootKI" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1186" y="280"/>
-		<height>23</height>
+	<widget field="Drive Encoder Right (Inch)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="3" y="121"/>
+		<height>20</height>
 	</widget>
-	<widget field="IN: ShootKD" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1180" y="304"/>
+	<widget field="Drive Encoder Left (RAW)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="5" y="57"/>
 	</widget>
-	<widget field="IN: ShootKF" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="1182" y="328"/>
+	<widget field="Auto Heading" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="983" y="68"/>
 	</widget>
-	<widget field="Auto Selector" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="23" y="20"/>
+	<widget field="Auto Target" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="805" y="41"/>
+	</widget>
+	<widget field="Inkate PWM" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="2" y="369"/>
 	</widget>
 </dashboard>
 <live-window>
+	<widget field="Ungrouped" type="LW Subsystem" class="edu.wpi.first.smartdashboard.livewindow.elements.LWSubsystem">
+		<widget field="PowerDistributionPanel[0]" type="PowerDistributionPanel" class="edu.wpi.first.smartdashboard.livewindow.elements.PowerDistributionPanel">
+			<location x="6" y="16"/>
+			<height>195</height>
+			<width>326</width>
+		</widget>
+		<widget field="Relay[1]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
+			<location x="6" y="211"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="AnalogInput[1]" type="Analog Input" class="edu.wpi.first.smartdashboard.livewindow.elements.SingleNumberDisplay">
+			<location x="6" y="231"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[4]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="251"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="DigitalInput[11]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
+			<location x="6" y="297"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="DigitalInput[8]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
+			<location x="6" y="317"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="Solenoid[0,3]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
+			<location x="108" y="337"/>
+			<height>23</height>
+			<width>123</width>
+		</widget>
+		<widget field="VictorSP[1]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="360"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[3]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="406"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="DigitalInput[10]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
+			<location x="6" y="452"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="Relay[0]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
+			<location x="6" y="472"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="AnalogInput[0]" type="Analog Input" class="edu.wpi.first.smartdashboard.livewindow.elements.SingleNumberDisplay">
+			<location x="6" y="492"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="Encoder[2]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
+			<location x="6" y="512"/>
+			<height>98</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[9]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="610"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="Encoder[4]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
+			<location x="6" y="656"/>
+			<height>98</height>
+			<width>326</width>
+		</widget>
+		<widget field="Encoder[6]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
+			<location x="6" y="754"/>
+			<height>98</height>
+			<width>326</width>
+		</widget>
+		<widget field="DoubleSolenoid[0,1]" type="Double Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
+			<location x="6" y="852"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="Encoder[0]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
+			<location x="6" y="872"/>
+			<height>98</height>
+			<width>326</width>
+		</widget>
+		<widget field="Solenoid[0,0]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
+			<location x="108" y="970"/>
+			<height>23</height>
+			<width>123</width>
+		</widget>
+		<widget field="VictorSP[2]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="993"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[8]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1039"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[0]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1085"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[2147483647]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1131"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[7]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1177"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[6]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1223"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="Relay[3]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
+			<location x="6" y="1269"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="SpeedControllerGroup[2]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1289"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="Relay[2]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
+			<location x="6" y="1335"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="SpeedControllerGroup[1]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1355"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="VictorSP[5]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
+			<location x="6" y="1401"/>
+			<height>46</height>
+			<width>326</width>
+		</widget>
+		<widget field="DigitalInput[9]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
+			<location x="6" y="1447"/>
+			<height>20</height>
+			<width>326</width>
+		</widget>
+		<widget field="Solenoid[0,4]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
+			<location x="108" y="1467"/>
+			<height>23</height>
+			<width>123</width>
+		</widget>
+		<location x="0" y="0"/>
+		<width>338</width>
+		<height>1497</height>
+	</widget>
 </live-window>
 </xml>

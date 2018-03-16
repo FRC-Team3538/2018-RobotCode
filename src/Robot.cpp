@@ -42,7 +42,6 @@ class Robot: public frc::TimedRobot {
 	bool AutoStateCheck = false;
 	bool TeleopStateCheck = false;
 
-
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
@@ -73,8 +72,8 @@ class Robot: public frc::TimedRobot {
 		std::transform(autoGameData.begin(), autoGameData.end(), autoGameData.begin(), ::toupper);
 
 		// Launchpad data
-		IO.DS.LaunchPad.SetOutput(3,  AutoStateCheck);
-		IO.DS.LaunchPad.SetOutput(4,  TeleopStateCheck);
+		IO.DS.LaunchPad.SetOutput(3, AutoStateCheck);
+		IO.DS.LaunchPad.SetOutput(4, TeleopStateCheck);
 
 		// Disable closed loop control and limit switches
 		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
@@ -88,6 +87,11 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.EncoderElevator.Reset();
 		}
 
+
+		if (IO.DS.OperatorStick.GetStartButton())
+			ElevOverride = false;
+		if (IO.DS.OperatorStick.GetBackButton())
+			ElevOverride = true;
 
 	}
 
@@ -192,6 +196,25 @@ class Robot: public frc::TimedRobot {
 
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
+
+		// Elevator Preset Positions [DPAD]
+		switch (IO.DS.DriveStick.GetPOV()) {
+		case 180:
+			// Dpad Down - ground/intake level
+			IO.DriveBase.Winches.Set(1.0);
+			break;
+		case 0:
+			// Dpad  Up - Scale Position
+			IO.DriveBase.Winches.Set(-1.0);
+			break;
+
+		default:
+			IO.DriveBase.Winches.Set(0);
+			break;
+		}
+
+
+
 
 		/*
 		 * MANIP CODE
@@ -317,6 +340,9 @@ class Robot: public frc::TimedRobot {
 
 		// Low gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
+
+		// Default Wrist motor to not move
+		IO.DriveBase.Wrist1.Set(0.0);
 
 		// Shut the claw by default
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
@@ -1851,6 +1877,13 @@ class Robot: public frc::TimedRobot {
 		// Elevator Limit Switches
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
+
+		//Claw Limit switches
+		SmartDashboard::PutBoolean("Intake Switch1", IO.DriveBase.IntakeSwitch1.Get());
+		SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
+
+		//Wrist Pot
+	//	SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
 
 		// Game State
 		SmartDashboard::PutBoolean("Autonomous Running", AutoStateCheck);
