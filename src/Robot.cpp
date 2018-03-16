@@ -87,7 +87,6 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.EncoderElevator.Reset();
 		}
 
-
 		if (IO.DS.OperatorStick.GetStartButton())
 			ElevOverride = false;
 		if (IO.DS.OperatorStick.GetBackButton())
@@ -213,9 +212,6 @@ class Robot: public frc::TimedRobot {
 			break;
 		}
 
-
-
-
 		/*
 		 * MANIP CODE
 		 */
@@ -288,6 +284,7 @@ class Robot: public frc::TimedRobot {
 		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 		bool OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
+		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
 		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
@@ -295,7 +292,9 @@ class Robot: public frc::TimedRobot {
 		//
 		// Claw control
 		//
-		if (OpRightBumper) {
+
+
+		if (OpRightBumper or (OpRightTrigger > 0.125)) {
 			// Loose Intake
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			IO.DriveBase.ClawIntake.Set(1.0);
@@ -305,7 +304,12 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(0.0);
 
-		} else {
+		} else if (OpButtonB){
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(1.0); // Intake
+		}
+
+		else {
 			// Default Hold Cube
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(intakeCommand);
@@ -793,7 +797,7 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			if (autoForward(260, 0.9, 0.1)) {
 				//autoNextState();
-				ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
+				ElevPosTarget = 11000;				//TODO: Set back to Full Height (TESTING)
 
 				if (elevatorPosition(ElevPosTarget)) {
 					autoNextState();
@@ -1883,7 +1887,7 @@ class Robot: public frc::TimedRobot {
 		//SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
 
 		//Wrist Pot
-	//	SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
+		//	SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
 
 		// Game State
 		SmartDashboard::PutBoolean("Autonomous Running", AutoStateCheck);
