@@ -300,7 +300,6 @@ class Robot: public frc::TimedRobot {
 //			intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
 //		}
 
-
 		//
 		// Claw control
 		//
@@ -583,7 +582,7 @@ class Robot: public frc::TimedRobot {
 		double CAoffset = 67;
 		if (isGoRight) {
 			rot = -1;
-			CAoffset = 64;
+			CAoffset = 53;
 		}
 
 		SmartDashboard::PutNumber("OffSet Set", CAoffset);
@@ -599,9 +598,10 @@ class Robot: public frc::TimedRobot {
 
 		switch (autoModeState) {
 		case 1:
-			if (autoForward(18))
+			if (autoForward(18)) {
 				ElevPosTarget = 800;
-			autoNextState();
+				autoNextState();
+			}
 			break;
 
 		case 2:
@@ -610,8 +610,10 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(CAoffset))
+			if (autoForward(CAoffset)) {
+				SmartDashboard::PutNumber("OffSet c3", CAoffset);
 				autoNextState();
+			}
 			break;
 
 		case 4:
@@ -625,6 +627,15 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
+			IO.DriveBase.Wrist1.Set(-0.4);
+
+			if (AutonTimer.Get() > 0.5) {
+				IO.DriveBase.Wrist1.Set(0.25);
+				autoNextState();
+			}
+			break;
+
+		case 7:
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-0.65);
 
@@ -635,12 +646,12 @@ class Robot: public frc::TimedRobot {
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-				SmartDashboard::PutNumber("OffSet c3", CAoffset);
+				SmartDashboard::PutNumber("OffSet c6", CAoffset);
 			}
 
 			break;
 
-		case 7:
+		case 8:
 			if (autoFinisher == IO.DS.sAutoCube2Get) {
 				autoNextState();
 
@@ -650,29 +661,29 @@ class Robot: public frc::TimedRobot {
 			}
 
 			break;
-		case 8:
+		case 9:
 			// Start of wall hug path
 			if (autoForward(-70))
 				autoNextState();
 			break;
 
-		case 9:
+		case 10:
 			if (autoTurn(45 * rot))
 
 				autoNextState();
 			break;
 
-		case 10:
+		case 11:
 			if (autoForward(73))
 				autoNextState();
 			break;
 
-		case 11:
+		case 12:
 			if (autoTurn(0, 0.6, 0.2))
 				autoNextState();
 			break;
 
-		case 12:
+		case 13:
 			ElevPosTarget = 0;
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			IO.DriveBase.Wrist1.Set(0.45);
@@ -680,12 +691,12 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 13:
+		case 14:
 			if (autoTurn(58 * rot, 1.0, 0.1))
 				autoNextState();
 			break;
 
-		case 14:
+		case 15:
 			IO.DriveBase.SolenoidShifter.Set(true);
 			IO.DriveBase.ClawIntake.Set(1.0);
 			if (autoForward(-54, 0.4, 0))
@@ -697,7 +708,7 @@ class Robot: public frc::TimedRobot {
 //				autoModeState = 0;
 //			break;
 
-		case 15:
+		case 16:
 			IO.DriveBase.Wrist1.Set(0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(0);
@@ -706,27 +717,27 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-		case 16:
+		case 17:
 			IO.DriveBase.Wrist1.Set(-1.0);
 			if (autoForward(10))
 				autoNextState();
 			break;
 
-		case 17:
+		case 18:
 
 			if (autoTurn(-30))
 				autoNextState();
 			ElevPosTarget = 14000;
 			break;
 
-		case 18:
+		case 19:
 
 			if (autoForward(30))
 				autoNextState();
 			IO.DriveBase.ClawIntake.Set(-0.65);
 			break;
 
-		case 19:
+		case 20:
 
 			//190
 			if (autoForward(-15)) {
@@ -1891,7 +1902,6 @@ class Robot: public frc::TimedRobot {
 		} else {
 			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
-
 
 		// Game Specific Message
 		SmartDashboard::PutString(llvm::StringRef("autoGameData"), llvm::StringRef(autoGameData));
