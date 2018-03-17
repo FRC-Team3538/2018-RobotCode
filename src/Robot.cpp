@@ -586,6 +586,8 @@ class Robot: public frc::TimedRobot {
 			CAoffset = 64;
 		}
 
+		SmartDashboard::PutNumber("OffSet Set", CAoffset);
+
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 
@@ -633,6 +635,7 @@ class Robot: public frc::TimedRobot {
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+				SmartDashboard::PutNumber("OffSet c3", CAoffset);
 			}
 
 			break;
@@ -1888,6 +1891,7 @@ class Robot: public frc::TimedRobot {
 		} else {
 			SmartDashboard::PutNumber("Gyro Angle", 999);
 		}
+
 
 		// Game Specific Message
 		SmartDashboard::PutString(llvm::StringRef("autoGameData"), llvm::StringRef(autoGameData));
