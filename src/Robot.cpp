@@ -128,7 +128,6 @@ class Robot: public frc::TimedRobot {
 		// Power Brake
 		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
-
 		//Swap below deadband
 		// Bad joystick compensation. :)
 		SpeedLinear *= 1.05;
@@ -289,14 +288,22 @@ class Robot: public frc::TimedRobot {
 		bool OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
+		//bool EjectFull = IO.DS.OperatorStick.GetAButton();
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
 		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
 
+		//Full Speed Eject if the a button is hit
+//		if (EjectFull) {
+//			intakeCommand = deadband(intakeCommand, Control_Deadband);
+//		} else {
+//			intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
+//		}
+
+
 		//
 		// Claw control
 		//
-
 
 		if (OpRightBumper or (OpRightTrigger > 0.125)) {
 			// Loose Intake
@@ -308,7 +315,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(0.0);
 
-		} else if (OpButtonB){
+		} else if (OpButtonB) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(1.0); // Intake
 		}
@@ -573,8 +580,11 @@ class Robot: public frc::TimedRobot {
 
 		// Mirror path if starting on right
 		double rot = 1;
-		if (isGoRight)
+		double CAoffset = 67;
+		if (isGoRight) {
 			rot = -1;
+			CAoffset = 64;
+		}
 
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
@@ -598,7 +608,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(67.0))
+			if (autoForward(CAoffset))
 				autoNextState();
 			break;
 
