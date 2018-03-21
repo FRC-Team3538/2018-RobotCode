@@ -137,8 +137,13 @@ public:
 	struct structVision {
 		cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
 		cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
+
+		cs::MjpegServer server = CameraServer::GetInstance()->GetServer();
 		cs::MjpegServer server0 = new cs::MjpegServer("Camera 0", 1181);
 		cs::MjpegServer server1 = new cs::MjpegServer("Camera 1", 1182);
+
+		cs::CvSink sink0;
+		cs::CvSink sink1;
 	};
 	structVision Vision;
 

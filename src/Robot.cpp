@@ -1927,6 +1927,14 @@ class Robot: public frc::TimedRobot {
 		// Sensor Override
 		SmartDashboard::PutBoolean("Elevator Override", ElevOverride);
 
+
+		// Camera Select
+		if (IO.DS.DriveStick.GetAButton()) {
+			IO.Vision.server.SetSource(IO.Vision.cam0);
+		}
+		if (IO.DS.DriveStick.GetBButton()) {
+			IO.Vision.server.SetSource(IO.Vision.cam1);
+		}
 	}
 
 }
