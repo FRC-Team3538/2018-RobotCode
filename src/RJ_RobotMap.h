@@ -7,12 +7,6 @@
 #include "math.h"
 #include "Encoder.h"
 
-#include <IterativeRobot.h>
-#include <LiveWindow/LiveWindow.h>
-#include <SmartDashboard/SendableChooser.h>
-#include <SmartDashboard/SmartDashboard.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
 
 class RJ_RobotMap {
 
@@ -137,6 +131,17 @@ public:
 
 	};
 	structDriveBase DriveBase;
+
+
+	// Drive Base
+	struct structVision {
+		cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
+		cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
+		cs::MjpegServer server0 = new cs::MjpegServer("Camera 0", 1181);
+		cs::MjpegServer server1 = new cs::MjpegServer("Camera 1", 1182);
+	};
+	structVision Vision;
+
 
 	// Default Constructor
 	RJ_RobotMap();

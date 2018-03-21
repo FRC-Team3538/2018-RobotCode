@@ -82,6 +82,16 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoEncoder.AddObject(DS.EncoderBoth, DS.EncoderBoth);
 	frc::SmartDashboard::PutData("Drive Encoder", &DS.chooseAutoEncoder);
 
+
+	//
+	// Vision System
+	//
+	Vision.cam0.SetFPS(10);
+	Vision.cam1.SetFPS(10);
+	Vision.cam0.SetResolution(480,320);
+	Vision.cam1.SetResolution(480,320);
+	Vision.server0.SetSource(Vision.cam0);
+	Vision.server1.SetSource(Vision.cam1);
 }
 
 
