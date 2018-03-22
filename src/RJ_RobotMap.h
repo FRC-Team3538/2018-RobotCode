@@ -137,8 +137,6 @@ public:
 		cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
 
 		cs::VideoSink server = CameraServer::GetInstance()->GetServer();
-		//cs::MjpegServer server0 {"Camera 0", 1181};
-		//cs::MjpegServer server1 {"Camera 1", 1182};
 
 		cs::CvSink sink0;
 		cs::CvSink sink1;

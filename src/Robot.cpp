@@ -22,14 +22,17 @@ class Robot: public frc::TimedRobot {
 	PowerDistributionPanel *pdp = new PowerDistributionPanel();
 
 	// Override Elevator lower limit switch, upper limit switch, and elevator encoder
-	bool ElevOverride = false;
+	bool SensorOverride = false;
 
 	// Drive Input Filter
 	float OutputX = 0.0, OutputY = 0.0;
 
-	// Teleop Elevator Position
+	// Elevator Position
 	double ElevPosTarget = 800;
 	bool ElevatorSetFlag = true;
+
+	// Teleop Elevator Position
+	double WristTarget = 0.0;
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
@@ -78,9 +81,9 @@ class Robot: public frc::TimedRobot {
 		// Disable closed loop control and limit switches
 		//ElevOverride = IO.DS.LaunchPad.GetRawButton(1);
 		if (IO.DS.OperatorStick.GetStartButton())
-			ElevOverride = false;
+			SensorOverride = false;
 		if (IO.DS.OperatorStick.GetBackButton())
-			ElevOverride = true;
+			SensorOverride = true;
 
 		// If the lower limit switch is hit reset the encoder to 0
 		if (!IO.DriveBase.SwitchElevatorLower.Get()) {
@@ -88,9 +91,9 @@ class Robot: public frc::TimedRobot {
 		}
 
 		if (IO.DS.OperatorStick.GetStartButton())
-			ElevOverride = false;
+			SensorOverride = false;
 		if (IO.DS.OperatorStick.GetBackButton())
-			ElevOverride = true;
+			SensorOverride = true;
 
 	}
 
@@ -107,6 +110,7 @@ class Robot: public frc::TimedRobot {
 
 		// Hold current elevator position
 		ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
+		WristTarget = IO.DriveBase.WristPot.Get();
 
 		// Low Gear by default
 		IO.DriveBase.SolenoidShifter.Set(true);
@@ -182,10 +186,6 @@ class Robot: public frc::TimedRobot {
 		// Drive Code (WPI Built-in)
 		Adrive.ArcadeDrive(OutputY, OutputX, false);
 
-		// Z-Bar controls (Dont fit on the opperator stick, so they are on the drive stick...
-		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
-		IO.DriveBase.Zbar1.Set(IO.DS.DriveStick.GetBButton());
-
 		//  Rumble code
 		//  Read all motor current from PDP and display on drivers station
 		//double driveCurrent = pdp->GetTotalCurrent();	// Get total current
@@ -199,12 +199,21 @@ class Robot: public frc::TimedRobot {
 		IO.DS.DriveStick.SetRumble(Joystick::kLeftRumble, RbtThr); // Set Left Rumble to RbtThr
 		IO.DS.DriveStick.SetRumble(Joystick::kRightRumble, RbtThr);	// Set Right Rumble to RbtThr
 
-		// Elevator Preset Positions [DPAD]
+		//
+		// Stuff that Doesn't fit on the op Controller:
+		//
+
+		// Z-Bar controls
+		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
+		IO.DriveBase.Zbar1.Set(IO.DS.DriveStick.GetBButton());
+
+		// Winch Control [DPAD]
 		switch (IO.DS.DriveStick.GetPOV()) {
 		case 180:
 			// Dpad Down - ground/intake level
 			IO.DriveBase.Winches.Set(1.0);
 			break;
+
 		case 0:
 			// Dpad  Up - Scale Position
 			IO.DriveBase.Winches.Set(-1.0);
@@ -254,7 +263,7 @@ class Robot: public frc::TimedRobot {
 			elevatorSpeed(ElevatorStick);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 
-		} else if (!ElevOverride) {
+		} else if (!SensorOverride) {
 			// Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
 		} else {
@@ -278,27 +287,45 @@ class Robot: public frc::TimedRobot {
 		//
 		double wristStick = IO.DS.OperatorStick.GetX(frc::GenericHID::kRightHand);
 		wristStick = deadband(wristStick, Control_Deadband);
-		IO.DriveBase.Wrist1.Set(wristStick);
+		wristStick = cubedControl(wristStick, Control_Deadband);
 
-		// IO.DriveBase.Wrist1.Set(OpRightTrigger - OpLeftTrigger);
+		if (fabs(wristStick) > Control_Deadband) {
+			/// Manual Control
+			wristSpeed(wristStick);
+			WristTarget = IO.DriveBase.WristPot.Get();
 
+		} else if (!SensorOverride) {
+			// Hold Current Position
+			wristPosition(WristTarget);
+
+		} else {
+			elevatorSpeed(0.0);
+
+		}
+
+		// Wrist Presets
+		if (IO.DS.OperatorStick.GetAButton()) {
+			WristTarget = 0;
+		}
+		if (IO.DS.OperatorStick.GetXButton()) {
+			WristTarget = 45;
+		}
+		if (IO.DS.OperatorStick.GetYButton()) {
+			WristTarget = -45;
+		}
+
+
+		//
 		// Intake Control
+		//
 		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 		bool OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
-		//bool EjectFull = IO.DS.OperatorStick.GetAButton();
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
 		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
-
-		//Full Speed Eject if the a button is hit
-//		if (EjectFull) {
-//			intakeCommand = deadband(intakeCommand, Control_Deadband);
-//		} else {
-//			intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
-//		}
 
 		//
 		// Claw control
@@ -317,9 +344,8 @@ class Robot: public frc::TimedRobot {
 		} else if (OpButtonB) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(1.0); // Intake
-		}
 
-		else {
+		} else {
 			// Default Hold Cube
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(intakeCommand);
@@ -368,6 +394,7 @@ class Robot: public frc::TimedRobot {
 
 		// Default Elevator default
 		ElevPosTarget = 800;
+		WristTarget = 25;
 
 		// turn on Auto State to true
 		AutoStateCheck = true;
@@ -1526,10 +1553,10 @@ class Robot: public frc::TimedRobot {
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
 		// Slow down if approaching limits
-		if (ElevEncoderRead < 800 and elevMotor < 0 and (!ElevOverride))
+		if (ElevEncoderRead < 800 and elevMotor < 0 and (!SensorOverride))
 			elevMotor *= 0.3;
 
-		if (ElevEncoderRead > 17500 and elevMotor > 0 and (!ElevOverride))
+		if (ElevEncoderRead > 17500 and elevMotor > 0 and (!SensorOverride))
 			elevMotor *= 0.3;
 
 		// Zero the encoder if we hit the lower limit switch
@@ -1538,11 +1565,11 @@ class Robot: public frc::TimedRobot {
 		}
 
 		// If a limit switch is pressed, only allow a reverse motion
-		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!ElevOverride)) {
+		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!SensorOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
 
-		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!ElevOverride)) {
+		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!SensorOverride)) {
 			IO.DriveBase.Elevator1.Set(0);
 			IO.DriveBase.Elevator2.Set(0);
 
@@ -1563,7 +1590,7 @@ class Robot: public frc::TimedRobot {
 
 		// Anti-bounce
 		bool ElevatorUpperLimit = IO.DriveBase.SwitchElevatorUpper.Get();
-		if ((!ElevatorUpperLimit) and (!ElevOverride))
+		if ((!ElevatorUpperLimit) and (!SensorOverride))
 			Elev_position = ElevEncoderRead - 100;
 
 		// Motor Command Calculation
@@ -1579,6 +1606,69 @@ class Robot: public frc::TimedRobot {
 
 		// Check if we made it to the target
 		return (fabs(ElevError) <= ElevatorPositionTol);
+	}
+
+	//
+	// Wrist Control
+	//
+	void wristSpeed(double input) {
+
+		// Sensor Override Mode
+		if (SensorOverride) {
+			IO.DriveBase.Elevator1.Set(input);
+			IO.DriveBase.Elevator2.Set(input);
+
+			return;
+		}
+
+		// Get Current Wrist Angle
+		double wristAngle = IO.DriveBase.WristPot.Get();
+		double softLimit = 80;
+		double hardLimit = 90;
+
+		// Slow down if approaching limits
+		if (wristAngle < -softLimit and input < 0) {
+			input *= 0.3;
+		}
+
+		if (wristAngle > softLimit and input > 0) {
+			input *= 0.3;
+		}
+
+		// If a limit is reached, only allow motion away from it
+		if ((wristAngle > hardLimit) and (input > 0)) {
+			IO.DriveBase.Wrist1.Set(0);
+
+		} else if ((wristAngle < -hardLimit) and (input < 0)) {
+			IO.DriveBase.Wrist1.Set(0);
+
+		} else {
+			IO.DriveBase.Wrist1.Set(input);
+
+		}
+	}
+
+#define Wrist_MAXSpeed (1.0)
+#define Wrist_KP (0.022)
+#define WristPositionTol (5.0)
+
+	bool wristPosition(double input) {
+
+		// Get Current Encoder Value
+		double wristAngle = IO.DriveBase.WristPot.Get();
+
+		// Motor Command Calculation
+		double error = input - wristAngle;
+		double ElevCmd = error * Wrist_KP;
+
+		//Limit Elevator Max Speed
+		ElevCmd = absMax(ElevCmd, Wrist_MAXSpeed);
+
+		// Set the wrist speed
+		wristSpeed(ElevCmd);
+
+		// Check if we made it to the target
+		return (fabs(error) <= WristPositionTol);
 	}
 
 // Drivetrain functions
@@ -1826,6 +1916,17 @@ class Robot: public frc::TimedRobot {
 
 	}
 
+	double cubedControl(double input, double minval) {
+
+		// Smoothing algorithm for x^3
+		if (input > 0.0)
+			return (1 - minval) * pow(input, 3) + minval;
+
+		else
+			return (1 - minval) * pow(input, 3) - minval;
+
+	}
+
 	// Limits absolute value of input
 	double absMax(double input, double maxval) {
 
@@ -1925,8 +2026,7 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("TeleOp Running", TeleopStateCheck);
 
 		// Sensor Override
-		SmartDashboard::PutBoolean("Elevator Override", ElevOverride);
-
+		SmartDashboard::PutBoolean("Elevator Override", SensorOverride);
 
 		// Camera Select
 		if (IO.DS.DriveStick.GetAButton()) {

@@ -96,17 +96,6 @@ RJ_RobotMap::RJ_RobotMap() {
 	Vision.cam1.SetExposureAuto();
 	Vision.cam1.SetWhiteBalanceAuto();
 
-	//Vision.server0.SetSource(Vision.cam0);
-	//Vision.server1.SetSource(Vision.cam1);
-
-	// Opens a sink for each camera to prevent them from going to sleep
-	//Vision.sink0.SetSource(Vision.cam0);
-	//Vision.sink1.SetSource(Vision.cam1);
-	//Vision.sink0.SetEnabled(true);
-	//Vision.sink1.SetEnabled(true);
-
-	// Default View [Switchable]
-	//Vision.server.SetSource(Vision.cam0);
 }
 
 
