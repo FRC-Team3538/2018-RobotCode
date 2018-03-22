@@ -86,21 +86,27 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 	// Vision System
 	//
-	Vision.cam0.SetFPS(10);
-	Vision.cam1.SetFPS(10);
-	Vision.cam0.SetResolution(480,320);
-	Vision.cam1.SetResolution(480,320);
-	Vision.server0.SetSource(Vision.cam0);
-	Vision.server1.SetSource(Vision.cam1);
+	Vision.cam0.SetFPS(30);
+	Vision.cam0.SetResolution(160, 120);
+	Vision.cam0.SetExposureAuto();
+	Vision.cam0.SetWhiteBalanceAuto();
+
+	Vision.cam1.SetFPS(30);
+	Vision.cam1.SetResolution(160,120);
+	Vision.cam1.SetExposureAuto();
+	Vision.cam1.SetWhiteBalanceAuto();
+
+	//Vision.server0.SetSource(Vision.cam0);
+	//Vision.server1.SetSource(Vision.cam1);
 
 	// Opens a sink for each camera to prevent them from going to sleep
-	Vision.sink0.SetSource(Vision.cam0);
-	Vision.sink1.SetSource(Vision.cam1);
-	Vision.sink0.SetEnabled(true);
-	Vision.sink1.SetEnabled(true);
+	//Vision.sink0.SetSource(Vision.cam0);
+	//Vision.sink1.SetSource(Vision.cam1);
+	//Vision.sink0.SetEnabled(true);
+	//Vision.sink1.SetEnabled(true);
 
 	// Default View [Switchable]
-	Vision.server.SetSource(Vision.cam0);
+	//Vision.server.SetSource(Vision.cam0);
 }
 
 
