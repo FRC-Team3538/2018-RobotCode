@@ -1554,8 +1554,7 @@ class Robot: public frc::TimedRobot {
 
 		// Sensor Override Mode
 		if (SensorOverride) {
-			IO.DriveBase.Elevator1.Set(input);
-			IO.DriveBase.Elevator2.Set(input);
+			IO.DriveBase.Wrist1.Set(input);
 
 			return;
 		}
@@ -1953,27 +1952,16 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("SwitchElevatorUpper", IO.DriveBase.SwitchElevatorUpper.Get());
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 
-		//Claw Limit switches
-		//SmartDashboard::PutBoolean("Intake Switch1", IO.DriveBase.IntakeSwitch1.Get());
-		//SmartDashboard::PutBoolean("Intake Switch2", IO.DriveBase.IntakeSwitch2.Get());
-
 		//Wrist Pot
-		//	SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
+		SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
 
 		// Game State
 		SmartDashboard::PutBoolean("Autonomous Running", AutoStateCheck);
 		SmartDashboard::PutBoolean("TeleOp Running", TeleopStateCheck);
 
 		// Sensor Override
-		SmartDashboard::PutBoolean("Elevator Override", SensorOverride);
+		SmartDashboard::PutBoolean("Sensor Override", SensorOverride);
 
-		// Camera Select
-		if (IO.DS.DriveStick.GetAButton()) {
-			IO.Vision.server.SetSource(IO.Vision.cam0);
-		}
-		if (IO.DS.DriveStick.GetBButton()) {
-			IO.Vision.server.SetSource(IO.Vision.cam1);
-		}
 	}
 
 }
