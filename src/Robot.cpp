@@ -7,6 +7,8 @@
 // And So It Begins...
 #include "RJ_RobotMap.h"
 
+#define MAIN_LOOP_PERIOD (0.020)
+
 #define ElevDeadband (0.125)	// deadband for elevator gears and motors, value to move elevator up
 
 class Robot: public frc::TimedRobot {
@@ -55,6 +57,9 @@ class Robot: public frc::TimedRobot {
 
 		// Zeros the NavX Yaw
 		IO.DriveBase.ahrs.ZeroYaw();
+
+		// 20ms is the default, but lets enforce it.
+		this->SetPeriod(MAIN_LOOP_PERIOD);
 	}
 
 	void RobotPeriodic() {
@@ -441,15 +446,6 @@ class Robot: public frc::TimedRobot {
 					autoCenterFast(true);
 			}
 
-			// Arc Switch (Testing)
-			if (autoTarget == IO.DS.AutoArcSwitch) {
-
-				if (autoGameData[0] == 'L')
-					autoCenterArc(1);
-
-				if (autoGameData[0] == 'R')
-					autoCenterArc(-1);
-			}
 		}
 
 		// Left Start
@@ -780,61 +776,6 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoCenterArc(double direction) {
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-		ElevPosTarget = 800;
-
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
-		switch (autoModeState) {
-		case 1:
-			if (autoArcDrive(24.0, 45.0 * direction, 0.5, 5.0))
-				autoNextState();
-			break;
-
-		case 2:
-			if (autoForward(14, 0.5, 5.0))
-				autoNextState();
-			break;
-
-		case 3:
-			ElevPosTarget = 4200;
-			IO.DriveBase.Wrist1.Set(-0.45);
-
-			if (autoArcDrive(24.0, 0.0, 0.5, 5.0))
-				autoNextState();
-			break;
-
-		case 4:
-			//if (timedDrive(0.1, 0.5, 0.5))
-			//	autoNextState();
-			break;
-		case 5:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
-
-			// keep pushing!
-			if (timedDrive(1.0, 0.15, 0.15)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
-				autoNextState();
-
-				// Display auton Time
-				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-			}
-
-			break;
-
-		default:
-			stopMotors();
-
-		}
-
-		return;
-	}
 
 	void autoScaleFastNear(bool isStartRightPos) {
 
@@ -1674,7 +1615,7 @@ class Robot: public frc::TimedRobot {
 
 	// Default to holding whatever position was last commanded
 	bool wristPosition() {
-		wristPosition(WristTarget);
+		return wristPosition(WristTarget);
 	}
 
 // Drivetrain functions
@@ -1698,22 +1639,40 @@ class Robot: public frc::TimedRobot {
 
 	// Go AutoForward autonomously...
 
-#define KP_LINEAR (0.056 / 1.8)
+#define KP_LINEAR (0.0311)
+#define KI_LINEAR (0.000)
+#define KD_LINEAR (0.008)
 #define LINEAR_TOLERANCE (1.0)
 
-//1.25
-#define ROTATION_kP (0.07 / 1.15)
+#define ROTATION_kP (0.0609)
 #define ROTATION_TOLERANCE (10.0)
 #define ROTATIONAL_SETTLING_TIME (0.0)
 #define ROTATIONAL_MAX_SPEED (0.40)
+
+	double prevError = 0; // Derivative Calculation
+	double sumError = 0;  // Integral Calculation
 
 	int autoForward(double targetDistance, double max_speed, double settle_time) {
 
 		double encoderDistance = getEncoderDistance();
 
-		// Calculate motor power
-		double encoderError = targetDistance - encoderDistance;
-		double driveCommandLinear = encoderError * KP_LINEAR;
+		// P Control
+		double error = targetDistance - encoderDistance;        // [Inches]
+
+		// I Control
+		if (error < 24) {
+			sumError += error / MAIN_LOOP_PERIOD;
+		} else {
+			sumError = 0;
+		}
+
+		// D Control
+		double dError = (error - prevError) / MAIN_LOOP_PERIOD; // [Inches/second]
+		double prevError = error;
+
+		// PID Command
+		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError + KD_LINEAR * dError;
+
 
 		// limit max drive speed
 		driveCommandLinear = absMax(driveCommandLinear, max_speed);
@@ -1730,7 +1689,7 @@ class Robot: public frc::TimedRobot {
 		motorSpeed(driveCommandLinear - driveCommandRotation, driveCommandLinear + driveCommandRotation);
 
 		// Allow robot to come to a stop after reaching target
-		if (abs(encoderError) > LINEAR_TOLERANCE) {
+		if (abs(error) > LINEAR_TOLERANCE) {
 			autoSettleTimer.Reset();
 
 		} else if (autoSettleTimer.Get() > settle_time)
@@ -1744,32 +1703,6 @@ class Robot: public frc::TimedRobot {
 		return autoForward(targetDistance, 1.0, 0.0);
 	}
 
-	// Drive the robot on an arc
-	// TODO: Make it drive the same regardless of which encoder is selected...
-	int arcState = -1;
-	double arcStartHeading;
-	int autoArcDrive(double targetDistance, double targetHeading, double max_speed, double settle_time) {
-
-		// Get starting heading
-		if (arcState != autoModeState) {
-			arcState = autoModeState;
-			arcStartHeading = autoHeading;
-		}
-
-		// Get Encoder Position
-		double encoderDistance = getEncoderDistance();
-
-		// update current heading
-		double encProgress = (targetDistance - encoderDistance);
-		if (encProgress > 1.0)
-			encProgress = 1.0;
-		if (encProgress <= 0)
-			encProgress = 0.001;
-		autoHeading = arcStartHeading + (arcStartHeading - targetHeading) / (encProgress);
-
-		// Run Auto Drive per usual.
-		return autoForward(targetDistance, max_speed, settle_time);
-	}
 
 	int autoTurn(float targetYaw, double maxSpeed, double settlingTime) {
 

@@ -35,7 +35,6 @@ public:
 		const llvm::StringRef AutoScale = "4 Scale";
 		const llvm::StringRef AutoNearSide = "5 NSc NSw L";
 		const llvm::StringRef AutoNNF = "6 NSc NSw FSc";
-		const llvm::StringRef AutoArcSwitch = "7 ArcSwitch";
 
 		SendableChooser<llvm::StringRef> chooseAutoFinisher;
 		const llvm::StringRef sAutoNo = "1 None";
