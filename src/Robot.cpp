@@ -314,7 +314,6 @@ class Robot: public frc::TimedRobot {
 			WristTarget = -45;
 		}
 
-
 		//
 		// Intake Control
 		//
@@ -420,6 +419,9 @@ class Robot: public frc::TimedRobot {
 			return;
 		if (autoDelay == IO.DS.sAutoDelay5 and autoTotalTime.Get() < 5)
 			return;
+
+		// Closed Loop Position Hold;
+		wristPosition();
 
 		// Cross the Line Auto
 		if (autoTarget == IO.DS.AutoLine) {
@@ -638,7 +640,6 @@ class Robot: public frc::TimedRobot {
 
 		case 3:
 			if (autoForward(CAoffset)) {
-				SmartDashboard::PutNumber("OffSet c3", CAoffset);
 				autoNextState();
 			}
 			break;
@@ -654,10 +655,11 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			IO.DriveBase.Wrist1.Set(-0.4);
+			//IO.DriveBase.Wrist1.Set(-0.4);
 
-			if (AutonTimer.Get() > 0.5) {
-				IO.DriveBase.Wrist1.Set(0.25);
+			//if (AutonTimer.Get() > 0.5 ) {
+			if (AutonTimer.Get() > 1.5 || wristPosition(45.0)) {
+				//IO.DriveBase.Wrist1.Set(0.25);
 				autoNextState();
 			}
 			break;
@@ -669,11 +671,11 @@ class Robot: public frc::TimedRobot {
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake.Set(0.0);
+				wristPosition(0.0);
 				autoNextState();
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-				SmartDashboard::PutNumber("OffSet c6", CAoffset);
 			}
 
 			break;
@@ -690,7 +692,7 @@ class Robot: public frc::TimedRobot {
 			break;
 		case 9:
 			// Start of wall hug path
-			if (autoForward(-70))
+			if (autoForward(-50))
 				autoNextState();
 			break;
 
@@ -730,10 +732,6 @@ class Robot: public frc::TimedRobot {
 				autoNextState();
 			break;
 
-//			if (true)
-//				stopMotors();
-//				autoModeState = 0;
-//			break;
 
 		case 16:
 			IO.DriveBase.Wrist1.Set(0);
@@ -1654,6 +1652,9 @@ class Robot: public frc::TimedRobot {
 
 	bool wristPosition(double input) {
 
+		// Update Target Position
+		WristTarget = input;
+
 		// Get Current Encoder Value
 		double wristAngle = IO.DriveBase.WristPot.Get();
 
@@ -1669,6 +1670,11 @@ class Robot: public frc::TimedRobot {
 
 		// Check if we made it to the target
 		return (fabs(error) <= WristPositionTol);
+	}
+
+	// Default to holding whatever position was last commanded
+	bool wristPosition() {
+		wristPosition(WristTarget);
 	}
 
 // Drivetrain functions
