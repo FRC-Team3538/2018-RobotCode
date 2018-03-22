@@ -1,5 +1,20 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Elev error" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="142"/>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="884" y="117"/>
+		<width>452</width>
+		<height>355</height>
+		<property name="Camera Choice" value="Camera 1"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="413" y="112"/>
+		<width>463</width>
+		<height>362</height>
+		<property name="Camera Choice" value="Camera 0"/>
+	</static-widget>
 	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
 		<location x="1222" y="14"/>
 		<property name="Text" value="Auto Delay"/>
@@ -30,9 +45,6 @@
 	</widget>
 	<widget field="DriveFilter" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="579" y="65"/>
-	</widget>
-	<widget field="Autonomous Running" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="267" y="180"/>
 	</widget>
 	<widget field="Auto Position" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="799" y="87"/>
@@ -76,9 +88,6 @@
 	<widget field="Drive Left (PWM)" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="8" y="11"/>
 	</widget>
-	<widget field="TeleOp Running" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="283" y="158"/>
-	</widget>
 	<widget field="Elevator Encoder [RAW]" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="3" y="228"/>
 	</widget>
@@ -106,170 +115,7 @@
 	</widget>
 </dashboard>
 <live-window>
-	<widget field="Ungrouped" type="LW Subsystem" class="edu.wpi.first.smartdashboard.livewindow.elements.LWSubsystem">
-		<widget field="PowerDistributionPanel[0]" type="PowerDistributionPanel" class="edu.wpi.first.smartdashboard.livewindow.elements.PowerDistributionPanel">
-			<location x="6" y="16"/>
-			<height>195</height>
-			<width>326</width>
-		</widget>
-		<widget field="Relay[1]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
-			<location x="6" y="211"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="AnalogInput[1]" type="Analog Input" class="edu.wpi.first.smartdashboard.livewindow.elements.SingleNumberDisplay">
-			<location x="6" y="231"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[4]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="251"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="DigitalInput[11]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
-			<location x="6" y="297"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="DigitalInput[8]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
-			<location x="6" y="317"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="Solenoid[0,3]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
-			<location x="108" y="337"/>
-			<height>23</height>
-			<width>123</width>
-		</widget>
-		<widget field="VictorSP[1]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="360"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[3]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="406"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="DigitalInput[10]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
-			<location x="6" y="452"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="Relay[0]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
-			<location x="6" y="472"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="AnalogInput[0]" type="Analog Input" class="edu.wpi.first.smartdashboard.livewindow.elements.SingleNumberDisplay">
-			<location x="6" y="492"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="Encoder[2]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
-			<location x="6" y="512"/>
-			<height>98</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[9]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="610"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="Encoder[4]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
-			<location x="6" y="656"/>
-			<height>98</height>
-			<width>326</width>
-		</widget>
-		<widget field="Encoder[6]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
-			<location x="6" y="754"/>
-			<height>98</height>
-			<width>326</width>
-		</widget>
-		<widget field="DoubleSolenoid[0,1]" type="Double Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
-			<location x="6" y="852"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="Encoder[0]" type="Quadrature Encoder" class="edu.wpi.first.smartdashboard.livewindow.elements.EncoderDisplay">
-			<location x="6" y="872"/>
-			<height>98</height>
-			<width>326</width>
-		</widget>
-		<widget field="Solenoid[0,0]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
-			<location x="108" y="970"/>
-			<height>23</height>
-			<width>123</width>
-		</widget>
-		<widget field="VictorSP[2]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="993"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[8]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1039"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[0]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1085"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[2147483647]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1131"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[7]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1177"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[6]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1223"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="Relay[3]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
-			<location x="6" y="1269"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="SpeedControllerGroup[2]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1289"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="Relay[2]" type="Relay" class="edu.wpi.first.smartdashboard.livewindow.elements.RelayController">
-			<location x="6" y="1335"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="SpeedControllerGroup[1]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1355"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="VictorSP[5]" type="Speed Controller" class="edu.wpi.first.smartdashboard.livewindow.elements.SpeedController">
-			<location x="6" y="1401"/>
-			<height>46</height>
-			<width>326</width>
-		</widget>
-		<widget field="DigitalInput[9]" type="Digital Input" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalInputDisplay">
-			<location x="6" y="1447"/>
-			<height>20</height>
-			<width>326</width>
-		</widget>
-		<widget field="Solenoid[0,4]" type="Solenoid" class="edu.wpi.first.smartdashboard.livewindow.elements.DigitalOutputController">
-			<location x="108" y="1467"/>
-			<height>23</height>
-			<width>123</width>
-		</widget>
-		<location x="0" y="0"/>
-		<width>338</width>
-		<height>1497</height>
-	</widget>
 </live-window>
+	<hidden field="TeleOp Running"/>
+	<hidden field="Autonomous Running"/>
 </xml>
