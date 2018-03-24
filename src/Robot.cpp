@@ -1667,7 +1667,7 @@ class Robot: public frc::TimedRobot {
 
 		// D Control
 		double dError = (error - prevError) / MAIN_LOOP_PERIOD; // [Inches/second]
-		double prevError = error;
+		prevError = error;
 
 		// PID Command
 		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError + KD_LINEAR * dError;
