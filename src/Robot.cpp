@@ -296,9 +296,9 @@ class Robot: public frc::TimedRobot {
 		wristStick = deadband(wristStick, Control_Deadband);
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
-		IO.DriveBase.Wrist1.Set(wristStick);
+		//IO.DriveBase.Wrist1.Set(wristStick);
 
-		/*
+
 		if (fabs(wristStick) > Control_Deadband) {
 			/// Manual Control
 			wristSpeed(wristStick);
@@ -310,9 +310,8 @@ class Robot: public frc::TimedRobot {
 
 		} else {
 			elevatorSpeed(0.0);
-
 		}
-		 */
+
 
 		// Wrist Presets
 		if (IO.DS.OperatorStick.GetAButton()) {
@@ -1783,7 +1782,7 @@ class Robot: public frc::TimedRobot {
 	}
 
 #define Wrist_MAXSpeed (1.0)
-#define Wrist_KP (0.022)
+#define Wrist_KP (0.080)
 #define WristPositionTol (5.0)
 
 	bool wristPosition(double input) {
@@ -2151,6 +2150,7 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutBoolean("SwitchElevatorLower", IO.DriveBase.SwitchElevatorLower.Get());
 
 		//Wrist Pot
+		SmartDashboard::PutNumber("Wrist AI", IO.DriveBase.WristAI.GetVoltage());
 		SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get());
 
 		// Game State

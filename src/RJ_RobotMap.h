@@ -105,7 +105,8 @@ public:
 		AnalogInput PotentiometerWrist { 1 };
 		// Dio are faster that pwm so make sure that these do not have the same port as victors
 		// when talking to the navx other wise the pwm signal will not be sent.
-		AnalogPotentiometer WristPot { 0, 270, -270 / 2};
+		AnalogInput WristAI{3};
+		AnalogPotentiometer WristPot { &WristAI, 270, -270 / 2};
 
 
 		//Claw
