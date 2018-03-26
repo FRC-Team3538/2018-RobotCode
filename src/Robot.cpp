@@ -334,7 +334,7 @@ class Robot: public frc::TimedRobot {
 		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
 
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
-		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.65;
+		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.7;
 
 		//
 		// Claw control
@@ -1132,8 +1132,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			//190
-			if (autoForward(222, 1.0, 0.1)) {
+			//190 ? 222
+			if (autoForward(187, 1.0, 0.1)) {
 				autoNextState();
 
 			}
