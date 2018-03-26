@@ -1757,16 +1757,16 @@ class Robot: public frc::TimedRobot {
 
 		// Get Current Wrist Angle
 		double wristAngle = IO.DriveBase.WristPot.Get();
-		double softLimit = 80;
-		double hardLimit = 90;
+		double softLimit = 100;
+		double hardLimit = 110;
 
 		// Slow down if approaching limits
 		if (wristAngle < -softLimit and input < 0) {
-			input *= 0.3;
+			input *= 0.5;
 		}
 
 		if (wristAngle > softLimit and input > 0) {
-			input *= 0.3;
+			input *= 0.5;
 		}
 
 		// If a limit is reached, only allow motion away from it
