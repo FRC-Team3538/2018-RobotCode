@@ -444,10 +444,10 @@ class Robot: public frc::TimedRobot {
 			if (autoTarget == IO.DS.AutoSwitch) {
 
 				if (autoGameData[0] == 'L')
-					autoCenterFast(false);
+					autoCenter(false);
 
 				if (autoGameData[0] == 'R')
-					autoCenterFast(true);
+					autoCenter(true);
 			}
 
 		}
@@ -491,7 +491,7 @@ class Robot: public frc::TimedRobot {
 			}
 
 			// Near Scale, Near Switch, Far Scale
-			if (autoTarget == IO.DS.AutoNearSide) {
+			if (autoTarget == IO.DS.AutoNscNswFsc) {
 
 				if (autoGameData[1] == 'L') {
 					autoScaleNear(false);
@@ -545,7 +545,7 @@ class Robot: public frc::TimedRobot {
 			}
 
 			// Near Scale, Near Switch, Far Scale
-			if (autoTarget == IO.DS.AutoNearSide) {
+			if (autoTarget == IO.DS.AutoNscNswFsc) {
 
 				if (autoGameData[1] == 'R') {
 					autoScaleNear(true);
@@ -560,20 +560,6 @@ class Robot: public frc::TimedRobot {
 			}
 		}
 
-		// 2Cube Auto
-		if (autoFinisher == IO.DS.sAutoCube2Score) {
-			if (!auto2CubeStartRight) {
-				if (autoGameData[1] == 'L')
-					autoCube2ScoreNear(1);
-				else
-					autoCube2ScoreFar(1);
-			} else {
-				if (autoGameData[1] == 'L')
-					autoCube2ScoreNear(-1);
-				else
-					autoCube2ScoreFar(-1);
-			}
-		}
 	}
 
 	/*
@@ -599,188 +585,7 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	/*
-	 * AUTO PROGRAM - CENTER SWITCH FAST
-	 *
-	 *
-	 */
-	void autoCenterFast_org(bool isGoRight) {
-
-		// Mirror path if starting on right
-		double rot = 1;
-		double CAoffset = 67;
-		if (isGoRight) {
-			rot = -1;
-			CAoffset = 53;
-		}
-
-		SmartDashboard::PutNumber("OffSet Set", CAoffset);
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
-		//Hold Cube
-		//IO.DriveBase.ClawIntake.Set(0.2);
-
-		switch (autoModeState) {
-		case 1:
-			if (autoForward(18)) {
-				ElevPosTarget = 800;
-				autoNextState();
-			}
-			break;
-
-		case 2:
-			if (autoTurn(45.0 * rot))
-				autoNextState();
-			break;
-
-		case 3:
-			if (autoForward(CAoffset)) {
-				autoNextState();
-			}
-			break;
-
-		case 4:
-			if (autoTurn(0.0, 0.40, 0.15))
-				autoNextState();
-			break;
-
-		case 5:
-			if (timedDrive(1.7, 0.5, 0.5))
-				autoNextState();
-			break;
-
-		case 6:
-			IO.DriveBase.Wrist1.Set(-0.4);
-
-			if (AutonTimer.Get() > 0.5) {
-				//if (AutonTimer.Get() > 1.5 || wristPosition(45.0)) {
-				IO.DriveBase.Wrist1.Set(0.25);
-				//wristPosition(0.0);
-				autoNextState();
-			}
-			break;
-
-		case 7:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
-
-			// keep pushing!
-			if (timedDrive(1.0, 0.15, 0.15)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
-				autoNextState();
-
-				// Display auton Time
-				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-			}
-
-			break;
-
-		case 8:
-			if (autoFinisher == IO.DS.sAutoCube2Get) {
-				autoNextState();
-
-			} else {
-				autoNextState();
-				autoModeState = 0;
-			}
-
-			break;
-		case 9:
-			// Start of wall hug path
-			if (autoForward(-50))
-				autoNextState();
-			break;
-
-		case 10:
-			if (autoTurn(45 * rot))
-
-				autoNextState();
-			break;
-
-		case 11:
-			if (autoForward(73))
-				autoNextState();
-			break;
-
-		case 12:
-			if (autoTurn(0, 0.6, 0.2))
-				autoNextState();
-			break;
-
-		case 13:
-			ElevPosTarget = 0;
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-			IO.DriveBase.Wrist1.Set(0.45);
-			if (autoForward(92 + 42, 1.0, 0.2))
-				autoNextState();
-			break;
-
-		case 14:
-			if (autoTurn(58 * rot, 1.0, 0.1))
-				autoNextState();
-			break;
-
-		case 15:
-			IO.DriveBase.SolenoidShifter.Set(true);
-			IO.DriveBase.ClawIntake.Set(1.0);
-			if (autoForward(-54, 0.4, 0))
-				autoNextState();
-			break;
-
-		case 16:
-			IO.DriveBase.Wrist1.Set(0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(0);
-			//IO.DriveBase.Wrist1.Set(-0.35);
-			if (true)
-				autoNextState();
-			break;
-
-		case 17:
-			IO.DriveBase.Wrist1.Set(-1.0);
-			if (autoForward(10))
-				autoNextState();
-			break;
-
-		case 18:
-
-			if (autoTurn(-30))
-				autoNextState();
-			ElevPosTarget = 14000;
-			break;
-
-		case 19:
-
-			if (autoForward(30))
-				autoNextState();
-			IO.DriveBase.ClawIntake.Set(-0.65);
-			break;
-
-		case 20:
-
-			//190
-			if (autoForward(-15)) {
-				autoNextState();
-				ElevPosTarget = 1000;
-			}
-
-			break;
-
-		default:
-			stopMotors();
-
-		}
-
-		return;
-	}
-
-	void autoCenterFast(bool isGoRight) {
+	void autoCenter(bool isGoRight) {
 
 		// Mirror path if starting on right
 		double rot = 1;
@@ -793,22 +598,20 @@ class Robot: public frc::TimedRobot {
 		// Closed Loop control of Elevator
 		elevatorPosition(ElevPosTarget);
 
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
-		//Hold Cube
-		//IO.DriveBase.ClawIntake.Set(0.2);
-
 		switch (autoModeState) {
 		case 1:
+			// High gear
+			IO.DriveBase.SolenoidShifter.Set(false);
+
 			if (autoForward(18)) {
 				autoNextState();
 			}
 			break;
 
 		case 2:
-			if (autoTurn(45.0 * rot))
+			if (autoTurn(45.0 * rot)) {
 				autoNextState();
+			}
 			break;
 
 		case 3:
@@ -819,22 +622,21 @@ class Robot: public frc::TimedRobot {
 
 		case 4:
 			ElevPosTarget = 1200;
-			if (autoTurn(0.0))
+			if (autoTurn(0.0)) {
 				autoNextState();
+			}
 			break;
 
 		case 5:
-			if (timedDrive(0.7, 0.5, 0.5))
+			if (timedDrive(0.7, 0.5, 0.5)) {
 				autoNextState();
+			}
 			break;
 
 		case 6:
 			IO.DriveBase.Wrist1.Set(-0.4);
 
 			if (AutonTimer.Get() > 0.75) {
-				//if (AutonTimer.Get() > 1.5 || wristPosition(45.0)) {
-				IO.DriveBase.Wrist1.Set(0.25);
-				//wristPosition(0.0);
 				autoNextState();
 			}
 			break;
@@ -846,102 +648,153 @@ class Robot: public frc::TimedRobot {
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
 				autoNextState();
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 			}
-
 			break;
 
 		case 8:
-			if (autoFinisher == IO.DS.sAutoCube2Get) {
+			if (autoFinisher == IO.DS.sAutoWallHug) {
 				autoNextState();
-
+				autoModeState = 20;
+			} else if (autoFinisher == IO.DS.sAuto2Cube) {
+				autoNextState();
+				autoModeState = 40;
 			} else {
 				autoNextState();
 				autoModeState = 0;
 			}
 
 			break;
-		case 9:
-			// Start of wall hug path
-			if (autoForward(-50))
-				autoNextState();
-			break;
-
-		case 10:
-			if (autoTurn(45 * rot))
-
-				autoNextState();
-			break;
-
-		case 11:
-			if (autoForward(73))
-				autoNextState();
-			break;
-
-		case 12:
-			if (autoTurn(0, 0.6, 0.2))
-				autoNextState();
-			break;
-
-		case 13:
-			ElevPosTarget = 0;
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-			IO.DriveBase.Wrist1.Set(0.45);
-			if (autoForward(92 + 42, 1.0, 0.2))
-				autoNextState();
-			break;
-
-		case 14:
-			if (autoTurn(58 * rot, 1.0, 0.1))
-				autoNextState();
-			break;
-
-		case 15:
-			IO.DriveBase.SolenoidShifter.Set(true);
-			IO.DriveBase.ClawIntake.Set(1.0);
-			if (autoForward(-54, 0.4, 0))
-				autoNextState();
-			break;
-
-		case 16:
-			IO.DriveBase.Wrist1.Set(0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(0);
-			//IO.DriveBase.Wrist1.Set(-0.35);
-			if (true)
-				autoNextState();
-			break;
-
-		case 17:
-			IO.DriveBase.Wrist1.Set(-1.0);
-			if (autoForward(10))
-				autoNextState();
-			break;
-
-		case 18:
-
-			if (autoTurn(-30))
-				autoNextState();
-			ElevPosTarget = 14000;
-			break;
-
-		case 19:
-
-			if (autoForward(30))
-				autoNextState();
-			IO.DriveBase.ClawIntake.Set(-0.65);
-			break;
 
 		case 20:
-
-			//190
-			if (autoForward(-15)) {
+			//
+			// Start of wall hug path
+			//
+			if (autoForward(-48)) {
 				autoNextState();
-				ElevPosTarget = 1000;
+			}
+			break;
+
+		case 21:
+			if (autoTurn(45 * rot)) {
+				autoNextState();
+			}
+			break;
+
+		case 22:
+			if (autoForward(72)) {
+				autoNextState();
+			}
+			break;
+
+		case 23:
+			if (autoTurn(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 24:
+			if (autoForward(48)) {
+				autoNextState();
+			}
+			break;
+
+		case 40:
+			//
+			// Start of 2Cube
+			//
+			if (autoForward(-60)) {
+				autoNextState();
+			}
+			break;
+
+		case 41:
+			ElevPosTarget = 600;
+
+			if (autoTurn(-45 * rot) && wristPosition(-120)) {
+				autoNextState();
+			}
+			break;
+
+		case 42:
+			wristPosition(-120);
+			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+
+			if (autoForward(24, 0.4, 0.1)) {
+				autoNextState();
+			}
+			break;
+
+		case 43:
+			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
+			if (timedDrive(0.75, 0.3, 0.3)) {
+				IO.DriveBase.SolenoidShifter.Set(false); // High gear
+				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+				autoNextState();
+			}
+			break;
+
+		case 44:
+			wristPosition(-45);
+
+			if (autoForward(-36)) {
+				autoNextState();
+			}
+			break;
+
+		case 45:
+			IO.DriveBase.ClawIntake.Set(0.2);
+			ElevPosTarget = 1200;
+
+			if (autoTurn(0) && wristPosition(-45) && elevatorPosition(ElevPosTarget)) {
+				autoNextState();
+			}
+			break;
+
+		case 46:
+			if (autoForward(36)) {
+				autoNextState();
+			}
+			break;
+
+		case 47:
+			ElevPosTarget = 3000;
+
+			if (timedDrive(0.75, 0.3, 0.3) && wristPosition(-90)) {
+				autoNextState();
+			}
+			break;
+
+		case 48:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.7);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time2 [S]", autoTotalTime.Get());
+			}
+
+			break;
+
+		case 49:
+			if (autoForward(-36) && wristPosition(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 50:
+			ElevPosTarget = 800;
+
+			if (autoTurn(45 * rot)) {
+				autoNextState();
 			}
 
 			break;
@@ -957,48 +810,46 @@ class Robot: public frc::TimedRobot {
 	void autoScaleNear(bool isStartRightPos) {
 
 		// Mirror rotations for right side start
-		double direction = 1;
-		if (isStartRightPos)
-			direction = -1;
+		double rot = 1;
+		if (isStartRightPos) {
+			rot = -1;
+		}
 
-		// Closed Loop control of Elevator
+		// Closed Loop control of Elevator & Wrist
 		elevatorPosition(ElevPosTarget);
+		wristPosition();
 
 		switch (autoModeState) {
 		case 1:
-			//High Gear
-			IO.DriveBase.SolenoidShifter.Set(false);
+			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
 			wristPosition(0.0);
+
 			if (autoForward(256, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
 
 		case 2:
-			wristPosition(0.0);
 			ElevPosTarget = 11000;
-			if (autoTurn(-35 * direction) && elevatorPosition(ElevPosTarget)) {
+
+			if (autoTurn(-35 * rot) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
 
 		case 3:
-			//if (autoForward(15) && wristPosition(-35)) {
-			if (autoTurn(-35 * direction, 0.5, 0.2) && wristPosition(-35)) {
+			if (autoTurn(-35 * rot, 0.5, 0.2) && wristPosition(-35)) {
 				autoNextState();
 			}
 			break;
 
 		case 4:
-			autoNextState();
-			break;
-
-		case 5:
+			// Hold target heading
+			autoTurn(-35 * rot);
 
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.7);
 
-			// The Crowd Goes Wild!
 			if (AutonTimer.Get() > 0.65) {
 				IO.DriveBase.ClawIntake.Set(0.0);
 				autoNextState();
@@ -1009,44 +860,44 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 6:
-			wristPosition(0.0);
+		case 5:
 
-			if (autoForward(-14, 1.0, 0.1)) {
-				autoNextState();
+			if (autoForward(-14, 0.5, 0.1) && wristPosition(0.0)) {
 				ElevPosTarget = 800;
+				autoNextState();
 			}
 			break;
 
-		case 7:
-			if (autoFinisher == IO.DS.sAutoCube2Get) {
-				autoNextState();
+		case 6:
+			if (autoFinisher == IO.DS.sAuto2Cube) {
+				autoModeState = 20;
 			} else {
 				autoModeState = 0; // We are done.
 			}
 			break;
 
-		case 8:
+		case 20:
+			//
+			// 2Cube Start
+			//
+			ElevPosTarget = 800;
 			wristPosition(120);
 
-			if (autoTurn(32 * direction) && elevatorPosition(ElevPosTarget)) {
+			if (autoTurn(32 * rot) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
 
-		case 9:
-			wristPosition(120);
-
+		case 21:
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+
 			if (autoForward(-45)) {
 				autoNextState();
 			}
 			break;
 
-		case 10:
-			wristPosition(120);
-
+		case 22:
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
 			if (timedDrive(0.75, -0.3, -0.3)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
@@ -1054,43 +905,30 @@ class Robot: public frc::TimedRobot {
 			}
 			break;
 
-		case 11:
+		case 23:
+			wristPosition(45);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(0.3);
 
-			if (autoForward(10, 0.5, 0.0)) {
-				IO.DriveBase.ClawIntake.Set(0.5);
+			if (autoForward(55, 0.5, 0.2)) {
 				autoNextState();
 			}
 			break;
 
-		case 12:
-			wristPosition(0);
-
-			if (autoForward(45,0.5,0.2)) {
-				autoNextState();
-			}
-			break;
-
-		case 13:
+		case 24:
 			ElevPosTarget = 12000;
-			if (autoTurn(-35 * direction) && elevatorPosition(ElevPosTarget) && wristPosition(-45)) {
+			if (autoTurn(-35 * rot) && elevatorPosition(ElevPosTarget) && wristPosition(-45)) {
 				autoNextState();
 			}
 			break;
 
-		case 14:
-			//if (autoForward(18)) {
-				autoNextState();
-			//}
-			break;
-
-		case 15:
-			autoTurn(-40 * direction);
+		case 25:
+			// Hold target heading
+			autoTurn(-35 * rot);
 
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-1.0);
 
-			// The Crowd Goes Wild!
 			if (AutonTimer.Get() > 0.5) {
 				IO.DriveBase.ClawIntake.Set(0.0);
 				autoNextState();
@@ -1101,7 +939,7 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 16:
+		case 28:
 			if (autoTurn(0) && wristPosition(0)) {
 				autoNextState();
 				ElevPosTarget = 1000;
@@ -1119,157 +957,154 @@ class Robot: public frc::TimedRobot {
 	void autoScaleFar(bool isRightSide) {
 
 		// Mirror rotations for right side start
-		double direction = 1;
-		if (isRightSide)
-			direction = -1;
+		double rot = 1;
+		if (isRightSide) {
+			rot = -1;
+		}
 
-		// Closed Loop control of Elevator
+		// Closed Loop control of Elevator & Wrist
 		elevatorPosition(ElevPosTarget);
+		wristPosition();
 
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
+		// Auto State Machine
 		switch (autoModeState) {
 		case 1:
-			// Auto home the elevator
-			elevatorSpeed(-0.2);
+			IO.DriveBase.SolenoidShifter.Set(false); // High gear
 
-			//210
-			if (autoForward(228, 1.0, 0.1)) {
+			if (autoForward(228, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
 
 		case 2:
-			if (autoTurn(-90.0 * direction)) {
+			if (autoTurn(-90.0 * rot)) {
 				autoNextState();
 			}
 			break;
 
 		case 3:
-			//190 ? 222
-			if (autoForward(187, 1.0, 0.1)) {
+			//187 (RJ) ? 222 (BullDogs)
+			if (autoForward(187, 1.0, 0.2)) {
 				autoNextState();
-
 			}
 			break;
 
 		case 4:
-			if (autoTurn(20 * direction)) {
+			if (autoTurn(20 * rot)) {
 				autoNextState();
-			}
-			break;
-
-		case 5:
-			ElevPosTarget = 11000;  //TODO: Set back to Full Height (TESTING)
-			autoTurn(30 * direction);
-			if (elevatorPosition(ElevPosTarget)) {
-				autoNextState();
-
 			}
 			break;
 
 		case 6:
-			IO.DriveBase.SolenoidShifter.Set(true);
-			if (autoForward(48, 0.5, 0)) {
+			ElevPosTarget = 11000;
+
+			if (autoForward(36, 0.5, 0) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
 
 		case 7:
-			IO.DriveBase.Wrist1.Set(-0.4);
-
-			if (AutonTimer.Get() > 0.75) {
-				//if (AutonTimer.Get() > 1.5 || wristPosition(45.0)) {
-				IO.DriveBase.Wrist1.Set(0.0);
-				//wristPosition(0.0);
+			if (wristPosition(-45)) {
 				autoNextState();
 			}
 			break;
 
 		case 8:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.85);
+			IO.DriveBase.ClawIntake.Set(-0.80);
 
-			//autoTurn(20 * direction);
-
-			// The Crowd Goes Wild!
-			if (AutonTimer.Get() > 1.0) {
+			if (AutonTimer.Get() > 0.5) {
 				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
 				autoNextState();
 
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 			}
-
 			break;
 
 		case 9:
-			//190
-			if (autoForward(-20, 0.5, 0.1)) {
-				autoNextState();
+			if (autoForward(-36, 0.5, 0.1) && wristPosition(0)) {
 				ElevPosTarget = 800;
-			}
 
+				autoNextState();
+			}
 			break;
 
 		case 10:
-			if (autoFinisher == IO.DS.sAutoCube2Get)
-				autoNextState();
-			else
+			if (autoFinisher == IO.DS.sAuto2Cube) {
+				autoModeState = 20;
+			} else {
 				autoModeState = 0; // We are done.
+			}
 			break;
 
-		case 11:
-			IO.DriveBase.Wrist1.Set(0.45);
+		case 20:
+			//
+			// 2Cube Start
+			//
 			ElevPosTarget = 800;
+			wristPosition(120);
 
-			if (elevatorPosition(ElevPosTarget))
+			if (autoTurn(-32 * rot) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
+			}
 			break;
 
-		case 12:
-			if (autoForward(-36))
-				autoNextState();
-			break;
-
-		case 13:
-			if (autoTurn(15 * direction))
-				autoNextState();
-			break;
-
-		case 14:
-			if (autoForward(-18))
-				autoNextState();
-			break;
-
-		case 15:
-			if (autoTurn(0))
-				autoNextState();
-			break;
-
-		case 16:
-			// Loose Intake
+		case 21:
 			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 
-			if (timedDrive(1.5, -0.4, -0.4))
+			if (autoForward(-45)) {
 				autoNextState();
+			}
 			break;
 
-		case 17:
-			ElevPosTarget = 2200;
-			IO.DriveBase.ClawIntake.Set(0.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Wrist1.Set(0.0);
+		case 22:
+			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
+			if (timedDrive(0.75, -0.3, -0.3)) {
+				IO.DriveBase.SolenoidShifter.Set(false); // High gear
+				autoNextState();
+			}
+			break;
 
-			autoNextState();
+		case 23:
+			wristPosition(45);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(0.3);
 
-			// Trigger the score cube 2 auto mode
-			auto2CubeStartRight = !isRightSide;
-			autoModeState = 100;
+			if (autoForward(55, 0.5, 0.2)) {
+				autoNextState();
+			}
+			break;
 
+		case 24:
+			ElevPosTarget = 12000;
+			if (autoTurn(35 * rot) && elevatorPosition(ElevPosTarget) && wristPosition(-45)) {
+				autoNextState();
+			}
+			break;
+
+		case 25:
+			// Hold target heading
+			autoTurn(35 * rot);
+
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-1.0);
+
+			if (AutonTimer.Get() > 0.5) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time2 [S]", autoTotalTime.Get());
+			}
+			break;
+
+		case 28:
+			if (autoTurn(0) && wristPosition(0)) {
+				autoNextState();
+				ElevPosTarget = 1000;
+			}
 			break;
 
 		default:
@@ -1307,22 +1142,23 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			IO.DriveBase.SolenoidShifter.Set(false); //High Gear
 
-			if (autoForward(123))
+			if (autoForward(123)) {
 				autoNextState();
-
+			}
 			break;
 
 		case 2:
-			if (autoTurn(-90 * rotDir, 0.5, 0.1))
+			if (autoTurn(-90 * rotDir, 0.5, 0.1)) {
 				autoNextState();
-
+			}
 			break;
 
 		case 3:
 			IO.DriveBase.SolenoidShifter.Set(true); // Low Gear
-			if (timedDrive(0.6, 0.5, 0.5))
-				autoNextState();
 
+			if (timedDrive(0.6, 0.5, 0.5)) {
+				autoNextState();
+			}
 			break;
 
 		case 4:
@@ -1335,75 +1171,6 @@ class Robot: public frc::TimedRobot {
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 			}
-
-			break;
-
-		case 5:
-			if (autoFinisher == IO.DS.sAutoCube2Get)
-				autoNextState();
-			else
-				autoModeState = 0; // We are done.
-			break;
-
-		case 6:
-			IO.DriveBase.Wrist1.Set(0.3);
-			ElevPosTarget = 800;
-
-			if (elevatorPosition(ElevPosTarget))
-				autoNextState();
-			break;
-
-		case 7:
-			if (autoForward(-18))
-				autoNextState();
-			break;
-
-		case 8:
-			if (autoTurn(0))
-				autoNextState();
-			break;
-
-		case 9:
-			if (autoForward(36))
-				autoNextState();
-			break;
-
-		case 10:
-			if (autoTurn(-45 * rotDir))
-				autoNextState();
-			break;
-
-		case 11:
-			if (autoForward(28))
-				autoNextState();
-			break;
-
-		case 12:
-			if (autoTurn(0))
-				autoNextState();
-			break;
-
-		case 13:
-			// Loose Intake
-			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);
-
-			if (timedDrive(1.5, -0.4, -0.4))
-				autoNextState();
-			break;
-
-		case 14:
-			ElevPosTarget = 2200;
-			IO.DriveBase.ClawIntake.Set(0.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);
-			IO.DriveBase.Wrist1.Set(0.0);
-
-			autoNextState();
-
-			// Trigger the score cube 2 auto mode
-			auto2CubeStartRight = isStartRightPos;
-			autoModeState = 100;
-
 			break;
 
 		default:
@@ -1474,213 +1241,6 @@ class Robot: public frc::TimedRobot {
 			// Display auton Time
 			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
 
-			break;
-
-		default:
-			stopMotors();
-
-		}
-
-		return;
-	}
-
-	void autoSwitchBackLegal(bool isStartRightPos) {
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-
-		// Rotate based on field start position
-		double rotDir = 1.0;
-		if (isStartRightPos) {
-			rotDir = -1.0;
-		}
-
-		// Auto Sequence
-		switch (autoModeState) {
-		case 1:
-			if (autoForward(223))
-				autoNextState();
-
-			break;
-
-		case 2:
-			if (autoTurn(-90 * rotDir))
-				autoNextState();
-
-			break;
-
-		case 3:
-			if (autoForward(145))
-				autoNextState();
-
-			break;
-
-		case 4:
-			ElevPosTarget = 6500;
-			IO.DriveBase.Wrist1.Set(-0.45);
-
-			if (autoTurn((-90 - 25) * rotDir))
-				autoNextState();
-
-			break;
-
-		case 5:
-			if (autoForward(36.0))
-				autoNextState();
-
-			break;
-
-		case 6:
-			if (autoForward(-12.0))
-				autoNextState();
-
-			break;
-
-		case 7:
-			if (autoTurn(-180 * rotDir))
-				autoNextState();
-
-			break;
-
-		case 8:
-			if (timedDrive(0.5, 0.8, 0.8))
-				autoNextState();
-			break;
-
-		case 9:
-			IO.DriveBase.ClawIntake.Set(-0.65);
-			autoNextState();
-
-			// Display auton Time
-			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-
-			break;
-		default:
-			stopMotors();
-
-		}
-
-		return;
-	}
-
-	/*
-	 * AUTO PROGRAM - Score Second Cube
-	 *
-	 * Assumes that the prior auto sequence acquired the cube on the end
-	 *
-	 */
-	void autoCube2ScoreNear(double rot) {
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-		ElevPosTarget = 800;
-
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
-		switch (autoModeState) {
-		case 100:
-			if (autoForward(14))
-				autoNextState();
-			break;
-
-		case 101:
-			if (autoTurn(45.0 * rot))
-				autoNextState();
-			break;
-
-		case 102:
-			if (autoForward(24))
-				autoNextState();
-			break;
-
-		case 103:
-			ElevPosTarget = 6000; // TODO: Fix this for competition
-			IO.DriveBase.Wrist1.Set(-0.45);
-
-			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget))
-				autoNextState();
-			break;
-
-		case 104:
-			if (autoForward(18))
-				autoNextState();
-			break;
-
-		case 105:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
-
-			// keep pushing!
-			if (AutonTimer.Get() > 1.0) {
-				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
-				autoNextState();
-
-				// Display auton Time
-				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-			}
-			break;
-
-		default:
-			stopMotors();
-
-		}
-
-		return;
-	}
-
-	void autoCube2ScoreFar(double rot) {
-
-		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
-		ElevPosTarget = 800;
-
-		// High gear
-		IO.DriveBase.SolenoidShifter.Set(false);
-
-		switch (autoModeState) {
-		case 100:
-			if (autoForward(14))
-				autoNextState();
-			break;
-
-		case 101:
-			if (autoTurn(-90.0 * rot))
-				autoNextState();
-			break;
-
-		case 102:
-			if (autoForward(285))
-				autoNextState();
-			break;
-
-		case 103:
-			ElevPosTarget = 6000; // TODO: Fix this for competition
-			IO.DriveBase.Wrist1.Set(-0.45);
-
-			if (autoTurn(0.0) && elevatorPosition(ElevPosTarget))
-				autoNextState();
-			break;
-
-		case 104:
-			if (autoForward(28))
-				autoNextState();
-			break;
-
-		case 105:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
-
-			// keep pushing!
-			if (AutonTimer.Get() > 1.0) {
-				IO.DriveBase.ClawIntake.Set(0.0);
-				IO.DriveBase.Wrist1.Set(0.0);
-				autoNextState();
-
-				// Display auton Time
-				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-			}
 			break;
 
 		default:

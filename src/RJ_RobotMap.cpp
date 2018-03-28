@@ -52,7 +52,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoProgram.AddObject(DS.AutoLine, DS.AutoLine);
 	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
 	DS.chooseAutoProgram.AddObject(DS.AutoNearSide, DS.AutoNearSide);
-	DS.chooseAutoProgram.AddObject(DS.AutoNNF, DS.AutoNNF);
+	DS.chooseAutoProgram.AddObject(DS.AutoNscNswFsc, DS.AutoNscNswFsc);
 	frc::SmartDashboard::PutData("Auto OBJ", &DS.chooseAutoProgram);
 
 	// Auto Position Chooser
@@ -62,10 +62,10 @@ RJ_RobotMap::RJ_RobotMap() {
 	frc::SmartDashboard::PutData("Auto Pos", &DS.chooseAutoPosStart);
 
 	// Auto Finisher Chooser
-	DS.chooseAutoFinisher.AddDefault(DS.sAutoCube2Get, DS.sAutoCube2Get);
-	DS.chooseAutoFinisher.AddObject(DS.sAutoCube2Score, DS.sAutoCube2Score);
+	DS.chooseAutoFinisher.AddDefault(DS.sAuto2Cube, DS.sAuto2Cube);
 	DS.chooseAutoFinisher.AddObject(DS.sAutoNo, DS.sAutoNo);
-	frc::SmartDashboard::PutData("Fin", &DS.chooseAutoFinisher);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
+	frc::SmartDashboard::PutData("Auto Fin", &DS.chooseAutoFinisher);
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);

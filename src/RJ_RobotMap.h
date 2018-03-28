@@ -34,13 +34,12 @@ public:
 		const llvm::StringRef AutoSwitch = "3 Switch";
 		const llvm::StringRef AutoScale = "4 Scale";
 		const llvm::StringRef AutoNearSide = "5 NSc NSw L";
-		const llvm::StringRef AutoNNF = "6 NSc NSw FSc";
+		const llvm::StringRef AutoNscNswFsc = "6 NSc NSw FSc";
 
 		SendableChooser<llvm::StringRef> chooseAutoFinisher;
 		const llvm::StringRef sAutoNo = "1 None";
-		const llvm::StringRef sAutoCube2Get = "2 Cube2Get";
-		const llvm::StringRef sAutoCube2Score = "3 Cube2Score";
-		const llvm::StringRef sAutoWallHug = "4 Wall Hug";
+		const llvm::StringRef sAuto2Cube = "2 2Cube";
+		const llvm::StringRef sAutoWallHug = "3 Wall Hug";
 
 		SendableChooser<llvm::StringRef> chooseAutoEncoder;
 		const llvm::StringRef EncoderAuto  = "Enc Auto";
