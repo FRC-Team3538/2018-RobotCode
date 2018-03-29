@@ -86,6 +86,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 	// Vision System
 	//
+	/*
 	Vision.cam0.SetFPS(30);
 	Vision.cam0.SetResolution(160, 120);
 	Vision.cam0.SetExposureAuto();
@@ -95,6 +96,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	Vision.cam1.SetResolution(160, 120);
 	Vision.cam1.SetExposureAuto();
 	Vision.cam1.SetWhiteBalanceAuto();
+	*/
 
 }
 

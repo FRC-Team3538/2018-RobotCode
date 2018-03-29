@@ -48,8 +48,8 @@ public:
 		const llvm::StringRef EncoderNone = "Enc None";
 
 		SendableChooser<llvm::StringRef> choosePotDisabled;
-		const llvm::StringRef DisabledPOT = "Disable Pot";
-		const llvm::StringRef EnabledPOT = "Enable Pot";
+		const llvm::StringRef EnabledPOT = "1 Enable Pot";
+		const llvm::StringRef DisabledPOT = "2 Disable Pot";
 
 	};
 	structDS DS;
@@ -129,6 +129,7 @@ public:
 	structDriveBase DriveBase;
 
 	// Drive Base
+	/*
 	struct structVision {
 		cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
 		cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
@@ -139,6 +140,7 @@ public:
 		cs::CvSink sink1;
 	};
 	structVision Vision;
+	*/
 
 	// Default Constructor
 	RJ_RobotMap();
