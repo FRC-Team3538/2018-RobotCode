@@ -17,7 +17,6 @@ public:
 		XboxController OperatorStick { 1 };
 		Joystick LaunchPad { 4 };
 
-
 		SendableChooser<llvm::StringRef> chooseAutoDelay;
 		const llvm::StringRef sAutoDelayOff = "No_Delay";
 		const llvm::StringRef sAutoDelay3 = "3 Seconds";
@@ -42,11 +41,16 @@ public:
 		const llvm::StringRef sAutoWallHug = "3 Wall Hug";
 
 		SendableChooser<llvm::StringRef> chooseAutoEncoder;
-		const llvm::StringRef EncoderAuto  = "Enc Auto";
-		const llvm::StringRef EncoderLeft  = "Enc Left";
+		const llvm::StringRef EncoderAuto = "Enc Auto";
+		const llvm::StringRef EncoderLeft = "Enc Left";
 		const llvm::StringRef EncoderRight = "Enc Right";
-		const llvm::StringRef EncoderBoth  = "Enc Both";
-		const llvm::StringRef EncoderNone  = "Enc None";
+		const llvm::StringRef EncoderBoth = "Enc Both";
+		const llvm::StringRef EncoderNone = "Enc None";
+
+		SendableChooser<llvm::StringRef> choosePotDisabled;
+		const llvm::StringRef DisabledPOT = "Disable Pot";
+		const llvm::StringRef EnabledPOT = "Enable Pot";
+
 	};
 	structDS DS;
 
@@ -63,8 +67,6 @@ public:
 		VictorSP R2 { 4 };
 		VictorSP R3 { 5 };
 		SpeedControllerGroup MotorsRight { R1, R2, R3 };
-
-
 
 		// Drive Base Encoders
 		Encoder EncoderLeft { 0, 1 };
@@ -85,8 +87,6 @@ public:
 		VictorSP Elevator1 { 6 };
 		VictorSP Elevator2 { 7 };
 
-
-
 		//Elevator Sensing Package
 		Encoder EncoderElevator { 4, 5, false, Encoder::k4X };
 		DigitalInput SwitchElevatorLower { 8 };
@@ -104,9 +104,8 @@ public:
 		AnalogInput PotentiometerWrist { 1 };
 		// Dio are faster that pwm so make sure that these do not have the same port as victors
 		// when talking to the navx other wise the pwm signal will not be sent.
-		AnalogInput WristAI{3};
-		AnalogPotentiometer WristPot { &WristAI, 270, -270 / 2};
-
+		AnalogInput WristAI { 3 };
+		AnalogPotentiometer WristPot { &WristAI, 270, -270 / 2 };
 
 		//Claw
 		VictorSP ClawIntake1 { 9 };
@@ -129,7 +128,6 @@ public:
 	};
 	structDriveBase DriveBase;
 
-
 	// Drive Base
 	struct structVision {
 		cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
@@ -141,7 +139,6 @@ public:
 		cs::CvSink sink1;
 	};
 	structVision Vision;
-
 
 	// Default Constructor
 	RJ_RobotMap();
