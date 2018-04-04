@@ -118,7 +118,26 @@ class Robot: public frc::TimedRobot {
 		gearState = true;
 	}
 
+	bool bTeleAutoMode = false;
+
 	void TeleopPeriodic() {
+
+		// Tele-Auto-Test
+		// Run auto in teleop for testing during practice matches
+		if(IO.DS.DriveStick.GetAButton()){
+			// Run Auto Init
+			if(!bTeleAutoMode) {
+				AutonomousInit();
+				bTeleAutoMode = true;
+			}
+
+			AutonomousPeriodic();
+			return;
+		} else {
+			bTeleAutoMode = false;
+		}
+
+
 		double Control_Deadband = 0.11; // input where the joystick actually starts to move
 		double Drive_Deadband = 0.11; // command at which the motors begin to move
 
@@ -199,10 +218,6 @@ class Robot: public frc::TimedRobot {
 		//
 		// Stuff that Doesn't fit on the op Controller:
 		//
-
-		// Z-Bar controls
-		IO.DriveBase.Zbar.Set(IO.DS.DriveStick.GetAButton());
-		IO.DriveBase.Zbar1.Set(IO.DS.DriveStick.GetBButton());
 
 		// Winch Control [DPAD]
 		switch (IO.DS.DriveStick.GetPOV()) {
