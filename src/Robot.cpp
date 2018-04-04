@@ -663,8 +663,7 @@ class Robot: public frc::TimedRobot {
 			break;
 		case 9:
 			// Start of wall hug path
-			IO.DriveBase.Wrist1.Set(0);
-			if (autoForward(-20))
+			if (autoForward(-70))
 				autoNextState();
 			break;
 
@@ -675,7 +674,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 11:
-			if (autoForward(-CAoffset))
+			if (autoForward(73))
 				autoNextState();
 			break;
 
@@ -687,21 +686,21 @@ class Robot: public frc::TimedRobot {
 		case 13:
 			ElevPosTarget = 0;
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-			IO.DriveBase.Wrist1.Set(90);
-			if (autoForward(15))
+			IO.DriveBase.Wrist1.Set(0.45);
+			if (autoForward(92 + 42, 1.0, 0.2))
 				autoNextState();
 			break;
 
 		case 14:
-			if (autoForward(-33))
+			if (autoTurn(58 * rot, 1.0, 0.1))
 				autoNextState();
 			break;
 
 		case 15:
-			//IO.DriveBase.SolenoidShifter.Set(true);
-			//IO.DriveBase.ClawIntake.Set(1.0);
-			//if (autoForward(-33))
-			autoNextState();
+			IO.DriveBase.SolenoidShifter.Set(true);
+			IO.DriveBase.ClawIntake.Set(1.0);
+			if (autoForward(-54, 0.4, 0))
+				autoNextState();
 			break;
 
 //			if (true)
