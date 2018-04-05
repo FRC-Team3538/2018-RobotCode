@@ -26,12 +26,12 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
 	// Practice Bot
-	//DriveBase.EncoderLeft.SetDistancePerPulse(167.0 / 16745.0 * 4.0);
-	//DriveBase.EncoderRight.SetDistancePerPulse(-167.0 / 16745.0 * 4.0);
+	DriveBase.EncoderLeft.SetDistancePerPulse(167.0 / 16745.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(-167.0 / 16745.0 * 4.0);
 
 	// Comp Bot
-	DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	//DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	//DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
 
 	// Set Default Gear
 	DriveBase.SolenoidShifter.Set(false);

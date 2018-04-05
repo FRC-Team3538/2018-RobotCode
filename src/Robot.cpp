@@ -124,9 +124,9 @@ class Robot: public frc::TimedRobot {
 
 		// Tele-Auto-Test
 		// Run auto in teleop for testing during practice matches
-		if(IO.DS.DriveStick.GetAButton()){
+		if (IO.DS.DriveStick.GetAButton()) {
 			// Run Auto Init
-			if(!bTeleAutoMode) {
+			if (!bTeleAutoMode) {
 				AutonomousInit();
 				bTeleAutoMode = true;
 			}
@@ -134,9 +134,11 @@ class Robot: public frc::TimedRobot {
 			AutonomousPeriodic();
 			return;
 		} else {
-			bTeleAutoMode = false;
+			if (bTeleAutoMode) {
+				TeleopInit();
+				bTeleAutoMode = false;
+			}
 		}
-
 
 		double Control_Deadband = 0.11; // input where the joystick actually starts to move
 		double Drive_Deadband = 0.11; // command at which the motors begin to move
@@ -480,7 +482,7 @@ class Robot: public frc::TimedRobot {
 			if (autoTarget == IO.DS.AutoNearSide) {
 
 				if (autoGameData[1] == 'L') {
-					autoScaleNear(false);
+					autoScaleNearCompat(false);
 
 				} else if (autoGameData[0] == 'L') {
 					autoSwitchNearSide(false);
@@ -534,7 +536,7 @@ class Robot: public frc::TimedRobot {
 			if (autoTarget == IO.DS.AutoNearSide) {
 
 				if (autoGameData[1] == 'R') {
-					autoScaleNear(true);
+					autoScaleNearCompat(true);
 
 				} else if (autoGameData[0] == 'R') {
 					autoSwitchNearSide(true);
@@ -590,10 +592,239 @@ class Robot: public frc::TimedRobot {
 
 		// Mirror path if starting on right
 		double rot = 1;
-		double CAoffset = 67+8;
+		double CAoffset = 75;
 		if (isGoRight) {
 			rot = -1;
-			CAoffset = 53+12;
+			CAoffset = 65;
+		}
+
+		// Closed Loop control of Elevator & Wrist
+		elevatorPosition();
+		wristPosition();
+
+		switch (autoModeState) {
+		case 1:
+			// High gear
+			IO.DriveBase.SolenoidShifter.Set(false);
+			elevatorPosition(800);
+			wristPosition(-25);
+
+			if (autoForward(22)) {
+				autoNextState();
+			}
+			break;
+
+		case 2:
+			if (autoTurn(45.0 * rot)) {
+				autoNextState();
+			}
+			break;
+
+		case 3:
+			if (autoForward(CAoffset)) {
+				autoNextState();
+			}
+			break;
+
+		case 4:
+			if (autoTurn(0.0) && elevatorPosition(4500)) {
+				autoNextState();
+			}
+			break;
+
+		case 5:
+			if (autoForward(24) & wristPosition(-35) & wristNoPot(1.0, -0.57)) {
+				autoNextState();
+			}
+			break;
+
+		case 6:
+			if (true) {
+				autoNextState();
+			}
+			break;
+
+		case 7:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+
+			// keep pushing!
+			if (timedDrive(0.75, 0.2, 0.2)) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+			break;
+
+		case 8:
+
+			if (autoFinisher == IO.DS.sAutoWallHug) {
+				autoNextState();
+				autoModeState = 20;
+			} else if (autoFinisher == IO.DS.sAuto2Cube) {
+				autoNextState();
+				autoModeState = 40;
+			} else {
+				autoNextState();
+				autoModeState = 0;
+			}
+
+			break;
+
+		case 20:
+			//
+			// Start of wall hug path
+			//
+			if (wristPosition(0)) {
+				if (elevatorPosition(800)) {
+					if (autoForward(-48)) {
+						autoNextState();
+					}
+				}
+			}
+			break;
+
+		case 21:
+			if (autoTurn(45 * rot) && elevatorPosition(800)) {
+				autoNextState();
+			}
+			break;
+
+		case 22:
+			if (autoForward(72)) {
+				autoNextState();
+			}
+			break;
+
+		case 23:
+			if (autoTurn(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 24:
+			if (autoForward(48)) {
+				autoNextState();
+			}
+			break;
+
+		case 40:
+			//
+			// Start of 2Cube
+			//
+			CAoffset = -60;
+			if (isGoRight) {
+				CAoffset = -65;
+			}
+
+			if (autoForward(CAoffset)) {
+				autoNextState();
+			}
+			break;
+
+		case 41:
+			if (autoTurn(-45 * rot) & elevatorPosition(800) & wristPosition(-110) & wristPosition(-35)
+					& wristNoPot(1.25, -0.65)) {
+				autoNextState();
+			}
+			break;
+
+		case 42:
+			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+
+			if (autoForward(42)) {
+				autoNextState();
+			}
+			break;
+
+		case 43:
+			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
+			if (timedDrive(1.5, 0.25, 0.25)) {
+				IO.DriveBase.SolenoidShifter.Set(false); // High gear
+				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+				autoNextState();
+			}
+			break;
+
+		case 44:
+			if (autoForward(-42) & wristPosition(-45) & wristNoPot(0.6, 0.75)) {
+				autoNextState();
+			}
+			break;
+
+		case 45:
+			IO.DriveBase.ClawIntake.Set(0.2);
+
+			if (autoTurn(0) && wristPosition(-45) && elevatorPosition(6500)) {
+				autoNextState();
+			}
+			break;
+
+		case 46:
+			if (autoForward(56)) {
+				autoNextState();
+			}
+			break;
+
+		case 47:
+			wristPosition(-75);
+
+			if (true) {
+				autoNextState();
+			}
+			break;
+
+		case 48:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+
+			// keep pushing!
+			if (timedDrive(0.75, 0.2, 0.2)) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time2 [S]", autoTotalTime.Get());
+			}
+
+			break;
+
+		case 49:
+			if (autoForward(-36) && wristPosition(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 50:
+			elevatorPosition(800);
+
+			if (autoTurn(45 * rot)) {
+				autoNextState();
+			}
+
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoCenterWindsor(bool isGoRight) {
+
+		// Mirror path if starting on right
+		double rot = 1;
+		double CAoffset = 67 + 8;
+		if (isGoRight) {
+			rot = -1;
+			CAoffset = 53 + 12;
 		}
 
 		// Closed Loop control of Elevator
@@ -763,9 +994,9 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 47:
-			ElevPosTarget = 4500;
+			ElevPosTarget = 2600;
 
-			if (timedDrive(0.75, 0.3, 0.3) && wristPosition(-75)) {
+			if (timedDrive(0.75, 0.2, 0.2) && wristPosition(-75)) {
 				autoNextState();
 			}
 			break;
@@ -808,6 +1039,145 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
+	void autoCenterSouthField(double direction) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+		ElevPosTarget = 800;
+
+		IO.DriveBase.SolenoidShifter.Set(false); // High gear
+
+		switch (autoModeState) {
+		case 1:
+
+			if (autoForward(18))
+				autoNextState();
+			break;
+
+		case 2:
+			if (autoTurn(45.0 * direction))
+				autoNextState();
+			break;
+
+		case 3:
+
+			if (autoForward(60.0))
+				autoNextState();
+			break;
+
+		case 4:
+			if (autoTurn(0.0))
+				autoNextState();
+			break;
+
+		case 5:
+			if (timedDrive(1.5, 0.3, 0.3))
+				//if (autoForward(20.0, 0.7))
+				autoNextState();
+			break;
+		case 6:
+			// Eject!
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+
+			break;
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoScaleNearCompat(bool isStartRightPos) {
+
+		// Mirror rotations for right side start
+		double rot = 1;
+		if (isStartRightPos) {
+			rot = -1;
+		}
+
+		// Closed Loop control of Elevator & Wrist
+		elevatorPosition();
+		wristPosition();
+
+		switch (autoModeState) {
+		case 1:
+			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
+			elevatorPosition(800);
+			wristPosition(-25);
+
+			if (autoForward(275)) {
+				autoNextState();
+			}
+			break;
+
+		case 2:
+			elevatorPosition(15500);
+
+			if (autoTurn(-80 * rot) && elevatorPosition(ElevPosTarget)) {
+				autoNextState();
+			}
+			break;
+
+		case 3:
+			if (autoForward(10, 0.3, 0.1) & wristNoPot(0.6, -0.75)) {
+				autoNextState();
+			}
+			break;
+
+		case 4:
+			autoTurn(); // Hold Heading
+
+			if (wristPosition(-80)) {
+				autoNextState();
+			}
+			break;
+
+		case 5:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.5);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+
+			if (AutonTimer.Get() > 0.85) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+
+			break;
+
+		case 6:
+			if (autoForward(-14, 0.3, 0.1) && wristPosition(0)) {
+				elevatorPosition(800);
+				autoNextState();
+			}
+			break;
+
+		case 7:
+			if (autoTurn(35 * rot) & wristPosition(90) & wristNoPot(1.6, 0.75)) {
+				autoNextState();
+			}
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
 	void autoScaleNear(bool isStartRightPos) {
 
 		// Mirror rotations for right side start
@@ -817,7 +1187,7 @@ class Robot: public frc::TimedRobot {
 		}
 
 		// Closed Loop control of Elevator & Wrist
-		elevatorPosition(ElevPosTarget);
+		elevatorPosition();
 		wristPosition();
 
 		switch (autoModeState) {
@@ -831,33 +1201,28 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 2:
-			ElevPosTarget = 12000;
-
-			if (autoTurn(-35 * rot) && elevatorPosition(ElevPosTarget)) {
+			if (autoTurn(-35)) {
 				autoNextState();
 			}
 			break;
 
 		case 3:
-			if (autoTurn(-35 * rot, 0.5, 0.2) && wristPosition(-35)) {
+			if (autoForward(28, 0.6, 0.2) && elevatorPosition(15500)) {
 				autoNextState();
 			}
 			break;
 
 		case 4:
-			if (autoForward(18+18, 0.6, 0.2)) {
+			if (wristPosition(-35) && wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
 			break;
 
 		case 5:
-			// Hold target heading
-			autoTurn(-35 * rot);
-
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			IO.DriveBase.ClawIntake.Set(-0.7);
 
-			if (AutonTimer.Get() > 0.85) {
+			if (AutonTimer.Get() > 0.65) {
 				IO.DriveBase.ClawIntake.Set(0.0);
 				autoNextState();
 
@@ -979,7 +1344,6 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.SolenoidShifter.Set(false); // High gear
 			wristPosition(-25);
 
-			// 228 (RJ)
 			if (autoForward(232, 1.0, 0.2)) {
 				autoNextState();
 			}
@@ -992,35 +1356,34 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			//187 (RJ) ? 222 (BullDogs)
-			if (autoForward(218, 1.0, 0.2)) {
+			//187 (RJ) ? 222 (BullDogs) 218
+			if (autoForward(222, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
 
 		case 4:
-			if (autoTurn(20 * rot)) {
+			if (autoTurn(35 * rot)) {
 				autoNextState();
 			}
 			break;
 
 		case 5:
-			ElevPosTarget = 12500;
-
-			if (autoForward(32, 0.5, 0) && elevatorPosition(ElevPosTarget)) {
+			//32 inches forward
+			if (autoForward(24, 0.5, 0) & elevatorPosition(15500)) {
 				autoNextState();
 			}
 			break;
 
 		case 6:
-			if (wristPosition(-45)) {
+			if (wristPosition(-45) & wristNoPot(1.0, -0.65)) {
 				autoNextState();
 			}
 			break;
 
 		case 7:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.80);
+			IO.DriveBase.ClawIntake.Set(-0.66);
 
 			if (AutonTimer.Get() > 0.85) {
 				IO.DriveBase.ClawIntake.Set(0.0);
@@ -1138,7 +1501,7 @@ class Robot: public frc::TimedRobot {
 	void autoSwitchNearSide(bool isStartRightPos) {
 
 		// Closed Loop control of Elevator
-		elevatorPosition(ElevPosTarget);
+		elevatorPosition();
 
 		// Rotate based on field start position
 		double rotDir = 1.0;
@@ -1151,13 +1514,13 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			IO.DriveBase.SolenoidShifter.Set(false); //High Gear
 
-			if (autoForward(123)) {
+			if (autoForward(133)) {
 				autoNextState();
 			}
 			break;
 
 		case 2:
-			if (autoTurn(-90 * rotDir, 0.5, 0.1)) {
+			if (autoTurn(-90 * rotDir, 0.5, 0.1) & elevatorPosition(3000) & wristNoPot(0.6, -0.75)) {
 				autoNextState();
 			}
 			break;
@@ -1302,6 +1665,9 @@ class Robot: public frc::TimedRobot {
 
 	bool elevatorPosition(double Elev_position) {
 
+		// Set target to the commanded position
+		ElevPosTarget = Elev_position;
+
 		// Get Current Encoder Value
 		double ElevEncoderRead = IO.DriveBase.EncoderElevator.Get();
 
@@ -1323,6 +1689,11 @@ class Robot: public frc::TimedRobot {
 
 		// Check if we made it to the target
 		return (fabs(ElevError) <= ElevatorPositionTol);
+	}
+
+	// Default to hold last commanded position
+	bool elevatorPosition() {
+		return elevatorPosition(ElevPosTarget);
 	}
 
 	//
@@ -1370,6 +1741,10 @@ class Robot: public frc::TimedRobot {
 
 	bool wristPosition(double input) {
 
+		if (PotDisabled == IO.DS.DisabledPOT) {
+			return true;
+		}
+
 		// Update Target Position
 		WristTarget = input;
 
@@ -1393,6 +1768,20 @@ class Robot: public frc::TimedRobot {
 	// Default to holding whatever position was last commanded
 	bool wristPosition() {
 		return wristPosition(WristTarget);
+	}
+
+	bool wristNoPot(double time, double speed) {
+		if (PotDisabled == IO.DS.DisabledPOT) {
+			if (AutonTimer.Get() < time) {
+				IO.DriveBase.Wrist1.Set(speed);
+			} else {
+				IO.DriveBase.Wrist1.Set(0.0);
+				return true;
+			}
+		} else {
+			return true;
+		}
+		return false;
 	}
 
 // Drivetrain functions
@@ -1421,13 +1810,19 @@ class Robot: public frc::TimedRobot {
 #define KD_LINEAR (0.004)
 #define LINEAR_TOLERANCE (1.0)
 
-#define ROTATION_kP (0.0609)
+#define KP_ROTATION (0.0609)
+#define KI_ROTATION (0.0000)
+#define KD_ROTATION (0.0080)
+
 #define ROTATION_TOLERANCE (10.0)
 #define ROTATIONAL_SETTLING_TIME (0.0)
 #define ROTATIONAL_MAX_SPEED (0.42)
 
-	double prevError = 0; // Derivative Calculation
-	double sumError = 0;  // Integral Calculation
+	double prevError_linear = 0; // Derivative Calculation
+	double sumError_linear = 0;  // Integral Calculation
+
+	double prevError_rotation = 0; // Derivative Calculation
+	double sumError_rotation = 0;  // Integral Calculation
 
 	int autoForward(double targetDistance, double max_speed, double settle_time) {
 
@@ -1438,17 +1833,17 @@ class Robot: public frc::TimedRobot {
 
 		// I Control
 		if (error < 24) {
-			sumError += error / MAIN_LOOP_PERIOD;
+			sumError_linear += error / MAIN_LOOP_PERIOD;
 		} else {
-			sumError = 0;
+			sumError_linear = 0;
 		}
 
 		// D Control
-		double dError = (error - prevError) / MAIN_LOOP_PERIOD; // [Inches/second]
-		prevError = error;
+		double dError = (error - prevError_linear) / MAIN_LOOP_PERIOD; // [Inches/second]
+		prevError_linear = error;
 
 		// PID Command
-		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError + KD_LINEAR * dError;
+		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError_linear + KD_LINEAR * dError;
 
 		// limit max drive speed
 		driveCommandLinear = absMax(driveCommandLinear, max_speed);
@@ -1458,7 +1853,21 @@ class Robot: public frc::TimedRobot {
 
 		// Use Gyro to drive straight
 		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
-		double driveCommandRotation = (gyroAngle - autoHeading) * ROTATION_kP;
+		double error_rot = gyroAngle - autoHeading;
+
+		// I Control
+		if (error_rot < 15) {
+			sumError_rotation += error_rot / MAIN_LOOP_PERIOD;
+		} else {
+			sumError_rotation = 0;
+		}
+
+		// D Control
+		double dError_rot = (error_rot - prevError_rotation) / MAIN_LOOP_PERIOD; // [Inches/second]
+		prevError_rotation = error_rot;
+
+		double driveCommandRotation = error_rot * KP_ROTATION + KI_ROTATION * sumError_rotation
+				+ KD_ROTATION * dError_rot;
 		driveCommandRotation = absMax(driveCommandRotation, ROTATIONAL_MAX_SPEED);
 
 		// Do iiiiit!
@@ -1484,19 +1893,30 @@ class Robot: public frc::TimedRobot {
 		// For linear drive function
 		autoHeading = -targetYaw;
 
-		// Calculate motor command
-		float currentYaw = IO.DriveBase.ahrs.GetAngle();
-		float yawError = -targetYaw - currentYaw;
-		float yawCommand = yawError * -ROTATION_kP;
+		// Use Gyro to drive straight
+		double gyroAngle = IO.DriveBase.ahrs.GetAngle();
+		double error_rot = gyroAngle - autoHeading;
 
-		// Limit max rotation speed
-		yawCommand = absMax(yawCommand, maxSpeed);
+		// I Control
+		if (error_rot < 15) {
+			sumError_rotation += error_rot / MAIN_LOOP_PERIOD;
+		} else {
+			sumError_rotation = 0;
+		}
+
+		// D Control
+		double dError_rot = (error_rot - prevError_rotation) / MAIN_LOOP_PERIOD; // [Inches/second]
+		prevError_rotation = error_rot;
+
+		double driveCommandRotation = error_rot * KP_ROTATION + KI_ROTATION * sumError_rotation
+				+ KD_ROTATION * dError_rot;
+		driveCommandRotation = absMax(driveCommandRotation, maxSpeed);
 
 		// dooo it!
-		motorSpeed(-yawCommand, yawCommand);
+		motorSpeed(-driveCommandRotation, driveCommandRotation);
 
 		// Allow for the robot to settle into position
-		if (abs(yawError) > ROTATION_TOLERANCE)
+		if (abs(error_rot) > ROTATION_TOLERANCE)
 			autoSettleTimer.Reset();
 
 		else if (autoSettleTimer.Get() > settlingTime)
@@ -1509,13 +1929,31 @@ class Robot: public frc::TimedRobot {
 		return autoTurn(targetYaw, ROTATIONAL_MAX_SPEED, ROTATIONAL_SETTLING_TIME);
 	}
 
+	int autoTurn() {
+		return autoTurn(autoHeading, ROTATIONAL_MAX_SPEED, ROTATIONAL_SETTLING_TIME);
+	}
+
 	int timedDrive(double driveTime, double leftMotorSpeed, double rightMotorSpeed) {
 
 		if (AutonTimer.Get() < driveTime) {
 
 			// Use Gyro to drive straight
 			double gyroAngle = IO.DriveBase.ahrs.GetAngle();
-			double driveCommandRotation = (gyroAngle - autoHeading) * ROTATION_kP;
+			double error_rot = gyroAngle - autoHeading;
+
+			// I Control
+			if (error_rot < 15) {
+				sumError_rotation += error_rot / MAIN_LOOP_PERIOD;
+			} else {
+				sumError_rotation = 0;
+			}
+
+			// D Control
+			double dError_rot = (error_rot - prevError_rotation) / MAIN_LOOP_PERIOD; // [Inches/second]
+			prevError_rotation = error_rot;
+
+			double driveCommandRotation = error_rot * KP_ROTATION + KI_ROTATION * sumError_rotation
+					+ KD_ROTATION * dError_rot;
 			driveCommandRotation = absMax(driveCommandRotation, ROTATIONAL_MAX_SPEED);
 
 			motorSpeed(leftMotorSpeed - driveCommandRotation, rightMotorSpeed + driveCommandRotation);
@@ -1713,8 +2151,6 @@ class Robot: public frc::TimedRobot {
 		// Elevator Encoders
 		SmartDashboard::PutNumber("Elevator Encoder [RAW]", IO.DriveBase.EncoderElevator.Get());
 		SmartDashboard::PutNumber("Elevator Encoder [INCH]", IO.DriveBase.EncoderElevator.GetDistance());
-
-
 
 		// Gyro
 		if (&IO.DriveBase.ahrs) {
