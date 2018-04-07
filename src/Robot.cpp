@@ -575,7 +575,7 @@ class Robot: public frc::TimedRobot {
 
 		// Mirror path if starting on right
 		double rot = 1;
-		double CAoffset = 67+8;
+		double CAoffset = 67+12;
 		if (isGoRight) {
 			rot = -1;
 			CAoffset = 53+12;
@@ -614,6 +614,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
+			IO.DriveBase.SolenoidShifter.Set(true);
 			if (timedDrive(1.5, 0.5, 0.5)) {
 				autoNextState();
 			}
@@ -631,6 +632,7 @@ class Robot: public frc::TimedRobot {
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-0.65);
 
+			IO.DriveBase.SolenoidShifter.Set(true);
 			// keep pushing!
 			if (timedDrive(1.0, 0.15, 0.15)) {
 				IO.DriveBase.ClawIntake.Set(0.0);
@@ -808,7 +810,7 @@ class Robot: public frc::TimedRobot {
 		switch (autoModeState) {
 		case 1:
 			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
-			wristPosition(-25);
+			wristPosition(-60);
 
 			if (autoForward(250, 1.0, 0.2)) {
 				autoNextState();
@@ -977,8 +979,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			//187 (RJ) ? 222 (BullDogs)
-			if (autoForward(218, 1.0, 0.2)) {
+			//187 (RJ) ? 222 (BullDogs), 218(comp ) incresasedd
+			if (autoForward(222, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
@@ -992,7 +994,7 @@ class Robot: public frc::TimedRobot {
 		case 5:
 			ElevPosTarget = 12500;
 
-			if (autoForward(32, 0.5, 0) && elevatorPosition(ElevPosTarget)) {
+			if (autoForward(36, 0.5, 0) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
@@ -1004,8 +1006,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 7:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.80);
+			// Eject! , was -0.80
+			IO.DriveBase.ClawIntake.Set(-0.7);
 
 			if (AutonTimer.Get() > 0.85) {
 				IO.DriveBase.ClawIntake.Set(0.0);
@@ -1026,7 +1028,7 @@ class Robot: public frc::TimedRobot {
 
 		case 9:
 			if (autoFinisher == IO.DS.sAuto2Cube) {
-				autoModeState = 20;
+				autoModeState = 0; //20 for 2 cube
 			} else {
 				autoModeState = 0; // We are done.
 			}
