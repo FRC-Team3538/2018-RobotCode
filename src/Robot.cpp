@@ -155,6 +155,21 @@ class Robot: public frc::TimedRobot {
 		SpeedLinear *= 1.05;
 		SpeedRotate *= 1.05;
 
+		bool HookTowerIn = IO.DS.DriveStick.GetBButton();
+		bool HookTowerOut = IO.DS.DriveStick.GetXButton();
+
+		if (HookTowerIn) {
+			IO.DriveBase.HTower.Set(1.0); // Intake
+		} else {
+			IO.DriveBase.HTower.Set(0.0);
+		}
+
+		if (HookTowerOut) {
+			IO.DriveBase.HTower.Set(-1.0); // Intake
+		} else {
+			IO.DriveBase.HTower.Set(0.0);
+		}
+
 		//Swap Above ^^^^
 		// Set dead band for control inputs
 		SpeedLinear = deadband(SpeedLinear, Control_Deadband);
@@ -607,7 +622,7 @@ class Robot: public frc::TimedRobot {
 			// High gear
 			IO.DriveBase.SolenoidShifter.Set(false);
 			elevatorPosition(800);
-			wristPosition(-25);
+			wristPosition(-80); //-25
 
 			if (autoForward(22)) {
 				autoNextState();
@@ -633,6 +648,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
+			//24 inches
 			if (autoForward(24) & wristPosition(-35) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
@@ -1207,7 +1223,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(28, 0.6, 0.2) && elevatorPosition(15500)) {
+			//28
+			if (autoForward(26, 0.6, 0.2) && elevatorPosition(15500)) {
 				autoNextState();
 			}
 			break;
@@ -1220,7 +1237,7 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.7);
+			IO.DriveBase.ClawIntake.Set(-0.67);
 
 			if (AutonTimer.Get() > 0.65) {
 				IO.DriveBase.ClawIntake.Set(0.0);
@@ -1262,47 +1279,48 @@ class Robot: public frc::TimedRobot {
 
 		case 21:
 			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
-			if (autoForward(-50)) {
+			if (autoForward(-55) & wristNoPot(3.0, 0.8)) {
 				autoNextState();
 			}
 			break;
 
 		case 22:
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
-			if (timedDrive(0.75, -0.3, -0.3)) {
+			if (timedDrive(1.0, -0.3, -0.3)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
 				autoNextState();
 			}
 			break;
 
 		case 23:
-			wristPosition(45);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(0.3);
 
-			if (autoForward(55, 0.5, 0.2)) {
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(0.7);
+			wristPosition(45);
+
+			if (autoForward(60, 0.5, 0.2)) {
 				autoNextState();
 			}
 			break;
 
 		case 24:
-			ElevPosTarget = 12500;
-			if (autoTurn(-35 * rot) && elevatorPosition(ElevPosTarget) && wristPosition(-45)) {
+			ElevPosTarget = 15000;
+			if (autoTurn(-37 * rot) & elevatorPosition(ElevPosTarget) & wristPosition(-45) & wristNoPot(2.5, -0.67)) {
 				autoNextState();
 			}
 			break;
 
 		case 25:
 			// Hold target heading
-			autoTurn(-35 * rot);
+			autoTurn(-37 * rot);
 
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-1.0);
+			//IO.DriveBase.ClawIntake.Set(-1.0);
 
-			if (AutonTimer.Get() > 0.5) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+			if (AutonTimer.Get() > 1.0) {
+				//IO.DriveBase.ClawIntake.Set(0.7);
 				autoNextState();
 
 				// Display auton Time
@@ -1311,9 +1329,19 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 28:
-			if (autoTurn(0) && wristPosition(0)) {
+		case 26:
+			if (autoForward(16, 0.3, 0.2)) {
 				autoNextState();
+			}
+			break;
+
+		case 27:
+			//eject cube
+			IO.DriveBase.ClawIntake.Set(-0.67);
+
+			if (autoTurn(0) & wristPosition(0) & wristNoPot(2.0, 0.35)) {
+				autoNextState();
+				IO.DriveBase.ClawIntake.Set(0.0);
 				ElevPosTarget = 1000;
 			}
 			break;
@@ -1344,7 +1372,8 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.SolenoidShifter.Set(false); // High gear
 			wristPosition(-25);
 
-			if (autoForward(232, 1.0, 0.2)) {
+			//232
+			if (autoForward(230, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
