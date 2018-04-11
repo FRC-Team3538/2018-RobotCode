@@ -26,12 +26,12 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.EncoderRight.SetReverseDirection(false);
 
 	// Practice Bot
-	DriveBase.EncoderLeft.SetDistancePerPulse(167.0 / 16745.0 * 4.0);
-	DriveBase.EncoderRight.SetDistancePerPulse(-167.0 / 16745.0 * 4.0);
+	//DriveBase.EncoderLeft.SetDistancePerPulse(167.0 / 16745.0 * 4.0);
+	//DriveBase.EncoderRight.SetDistancePerPulse(-167.0 / 16745.0 * 4.0);
 
 	// Comp Bot
-	//DriveBase.EncoderLeft.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
-	//DriveBase.EncoderRight.SetDistancePerPulse(48.0/ -1523.0 * 4.0);
+	DriveBase.EncoderLeft.SetDistancePerPulse(48.0 / -1523.0 * 4.0);
+	DriveBase.EncoderRight.SetDistancePerPulse(48.0 / -1523.0 * 4.0);
 
 	// Set Default Gear
 	DriveBase.SolenoidShifter.Set(false);
@@ -64,6 +64,12 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoFinisher.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
 	frc::SmartDashboard::PutData("Auto Finisher", &DS.chooseAutoFinisher);
 
+	// Auto Game Data Overide
+	DS.chooseAutoGameData.AddDefault(DS.sGameDataOff, DS.sGameDataOff);
+	DS.chooseAutoGameData.AddObject(DS.sGameDataLefts, DS.sGameDataLefts);
+	DS.chooseAutoGameData.AddObject(DS.sGameDataRights, DS.sGameDataRights);
+	frc::SmartDashboard::PutData("Auto Game Data", & DS.chooseAutoGameData);
+
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
 	DS.chooseAutoDelay.AddObject(DS.sAutoDelay3, DS.sAutoDelay3);
@@ -81,22 +87,22 @@ RJ_RobotMap::RJ_RobotMap() {
 	// Is the pot enabled
 	DS.choosePotDisabled.AddDefault(DS.EnabledPOT, DS.EnabledPOT);
 	DS.choosePotDisabled.AddObject(DS.DisabledPOT, DS.DisabledPOT);
-	frc::SmartDashboard::PutData("POT Enabled?", & DS.choosePotDisabled);
+	frc::SmartDashboard::PutData("POT Enabled?", &DS.choosePotDisabled);
 
 	//
 	// Vision System
 	//
 	/*
-	Vision.cam0.SetFPS(30);
-	Vision.cam0.SetResolution(160, 120);
-	Vision.cam0.SetExposureAuto();
-	Vision.cam0.SetWhiteBalanceAuto();
+	 Vision.cam0.SetFPS(30);
+	 Vision.cam0.SetResolution(160, 120);
+	 Vision.cam0.SetExposureAuto();
+	 Vision.cam0.SetWhiteBalanceAuto();
 
-	Vision.cam1.SetFPS(30);
-	Vision.cam1.SetResolution(160, 120);
-	Vision.cam1.SetExposureAuto();
-	Vision.cam1.SetWhiteBalanceAuto();
-	*/
+	 Vision.cam1.SetFPS(30);
+	 Vision.cam1.SetResolution(160, 120);
+	 Vision.cam1.SetExposureAuto();
+	 Vision.cam1.SetWhiteBalanceAuto();
+	 */
 
 }
 

@@ -17,6 +17,11 @@ public:
 		XboxController OperatorStick { 1 };
 		Joystick LaunchPad { 4 };
 
+		SendableChooser<llvm::StringRef> chooseAutoGameData;
+		const llvm::StringRef sGameDataOff = "Off";
+		const llvm::StringRef sGameDataLefts = "LLL";
+		const llvm::StringRef sGameDataRights = "RRR";
+
 		SendableChooser<llvm::StringRef> chooseAutoDelay;
 		const llvm::StringRef sAutoDelayOff = "No_Delay";
 		const llvm::StringRef sAutoDelay3 = "3 Seconds";
@@ -132,17 +137,17 @@ public:
 
 	// Drive Base
 	/*
-	struct structVision {
-		cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
-		cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
+	 struct structVision {
+	 cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
+	 cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
 
-		cs::VideoSink server = CameraServer::GetInstance()->GetServer();
+	 cs::VideoSink server = CameraServer::GetInstance()->GetServer();
 
-		cs::CvSink sink0;
-		cs::CvSink sink1;
-	};
-	structVision Vision;
-	*/
+	 cs::CvSink sink0;
+	 cs::CvSink sink1;
+	 };
+	 structVision Vision;
+	 */
 
 	// Default Constructor
 	RJ_RobotMap();

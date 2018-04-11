@@ -40,7 +40,7 @@ class Robot: public frc::TimedRobot {
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
-	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher, PotDisabled;
+	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher, PotDisabled, GameDataOveride;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
@@ -72,6 +72,7 @@ class Robot: public frc::TimedRobot {
 		autoPosition = IO.DS.chooseAutoPosStart.GetSelected();
 		autoFinisher = IO.DS.chooseAutoFinisher.GetSelected();
 		PotDisabled = IO.DS.choosePotDisabled.GetSelected();
+		GameDataOveride = IO.DS.chooseAutoGameData.GetSelected();
 
 		// Get the game-specific message (ex: RLL)
 		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
@@ -125,6 +126,7 @@ class Robot: public frc::TimedRobot {
 		// Tele-Auto-Test
 		// Run auto in teleop for testing during practice matches
 		if (IO.DS.DriveStick.GetAButton()) {
+			autoGameData = GameDataOveride;
 			// Run Auto Init
 			if (!bTeleAutoMode) {
 				AutonomousInit();
@@ -624,6 +626,7 @@ class Robot: public frc::TimedRobot {
 			elevatorPosition(800);
 			wristPosition(-80); //-25
 
+			//18
 			if (autoForward(22)) {
 				autoNextState();
 			}
@@ -652,6 +655,10 @@ class Robot: public frc::TimedRobot {
 			if (autoForward(24) & wristPosition(-35) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
+			if (  AutonTimer.Get() > 4.0 ) {
+				autoNextState();
+			}
+
 			break;
 
 		case 6:
@@ -1211,6 +1218,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
 			wristPosition(-25);
 
+			//252
 			if (autoForward(250, 1.0, 0.2)) {
 				autoNextState();
 			}
