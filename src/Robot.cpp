@@ -787,7 +787,7 @@ class Robot: public frc::TimedRobot {
 		case 45:
 			IO.DriveBase.ClawIntake.Set(0.2);
 
-			if (autoTurn(0) & elevatorPosition(6500)) {
+			if (autoTurn(0) & elevatorPosition(4500)) {
 				autoNextState();
 			}
 			break;
