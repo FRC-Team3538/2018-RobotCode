@@ -41,7 +41,8 @@ class Robot: public frc::TimedRobot {
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
-	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher, PotDisabled, GameDataOveride;
+	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher, PotDisabled,
+			GameDataOveride;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
@@ -323,24 +324,24 @@ class Robot: public frc::TimedRobot {
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
 		//if (PotDisabled == IO.DS.DisabledPOT) {
-			IO.DriveBase.Wrist1.Set(wristStick);
-/*
-		} else {
+		IO.DriveBase.Wrist1.Set(wristStick);
+		/*
+		 } else {
 
-			if (fabs(wristStick) > Control_Deadband) {
-				/// Manual Control
-				wristSpeed(wristStick);
-				WristTarget = IO.DriveBase.WristPot.Get();
+		 if (fabs(wristStick) > Control_Deadband) {
+		 /// Manual Control
+		 wristSpeed(wristStick);
+		 WristTarget = IO.DriveBase.WristPot.Get();
 
-			} else if (!SensorOverride) {
-				// Hold Current Position
-				wristPosition(WristTarget);
+		 } else if (!SensorOverride) {
+		 // Hold Current Position
+		 wristPosition(WristTarget);
 
-			} else {
-				elevatorSpeed(0.0);
-			}
-		}
-*/
+		 } else {
+		 elevatorSpeed(0.0);
+		 }
+		 }
+		 */
 		// Wrist Presets
 		if (IO.DS.OperatorStick.GetAButton()) {
 			wristPosition(0);
@@ -661,7 +662,7 @@ class Robot: public frc::TimedRobot {
 			if (autoForward(24) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
-			if (  AutonTimer.Get() > 4.0 ) {
+			if (AutonTimer.Get() > 4.0) {
 				autoNextState();
 			}
 
@@ -793,10 +794,10 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 46:
-			if (autoForward(56) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+			if (autoForward(68) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
-			if (  AutonTimer.Get() > 4.0 ) {
+			if (AutonTimer.Get() > 4.0) {
 				autoNextState();
 			}
 			break;
@@ -1286,14 +1287,15 @@ class Robot: public frc::TimedRobot {
 			ElevPosTarget = 800;
 			wristPosition(120);
 
-			if (autoTurn(32 * rot) && elevatorPosition(ElevPosTarget)) {
+			//32
+			if (autoTurn(30 * rot) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
 
 		case 21:
 			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 
 			if (autoForward(-55) & wristNoPot(3.0, 0.8)) {
 				autoNextState();
@@ -1312,6 +1314,15 @@ class Robot: public frc::TimedRobot {
 
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(0.7);
+
+			if (AutonTimer.Get() > 1) {
+				autoNextState();
+			}
+
+			break;
+
+		case 24:
+			IO.DriveBase.ClawIntake.Set(0.7);
 			wristPosition(45);
 
 			if (autoForward(60, 0.5, 0.2)) {
@@ -1319,16 +1330,17 @@ class Robot: public frc::TimedRobot {
 			}
 			break;
 
-		case 24:
+		case 25:
 			ElevPosTarget = 15000;
-			if (autoTurn(-33 * rot) & elevatorPosition(ElevPosTarget) & wristPosition(-45) & wristNoPot(2.5, -0.67)) {
+			//33
+			if (autoTurn(-37 * rot) & elevatorPosition(ElevPosTarget) & wristPosition(-60) & wristNoPot(2.5, -0.67)) {
 				autoNextState();
 			}
 			break;
 
-		case 25:
-			// Hold target heading
-			autoTurn(-33 * rot);
+		case 26:
+			// Hold target heading 33
+			autoTurn(-37 * rot);
 
 			// Eject!
 			//IO.DriveBase.ClawIntake.Set(-1.0);
@@ -1343,13 +1355,13 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 26:
+		case 27:
 			if (autoForward(16, 0.3, 0.2)) {
 				autoNextState();
 			}
 			break;
 
-		case 27:
+		case 28:
 			//eject cube
 			IO.DriveBase.ClawIntake.Set(-0.67);
 
@@ -1447,7 +1459,7 @@ class Robot: public frc::TimedRobot {
 
 		case 9:
 			if (autoFinisher == IO.DS.sAuto2Cube) {
-				autoModeState = 20;
+				autoModeState = 0;
 			} else {
 				autoModeState = 0; // We are done.
 			}
@@ -1571,12 +1583,21 @@ class Robot: public frc::TimedRobot {
 		case 3:
 			IO.DriveBase.SolenoidShifter.Set(true); // Low Gear
 
-			if (timedDrive(0.6, 0.5, 0.5)) {
+			if (timedDrive(0.6, 0.65, 0.65)) {
 				autoNextState();
 			}
 			break;
 
 		case 4:
+			wristPosition(-60);
+
+			if (AutonTimer.Get() > 0.5) {
+				autoNextState();
+			}
+			break;
+
+		case 5:
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(-0.65);
 
 			if (timedDrive(0.75, 0.2, 0.2)) {
