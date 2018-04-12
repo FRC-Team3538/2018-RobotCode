@@ -157,7 +157,7 @@ class Robot: public frc::TimedRobot {
 		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 
 		// Power Brake
-		bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
+		//bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
 		//Swap below deadband
 		// Bad joystick compensation. :)
@@ -208,12 +208,15 @@ class Robot: public frc::TimedRobot {
 			gearState = true; // Low
 
 		// Power Brake
+		/*
 		if (bPowerBrake) {
 			SpeedLinear *= 0.4;
 			IO.DriveBase.SolenoidShifter.Set(true);
 		} else {
+		*/
 			IO.DriveBase.SolenoidShifter.Set(gearState);
-		}
+		//}
+
 
 		// Moving Average Filter (Previous 5 commands are averaged together.)
 
@@ -362,6 +365,10 @@ class Robot: public frc::TimedRobot {
 		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
 		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
 
+		// Ricky request
+		double DrRightTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+		double DrLeftTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+
 		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
 		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.7;
 
@@ -382,6 +389,26 @@ class Robot: public frc::TimedRobot {
 		} else if (OpButtonB) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(1.0); // Intake
+
+		}  else if ( DrLeftTrigger > 0.25) {
+			// Drop it like it's hot
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+			IO.DriveBase.ClawIntake.Set(0.0);
+
+		}  else if ( DrRightTrigger > 0.125) {
+			// Allow Driver to shoot as well
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+
+			// 25% power for 75% controller input
+			double driveEjection = deadband(-DrRightTrigger, Control_Deadband);
+			if(abs(driveEjection) < 0.75) {
+				driveEjection *= 0.25/0.75;
+			} else {
+				driveEjection *= 0.25 + (driveEjection-0.75)*0.75/0.25;
+			}
+
+
+			IO.DriveBase.ClawIntake.Set(driveEjection * 0.75); // Eject
 
 		} else {
 			// Default Hold Cube
@@ -659,7 +686,7 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			//24 inches
-			if (autoForward(24) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+			if (autoForward(24+4) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
 			if (AutonTimer.Get() > 4.0) {
@@ -1425,20 +1452,20 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			//32 inches forward
-			if (autoForward(28, 0.5, 0) & elevatorPosition(15500)) {
+			if (autoForward(32, 0.5, 0) & elevatorPosition(15500)) {
 				autoNextState();
 			}
 			break;
 
 		case 6:
-			if (wristPosition(-55) & wristNoPot(1.0, -0.65)) {
+			if (wristPosition(-90) & wristNoPot(1.0, -0.65)) {
 				autoNextState();
 			}
 			break;
 
 		case 7:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.5);
+			IO.DriveBase.ClawIntake.Set(-0.4);
 
 			if (AutonTimer.Get() > 0.85) {
 				IO.DriveBase.ClawIntake.Set(0.0);
