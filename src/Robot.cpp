@@ -771,7 +771,7 @@ class Robot: public frc::TimedRobot {
 
 		case 43:
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
-			if (timedDrive(1.5, 0.25, 0.25)) {
+			if (timedDrive(1.25, 0.25, 0.25)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 				autoNextState();
@@ -793,14 +793,15 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 46:
-			if (autoForward(56)) {
+			if (autoForward(56) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+				autoNextState();
+			}
+			if (  AutonTimer.Get() > 4.0 ) {
 				autoNextState();
 			}
 			break;
 
 		case 47:
-			wristPosition(-75);
-
 			if (true) {
 				autoNextState();
 			}
@@ -1556,7 +1557,7 @@ class Robot: public frc::TimedRobot {
 		case 1:
 			IO.DriveBase.SolenoidShifter.Set(false); //High Gear
 
-			if (autoForward(133)) {
+			if (autoForward(145)) {
 				autoNextState();
 			}
 			break;
