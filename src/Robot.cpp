@@ -327,7 +327,7 @@ class Robot: public frc::TimedRobot {
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
 		//if (PotDisabled == IO.DS.DisabledPOT) {
-		IO.DriveBase.Wrist1.Set(wristStick);
+		//IO.DriveBase.Wrist1.Set(wristStick);
 		/*
 		 } else {
 
@@ -349,11 +349,14 @@ class Robot: public frc::TimedRobot {
 		if (IO.DS.OperatorStick.GetAButton()) {
 			wristPosition(0);
 		}
-		if (IO.DS.OperatorStick.GetXButton()) {
+		else if (IO.DS.OperatorStick.GetXButton()) {
 			wristPosition(45);
 		}
-		if (IO.DS.OperatorStick.GetYButton()) {
+		else if (IO.DS.OperatorStick.GetYButton()) {
 			wristPosition(-45);
+		}
+		else {
+			IO.DriveBase.Wrist1.Set(wristStick);
 		}
 
 		//
@@ -400,11 +403,13 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
 			// 25% power for 75% controller input
+			double d1 = 0.25;
+			double d2 = 0.75;
 			double driveEjection = deadband(-DrRightTrigger, Control_Deadband);
-			if(abs(driveEjection) < 0.75) {
-				driveEjection *= 0.25/0.75;
+			if(abs(driveEjection) < d2) {
+				driveEjection = driveEjection * d1/d2;
 			} else {
-				driveEjection *= 0.25 + (driveEjection-0.75)*0.75/0.25;
+				driveEjection = d1 + (driveEjection-d2)*d2/d1;
 			}
 
 
