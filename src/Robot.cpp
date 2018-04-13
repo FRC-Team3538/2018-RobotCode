@@ -38,6 +38,7 @@ class Robot: public frc::TimedRobot {
 	// Teleop Elevator Position
 	double WristTarget = 0.0;
 	double m_WristOffset = 13;
+	// This number needs to be changed until the wrist reads 0 at top dead center + is toward the front of the robot
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
@@ -402,8 +403,8 @@ class Robot: public frc::TimedRobot {
 			// Allow Driver to shoot as well
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
-			// 25% power for 75% controller input
-			double d1 = 0.25;
+			// 35% power for 75% controller input
+			double d1 = 0.35;
 			double d2 = 0.75;
 			double driveEjection = deadband(-DrRightTrigger, Control_Deadband);
 			if(abs(driveEjection) < d2) {
@@ -788,7 +789,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 41:
-			if (autoTurn(-45 * rot) & elevatorPosition(800) & wristPosition(-110) & wristNoPot(1.25, -0.65)) {
+			//-110
+			if (autoTurn(-45 * rot) & elevatorPosition(1000) & wristPosition(-90) & wristNoPot(1.25, -0.65)) {
 				autoNextState();
 			}
 			break;
@@ -1319,13 +1321,17 @@ class Robot: public frc::TimedRobot {
 			ElevPosTarget = 800;
 			wristPosition(120);
 
-			//32
-			if (autoTurn(30 * rot) && elevatorPosition(ElevPosTarget)) {
+			//32 - Was the angle before MSC
+			// This controls how far we turn toward the second cube
+			// Turns left to point the back (gearbox side of the robot) at the cube
+			if (autoTurn(38 * rot) && elevatorPosition(ElevPosTarget)) {
 				autoNextState();
 			}
 			break;
 
 		case 21:
+			// Turns intake on (wheels spinning, clamp compliant
+			// Moves the robot 50 inches backwards into the cube
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 
@@ -1335,6 +1341,9 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 22:
+			// Switches robot into low gear
+			// Time drives the cube to ensure seating
+			// Switches back to high
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
 			if (timedDrive(1.0, -0.3, -0.3)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
@@ -1343,26 +1352,31 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 23:
-
+			// Clamps claw down, hopefully on cube
+			// Turns intake down to 0.7 so we are still pulling the cube in
+			// Waits 0.5 seconds for all that stuff to happen.
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(0.7);
 
-			if (AutonTimer.Get() > 1) {
+			if (AutonTimer.Get() > 0.5) {
 				autoNextState();
 			}
 
 			break;
 
 		case 24:
+			// Continue running intake slowly, drive forward 60 inches, and flip the wrist to 45 degrees.
 			IO.DriveBase.ClawIntake.Set(0.7);
 			wristPosition(45);
 
-			if (autoForward(60, 0.5, 0.2)) {
+			if (autoForward(60, 0.6, 0.2)) {
 				autoNextState();
 			}
 			break;
 
 		case 25:
+			// Raise elevator, turn robot to the right 37 degrees
+			// The degrees should roughly match those found in step 20
 			ElevPosTarget = 15000;
 			//33
 			if (autoTurn(-37 * rot) & elevatorPosition(ElevPosTarget) & wristPosition(-60) & wristNoPot(2.5, -0.67)) {
@@ -1371,12 +1385,15 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 26:
+			// Maintains the turning degree
+
 			// Hold target heading 33
 			autoTurn(-37 * rot);
 
 			// Eject!
 			//IO.DriveBase.ClawIntake.Set(-1.0);
 
+			//lower to like 0.3
 			if (AutonTimer.Get() > 1.0) {
 				//IO.DriveBase.ClawIntake.Set(0.7);
 				autoNextState();
@@ -1387,7 +1404,7 @@ class Robot: public frc::TimedRobot {
 
 			break;
 
-		case 27:
+		case 27: // drive forward toward the scale
 			if (autoForward(16, 0.3, 0.2)) {
 				autoNextState();
 			}
@@ -1463,7 +1480,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			if (wristPosition(-90) & wristNoPot(1.0, -0.65)) {
+			//90 but hit scale
+			if (wristPosition(-70) & wristNoPot(1.0, -0.65)) {
 				autoNextState();
 			}
 			break;
