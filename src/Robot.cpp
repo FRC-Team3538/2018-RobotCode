@@ -37,7 +37,12 @@ class Robot: public frc::TimedRobot {
 
 	// Teleop Elevator Position
 	double WristTarget = 0.0;
-	double m_WristOffset = 13 - 23;
+
+	//Sates config
+	//double m_WristOffset = 13 - 23;
+	//practic robot
+	double m_WristOffset = 94;
+
 	// This number needs to be changed until the wrist reads 0 at top dead center + is toward the front of the robot
 
 	//Autonomous Variables
@@ -326,9 +331,9 @@ class Robot: public frc::TimedRobot {
 		wristStick = deadband(wristStick, Control_Deadband);
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
-		//if (PotDisabled == IO.DS.DisabledPOT) {
-		//IO.DriveBase.Wrist1.Set(wristStick);
-		/*
+		if (PotDisabled == IO.DS.DisabledPOT) {
+		IO.DriveBase.Wrist1.Set(wristStick);
+
 		 } else {
 
 		 if (fabs(wristStick) > Control_Deadband) {
@@ -344,7 +349,7 @@ class Robot: public frc::TimedRobot {
 		 elevatorSpeed(0.0);
 		 }
 		 }
-		 */
+
 		// Wrist Presets
 		if (IO.DS.OperatorStick.GetAButton()) {
 			wristPosition(0);
@@ -1297,7 +1302,7 @@ class Robot: public frc::TimedRobot {
 		case 6:
 
 			if (AutonTimer.Get() > 0.75) {
-				if (autoForward(-14, 0.5, 0.1) && wristPosition(0.0)) {
+				if (autoForward(-26, 0.5, 0.1) && wristPosition(0.0)) {
 					ElevPosTarget = 800;
 					autoNextState();
 				}
@@ -1860,7 +1865,7 @@ class Robot: public frc::TimedRobot {
 		WristTarget = input;
 
 		// Get Current Encoder Value
-		double wristAngle = IO.DriveBase.WristPot.Get() + m_WristOffset;
+		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset)*-3.6;
 
 		// Motor Command Calculation
 		double error = input - wristAngle;
@@ -2283,7 +2288,7 @@ class Robot: public frc::TimedRobot {
 		//Wrist Pot
 		SmartDashboard::PutString("POT State", IO.DS.choosePotDisabled.GetSelected());
 		SmartDashboard::PutNumber("Wrist AI", IO.DriveBase.WristAI.GetVoltage());
-		SmartDashboard::PutNumber("Wrist Pot", IO.DriveBase.WristPot.Get() + m_WristOffset);
+		SmartDashboard::PutNumber("Wrist Pot", (IO.DriveBase.WristPot.Get() + m_WristOffset)*-3.6);
 
 		// Sensor Override
 		SmartDashboard::PutBoolean("Sensor Override", SensorOverride);
