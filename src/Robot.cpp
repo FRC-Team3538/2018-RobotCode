@@ -40,8 +40,10 @@ class Robot: public frc::TimedRobot {
 
 	//Sates config
 	//double m_WristOffset = 13 - 23;
+
 	//practic robot
 	double m_WristOffset = 94;
+	double WristScale = -3.6;
 
 	// This number needs to be changed until the wrist reads 0 at top dead center + is toward the front of the robot
 
@@ -1865,7 +1867,7 @@ class Robot: public frc::TimedRobot {
 		WristTarget = input;
 
 		// Get Current Encoder Value
-		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset)*-3.6;
+		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset)* WristScale;
 
 		// Motor Command Calculation
 		double error = input - wristAngle;
@@ -2288,7 +2290,7 @@ class Robot: public frc::TimedRobot {
 		//Wrist Pot
 		SmartDashboard::PutString("POT State", IO.DS.choosePotDisabled.GetSelected());
 		SmartDashboard::PutNumber("Wrist AI", IO.DriveBase.WristAI.GetVoltage());
-		SmartDashboard::PutNumber("Wrist Pot", (IO.DriveBase.WristPot.Get() + m_WristOffset)*-3.6);
+		SmartDashboard::PutNumber("Wrist Pot", (IO.DriveBase.WristPot.Get() + m_WristOffset)* WristScale);
 
 		// Sensor Override
 		SmartDashboard::PutBoolean("Sensor Override", SensorOverride);
