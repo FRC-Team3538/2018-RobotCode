@@ -1,4 +1,4 @@
-//// DETROIT-CHAMPS-B
+//States Code 2018
 
 #include <iostream>
 #include <memory>
@@ -49,7 +49,7 @@ class Robot: public frc::TimedRobot {
 
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
-	std::string autoGameData, autoDelay, autoMode, autoEncoder, autoPosition, autoFinisher, PotDisabled,
+	std::string autoGameData, autoDelay, autoTarget, autoEncoder, autoPosition, autoFinisher, PotDisabled,
 			GameDataOveride;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
@@ -77,8 +77,10 @@ class Robot: public frc::TimedRobot {
 
 		// Get SmartDash Choosers
 		autoDelay = IO.DS.chooseAutoDelay.GetSelected();
-		autoMode = IO.DS.chooseAutoMode.GetSelected();
+		autoTarget = IO.DS.chooseAutoProgram.GetSelected();
 		autoEncoder = IO.DS.chooseAutoEncoder.GetSelected();
+		autoPosition = IO.DS.chooseAutoPosStart.GetSelected();
+		autoFinisher = IO.DS.chooseAutoFinisher.GetSelected();
 		PotDisabled = IO.DS.choosePotDisabled.GetSelected();
 		GameDataOveride = IO.DS.chooseAutoGameData.GetSelected();
 
@@ -318,32 +320,11 @@ class Robot: public frc::TimedRobot {
 		}
 
 		// Controller Rumble if the elevator motor current is high
-	/*	double elevCurrent_m1 = pdp->GetCurrent(8);
+		double elevCurrent_m1 = pdp->GetCurrent(8);
 		double elevCurrent_m2 = pdp->GetCurrent(9);
 
 		IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, elevCurrent_m1 > 30.0);
 		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, elevCurrent_m2 > 30.0);
-*/
-
-		double wristangle = IO.DriveBase.WristPot.Get();
-
-		if (wristangle > 10){
-			IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0.5);
-		}
-		else {
-
-			IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0);
-		}
-
-
-		if (wristangle < -10){
-			IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0.5);
-		}
-		else {
-			IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0);
-		}
-
-
 
 		//
 		// Wrist control
@@ -514,77 +495,131 @@ class Robot: public frc::TimedRobot {
 		//wristPosition();
 
 		// Cross the Line Auto
-		if (autoMode == IO.DS.sAutoLine) {
+		if (autoTarget == IO.DS.AutoLine) {
 			autoLine();
 		}
-		// 2 Cube Switch, Center Start
-		if (autoMode == IO.DS.sAutoA){
-			if (autoGameData[0] == 'L'){
-				autoCenter(false,true);
-			}
-			if (autoGameData[0]=='R'){
-				autoCenter(true,true);
-			}
-		}
-		// 1 Cube Scale, Left Start
-		if (autoMode == IO.DS.sAutoB){
-			if (autoGameData[1] == 'L')
-				autoScaleNearCompat(false);
 
-			if (autoGameData[1] == 'R')
-				autoScaleFar(false,false);
-		}
-		// 2 Cube Near 1 Cube Far, Left Start
-		if (autoMode == IO.DS.sAutoC){
-			if (autoGameData[1] == 'L'){
-				autoScaleNear(false,true,false);
+		// Center Start
+		if (autoPosition == IO.DS.sAutoCenter) {
+
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
+
+				if (autoGameData[0] == 'L')
+					autoCenter(false);
+
+				if (autoGameData[0] == 'R')
+					autoCenter(true);
 			}
-			if (autoGameData[1] == 'R'){
-				autoScaleFar(false,false);
-			}
+
 		}
 
-		// 1 Cube Scale, 1 Cube Switch, Finish in center, Left Start
-		if (autoMode == IO.DS.sAutoD){
-			if (autoGameData[1] == 'L'){
-				if (autoGameData[0] == 'L'){
-					autoScaleNear(false,false,true);
-				}
-				if (autoGameData[0] == 'R'){
-					autoScaleNear(false,true,false);
-				}
-			}
-			if (autoGameData[1] == 'R'){
-				if (autoGameData[0]=='L'){
+		// Left Start
+		if (autoPosition == IO.DS.sAutoLeft) {
+
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
+
+				if (autoGameData[1] == 'L')
 					autoSwitchNearSide(false);
-				}
-				if (autoGameData[0] == 'R'){
-					autoLineNullZone(false);
+
+				if (autoGameData[1] == 'R')
+					autoSwitchBackShoot(false);
+			}
+
+			// Scale
+			if (autoTarget == IO.DS.AutoScale) {
+
+				if (autoGameData[1] == 'L')
+					autoScaleNear(false);
+
+				if (autoGameData[1] == 'R')
+					autoScaleFar(false);
+			}
+
+			// Our side
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'L') {
+					autoScaleNearCompat(false);
+
+				} else if (autoGameData[0] == 'L') {
+					autoSwitchNearSide(false);
+
+				} else if (autoGameData[0] == 'R') {
+					autoLine();
+
 				}
 			}
 
+			// Near Scale, Near Switch, Far Scale
+			if (autoTarget == IO.DS.AutoNscNswFsc) {
 
+				if (autoGameData[1] == 'L') {
+					autoScaleNear(false);
 
+				} else if (autoGameData[0] == 'L') {
+					autoSwitchNearSide(false);
+
+				} else if (autoGameData[0] == 'R') {
+					autoScaleFar(false);
+
+				}
+			}
 		}
 
-		// 1 Cube Scale, 1 Cube Switch, Finish in center, Right Start
-		if (autoMode == IO.DS.sAutoE){
-			if (autoGameData[1] == 'L'){
-							if (autoGameData[0] == 'L'){
-								autoScaleNear(true,false,true);
-							}
-							if (autoGameData[0] == 'R'){
-								autoScaleNear(true,true,false);
-							}
-						}
-						if (autoGameData[1] == 'R'){
-							if (autoGameData[0]=='L'){
-								autoSwitchNearSide(true);
-							}
-							if (autoGameData[0] == 'R'){
-								autoLineNullZone(true);
-							}
-						}
+		// Right Start
+		if (autoPosition == IO.DS.sAutoRight) {
+
+			// Switch
+			if (autoTarget == IO.DS.AutoSwitch) {
+
+				if (autoGameData[1] == 'R')
+					autoSwitchNearSide(true);
+
+				if (autoGameData[1] == 'L')
+					autoSwitchBackShoot(true);
+			}
+
+			// Scale
+			if (autoTarget == IO.DS.AutoScale) {
+
+				if (autoGameData[1] == 'R')
+					autoScaleNear(true);
+
+				if (autoGameData[1] == 'L')
+					autoScaleFar(true);
+			}
+
+			// Our side
+			if (autoTarget == IO.DS.AutoNearSide) {
+
+				if (autoGameData[1] == 'R') {
+					autoScaleNearCompat(true);
+
+				} else if (autoGameData[0] == 'R') {
+					autoSwitchNearSide(true);
+
+				} else if (autoGameData[0] == 'L') {
+					autoLine();
+
+				}
+			}
+
+			// Near Scale, Near Switch, Far Scale
+			if (autoTarget == IO.DS.AutoNscNswFsc) {
+
+				if (autoGameData[1] == 'R') {
+					autoScaleNear(true);
+
+				} else if (autoGameData[0] == 'R') {
+					autoSwitchNearSide(true);
+
+				} else if (autoGameData[0] == 'L') {
+					autoScaleFar(true);
+
+				}
+			}
 		}
 
 	}
@@ -612,40 +647,7 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoLineNullZone(bool isRightSide) {
-
-		double rot = 1;
-		if (isRightSide) {
-			rot = -1;
-		}
-
-
-			switch (autoModeState) {
-			case 1:
-				if (autoForward(230,1,0.2))
-					autoNextState();
-				break;
-			case 2:
-				if (autoTurn(-90*rot))
-					autoNextState();
-				break;
-			case 3:
-				if (autoForward(115,1,0.2))
-
-			default:
-				stopMotors();
-			}
-
-			return;
-		}
-
-
-
-
-
-
-
-	void autoCenter(bool isGoRight, bool autoCenter2Cube) {
+	void autoCenter(bool isGoRight) {
 
 		// Mirror path if starting on right
 		double rot = 1;
@@ -724,14 +726,15 @@ class Robot: public frc::TimedRobot {
 
 		case 8:
 
-			if (autoCenter2Cube == false) {
+			if (autoFinisher == IO.DS.sAutoWallHug) {
 				autoNextState();
-				autoModeState = 0;
-			} else if (autoCenter2Cube == true) {
+				autoModeState = 20;
+			} else if (autoFinisher == IO.DS.sAuto2Cube) {
 				autoNextState();
 				autoModeState = 40;
 			} else {
-
+				autoNextState();
+				autoModeState = 0;
 			}
 
 			break;
@@ -1232,7 +1235,7 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoScaleNear(bool isStartRightPos, bool autoScaleNear2Cube, bool autoScaleNearSwitch) {
+	void autoScaleNear(bool isStartRightPos) {
 
 		// Mirror rotations for right side start
 		double rot = 1;
@@ -1303,7 +1306,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 7:
-			if (autoScaleNear2Cube == true or autoScaleNearSwitch) {
+			if (autoFinisher == IO.DS.sAuto2Cube) {
 				autoModeState = 20;
 			} else {
 				autoModeState = 0; // We are done.
@@ -1349,18 +1352,12 @@ class Robot: public frc::TimedRobot {
 		case 23:
 			// Clamps claw down, hopefully on cube
 			// Turns intake down to 0.7 so we are still pulling the cube in
-			// Waits 0.65 seconds for all that stuff to happen.
+			// Waits 0.5 seconds for all that stuff to happen.
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(0.7);
 
 			if (AutonTimer.Get() > 0.65) {
-				if (autoScaleNearSwitch == false){
 				autoNextState();
-				}
-
-				if (autoScaleNearSwitch == true){
-					autoModeState = 40;
-				}
 			}
 
 			break;
@@ -1419,45 +1416,6 @@ class Robot: public frc::TimedRobot {
 			}
 			break;
 
-		case 40:
-			// Begin switch score sequence
-			// Back off the switch after grabbing cube
-		IO.DriveBase.ClawIntake.Set(0.7);
-
-		if (autoForward(12, 0.6, 0.1)) {
-			autoNextState();
-		}
-		break;
-
-		case 41:
-			// Lift the elevator and turn to the left to prepare to score in switch
-			elevatorPosition(5000);
-			if (autoTurn(-45 * rot)){
-				autoNextState();
-			}
-		break;
-
-		case 42:
-			if (autoForward(6, 0.6, 0.1)){
-				autoNextState();
-			}
-		break;
-
-		case 43:
-			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			// keep pushing!
-			if (timedDrive(0.75, 0.2, 0.2)) {
-			IO.DriveBase.ClawIntake.Set(0.0);
-			autoNextState();
-			// Display auton Time
-			SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
-			}
-
-		break;
-
-
 		default:
 			stopMotors();
 
@@ -1466,7 +1424,7 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
-	void autoScaleFar(bool isRightSide, bool autoScaleFar2Cube) {
+	void autoScaleFar(bool isRightSide) {
 
 		// Mirror rotations for right side start
 		double rot = 1;
