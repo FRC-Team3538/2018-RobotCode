@@ -653,7 +653,7 @@ class Robot: public frc::TimedRobot {
 		double CAoffset = 75 + 6;
 		if (isGoRight) {
 			rot = -1;
-			CAoffset = 65;
+			CAoffset = 65+6;
 		}
 
 		// Closed Loop control of Elevator & Wrist
@@ -668,7 +668,7 @@ class Robot: public frc::TimedRobot {
 			wristPosition(-25);
 
 			//18
-			if (autoForward(22)) {
+			if (autoForward(22+6)) {
 				autoNextState();
 			}
 			break;
@@ -693,11 +693,22 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			//24 inches
-			if (autoForward(28) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+			if (!isGoRight){
+			if (autoForward(28-10-4) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
-			if (AutonTimer.Get() > 4.0) {
+			if (AutonTimer.Get() > 2.0) {
 				autoNextState();
+			}
+
+			}
+			else{
+			if (autoForward(28-10) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+							autoNextState();
+						}
+						if (AutonTimer.Get() > 2.0) {
+							autoNextState();
+			}
 			}
 
 			break;
@@ -790,23 +801,39 @@ class Robot: public frc::TimedRobot {
 
 		case 41:
 			//-110
-			if (autoTurn(-45 * rot) & elevatorPosition(800) & wristPosition(-110) & wristNoPot(1.25, -0.65)) {
-				autoNextState();
+			if (!isGoRight){
+				if (autoTurn(-45 * rot) & elevatorPosition(800) & wristPosition(-110) & wristNoPot(1.25, -0.65)) {
+					autoNextState();
+				}
 			}
+			else{
+				if (autoTurn(-45 * rot) & elevatorPosition(800) & wristPosition(-110) & wristNoPot(1.25, -0.65)) {
+					autoNextState();
+
+			}
+			}
+
+
 			break;
 
 		case 42:
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-
-			if (autoForward(38)) {
-				autoNextState();
+			if (!isGoRight){
+				if (autoForward(38+3)) {
+					autoNextState();
+				}
+			}
+			else{
+				if (autoForward(38+3)) {
+					autoNextState();
+				}
 			}
 			break;
 
 		case 43:
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
-			if (timedDrive(1.25, 0.25, 0.25)) {
+			if (timedDrive(1.25-.5, 0.25, 0.25)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 				autoNextState();
@@ -814,8 +841,17 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 44:
+
+			if(!isGoRight){
 			if (autoForward(-60) & wristPosition(-45) & wristNoPot(0.6, 0.75)) {
 				autoNextState();
+			}
+			}
+			else {
+				if (autoForward(-60+12) & wristPosition(-45) & wristNoPot(0.6, 0.75)) {
+					autoNextState();
+				}
+
 			}
 			break;
 
@@ -828,7 +864,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 46:
-			if (autoForward(68) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+			if (autoForward(68-10+2) & wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
 			if (AutonTimer.Get() > 4.0) {
@@ -1052,7 +1088,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 
-			if (autoForward(-50) & wristNoPot(3.0, 0.8)) {
+			if (autoForward(-57) & wristNoPot(3.0, 0.8)) {
 				autoNextState();
 			}
 			break;
@@ -1061,11 +1097,11 @@ class Robot: public frc::TimedRobot {
 			// Switches robot into low gear
 			// Time drives the cube to ensure seating
 			// Switches back to high
-			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
-			if (timedDrive(1.0, -0.3, -0.3)) {
-				IO.DriveBase.SolenoidShifter.Set(false); // High gear
+			//IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
+			//if (timedDrive(1.0, -0.3, -0.3)) {
+				//IO.DriveBase.SolenoidShifter.Set(false); // High gear
 				autoNextState();
-			}
+			//}
 			break;
 
 		case 23:
@@ -1075,7 +1111,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(0.7);
 
-			if (AutonTimer.Get() > 0.65) {
+			if (timedDrive(0.5,-0.3,-0.3)) {
 				if (autoScaleNearSwitch == false){
 				autoNextState();
 				}
