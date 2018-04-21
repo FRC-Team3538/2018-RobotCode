@@ -44,13 +44,14 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 
 	// Auto Program Chooser
-	DS.chooseAutoMode.AddDefault(DS.sAutoNone, DS.sAutoNone);
+	DS.chooseAutoMode.AddDefault(DS.sAutoA, DS.sAutoA);
+	DS.chooseAutoMode.AddObject(DS.sAutoNone, DS.sAutoNone);
 	DS.chooseAutoMode.AddObject(DS.sAutoLine, DS.sAutoLine);
-	DS.chooseAutoMode.AddObject(DS.sAutoA, DS.sAutoA);
 	DS.chooseAutoMode.AddObject(DS.sAutoB, DS.sAutoB);
 	DS.chooseAutoMode.AddObject(DS.sAutoC, DS.sAutoC);
 	DS.chooseAutoMode.AddObject(DS.sAutoD, DS.sAutoD);
 	DS.chooseAutoMode.AddObject(DS.sAutoE, DS.sAutoE);
+	DS.chooseAutoMode.AddObject(DS.sAutoTEST, DS.sAutoTEST);
 	frc::SmartDashboard::PutData("Auto Mode", &DS.chooseAutoMode);
 
 
