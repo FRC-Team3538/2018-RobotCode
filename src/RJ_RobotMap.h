@@ -97,8 +97,7 @@ public:
 		Encoder EncoderWrist { 6, 7 };
 		DigitalInput SwitchWrist1 { 15 };
 		DigitalInput SwitchWrist2 { 16 };
-
-		//AnalogInput PotentiometerWrist { 1 };
+		AnalogInput PotentiometerWrist { 1 };
 		// Dio are faster that pwm so make sure that these do not have the same port as victors
 		// when talking to the navx other wise the pwm signal will not be sent.
 		AnalogInput WristAI { 3 };
@@ -117,7 +116,6 @@ public:
 		SpeedControllerGroup Winches { Winch1, Winch2 };
 
 		VictorSP HTower { 13 };
-
 
 		//LED Control
 		Relay LED0 { 0 };

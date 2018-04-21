@@ -325,8 +325,7 @@ class Robot: public frc::TimedRobot {
 		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, elevCurrent_m2 > 30.0);
 */
 
-		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset) * WristScale;
-
+		double wristangle = IO.DriveBase.WristPot.Get();
 
 		if (wristangle > 10){
 			IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0.5);
