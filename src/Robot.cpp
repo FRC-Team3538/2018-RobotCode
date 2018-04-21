@@ -42,8 +42,8 @@ class Robot: public frc::TimedRobot {
 	//double m_WristOffset = 13 - 23;
 
 	//practic robot
-	double m_WristOffset = 13-23+33;
-	double WristScale = -1;
+	double m_WristOffset = 94;
+	double WristScale = -3.6;
 
 	// This number needs to be changed until the wrist reads 0 at top dead center + is toward the front of the robot
 
@@ -880,8 +880,287 @@ class Robot: public frc::TimedRobot {
 		return;
 	}
 
+	void autoCenterWindsor(bool isGoRight) {
 
-		void autoScaleNearCompat(bool isStartRightPos) {
+		// Mirror path if starting on right
+		double rot = 1;
+		double CAoffset = 67 + 8;
+		if (isGoRight) {
+			rot = -1;
+			CAoffset = 53 + 12;
+		}
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+
+		switch (autoModeState) {
+		case 1:
+			// High gear
+			IO.DriveBase.SolenoidShifter.Set(false);
+
+			if (autoForward(22)) {
+				autoNextState();
+			}
+			break;
+
+		case 2:
+			if (autoTurn(45.0 * rot)) {
+				autoNextState();
+			}
+			break;
+
+		case 3:
+			if (autoForward(CAoffset)) {
+				autoNextState();
+			}
+			break;
+
+		case 4:
+			ElevPosTarget = 1200;
+			if (autoTurn(0.0)) {
+				autoNextState();
+			}
+			break;
+
+		case 5:
+			if (timedDrive(1.5, 0.5, 0.5)) {
+				autoNextState();
+			}
+			break;
+
+		case 6:
+			IO.DriveBase.Wrist1.Set(-0.4);
+
+			if (AutonTimer.Get() > 0.75) {
+				autoNextState();
+			}
+			break;
+
+		case 7:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.65);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+			break;
+
+		case 8:
+			if (autoFinisher == IO.DS.sAutoWallHug) {
+				autoNextState();
+				autoModeState = 20;
+			} else if (autoFinisher == IO.DS.sAuto2Cube) {
+				autoNextState();
+				autoModeState = 40;
+			} else {
+				autoNextState();
+				autoModeState = 0;
+			}
+
+			break;
+
+		case 20:
+			//
+			// Start of wall hug path
+			//
+			if (autoForward(-48)) {
+				autoNextState();
+			}
+			break;
+
+		case 21:
+			if (autoTurn(45 * rot)) {
+				autoNextState();
+			}
+			break;
+
+		case 22:
+			if (autoForward(72)) {
+				autoNextState();
+			}
+			break;
+
+		case 23:
+			if (autoTurn(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 24:
+			if (autoForward(48)) {
+				autoNextState();
+			}
+			break;
+
+		case 40:
+			//
+			// Start of 2Cube
+			//
+			if (autoForward(-60)) {
+				autoNextState();
+			}
+			break;
+
+		case 41:
+			ElevPosTarget = 600;
+
+			if (autoTurn(-45 * rot) && wristPosition(-120)) {
+				autoNextState();
+			}
+			break;
+
+		case 42:
+			wristPosition(-120);
+			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+
+			if (autoForward(48, 0.4, 0.1)) {
+				autoNextState();
+			}
+			break;
+
+		case 43:
+			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
+			if (timedDrive(0.75, 0.3, 0.3)) {
+				IO.DriveBase.SolenoidShifter.Set(false); // High gear
+				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+				autoNextState();
+			}
+			break;
+
+		case 44:
+			wristPosition(-45);
+
+			if (autoForward(-42)) {
+				autoNextState();
+			}
+			break;
+
+		case 45:
+			IO.DriveBase.ClawIntake.Set(0.2);
+			ElevPosTarget = 1200;
+
+			if (autoTurn(0) && wristPosition(-45) && elevatorPosition(ElevPosTarget)) {
+				autoNextState();
+			}
+			break;
+
+		case 46:
+			if (autoForward(56)) {
+				autoNextState();
+			}
+			break;
+
+		case 47:
+			ElevPosTarget = 2600;
+
+			if (timedDrive(0.75, 0.2, 0.2) && wristPosition(-75)) {
+				autoNextState();
+			}
+			break;
+
+		case 48:
+			// Eject!
+			IO.DriveBase.ClawIntake.Set(-0.7);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time2 [S]", autoTotalTime.Get());
+			}
+
+			break;
+
+		case 49:
+			if (autoForward(-36) && wristPosition(0)) {
+				autoNextState();
+			}
+			break;
+
+		case 50:
+			ElevPosTarget = 800;
+
+			if (autoTurn(45 * rot)) {
+				autoNextState();
+			}
+
+			break;
+
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoCenterSouthField(double direction) {
+
+		// Closed Loop control of Elevator
+		elevatorPosition(ElevPosTarget);
+		ElevPosTarget = 800;
+
+		IO.DriveBase.SolenoidShifter.Set(false); // High gear
+
+		switch (autoModeState) {
+		case 1:
+
+			if (autoForward(18))
+				autoNextState();
+			break;
+
+		case 2:
+			if (autoTurn(45.0 * direction))
+				autoNextState();
+			break;
+
+		case 3:
+
+			if (autoForward(60.0))
+				autoNextState();
+			break;
+
+		case 4:
+			if (autoTurn(0.0))
+				autoNextState();
+			break;
+
+		case 5:
+			if (timedDrive(1.5, 0.3, 0.3))
+				//if (autoForward(20.0, 0.7))
+				autoNextState();
+			break;
+		case 6:
+			// Eject!
+			IO.DriveBase.ClawIntake1.Set(-1.0);
+
+			// keep pushing!
+			if (timedDrive(1.0, 0.15, 0.15)) {
+				IO.DriveBase.ClawIntake1.Set(0.0);
+				autoNextState();
+
+				// Display auton Time
+				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
+			}
+
+			break;
+		default:
+			stopMotors();
+
+		}
+
+		return;
+	}
+
+	void autoScaleNearCompat(bool isStartRightPos) {
 
 		// Mirror rotations for right side start
 		double rot = 1;
@@ -984,15 +1263,15 @@ class Robot: public frc::TimedRobot {
 			}
 			break;
 
-		case 3:
-			//28
-			if (autoForward(28+6, 0.6, 0.1)) {
+		case 4:
+			if (wristPosition(-80) & wristNoPot(1.0, -0.57)) {
 				autoNextState();
 			}
 			break;
 
-		case 4:
-			if (wristPosition(-80) & wristNoPot(1.0, -0.57)) {
+		case 3:
+			//28
+			if (autoForward(28+6, 0.6, 0.1)) {
 				autoNextState();
 			}
 			break;
@@ -1051,7 +1330,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 
-			if (autoForward(-50) & wristNoPot(3.0, 0.8)) {
+			if (autoForward(-57) & wristNoPot(3.0, 0.8)) {
 				autoNextState();
 			}
 			break;
@@ -1088,7 +1367,7 @@ class Robot: public frc::TimedRobot {
 
 		case 24:
 			// Continue running intake slowly, drive forward 60 inches, and flip the wrist to 45 degrees.
-			IO.DriveBase.ClawIntake.Set(0.5);
+			IO.DriveBase.ClawIntake.Set(0.7);
 			wristPosition(-45);
 
 			if (autoForward(15, 0.6, 0.1)) {
@@ -1143,7 +1422,7 @@ class Robot: public frc::TimedRobot {
 		case 40:
 			// Begin switch score sequence
 			// Back off the switch after grabbing cube
-		IO.DriveBase.ClawIntake.Set(0);
+		IO.DriveBase.ClawIntake.Set(0.7);
 
 		if (autoForward(12, 0.6, 0.1)) {
 			autoNextState();
@@ -1152,14 +1431,14 @@ class Robot: public frc::TimedRobot {
 
 		case 41:
 			// Lift the elevator and turn to the left to prepare to score in switch
-			if (autoTurn(25 * rot) & (wristPosition(80) & elevatorPosition(5000))) {
+			elevatorPosition(5000);
+			if (autoTurn(-45 * rot)){
 				autoNextState();
 			}
 		break;
 
 		case 42:
-			// drive forward to the switch
-			if (autoForward(-25, 0.6, 0.1)){
+			if (autoForward(6, 0.6, 0.1)){
 				autoNextState();
 			}
 		break;
@@ -1269,7 +1548,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 9:
-			if (autoScaleFar2Cube == true) {
+			if (autoFinisher == IO.DS.sAuto2Cube) {
 				autoModeState = 0;
 			} else {
 				autoModeState = 0; // We are done.
@@ -2020,7 +2299,9 @@ class Robot: public frc::TimedRobot {
 		SmartDashboard::PutNumber("Speed Rotate", IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1);
 
 		// Auto State
-		SmartDashboard::PutString(llvm::StringRef("Auto Mode Selection"), llvm::StringRef(autoMode));
+		SmartDashboard::PutString(llvm::StringRef("Auto Target"), llvm::StringRef(autoTarget));
+		SmartDashboard::PutString(llvm::StringRef("Auto Position"), llvm::StringRef(autoPosition));
+		SmartDashboard::PutString(llvm::StringRef("Auto Fin"), llvm::StringRef(autoFinisher));
 		SmartDashboard::PutNumber("Auto State (#)", autoModeState);
 		SmartDashboard::PutNumber("Auto Timer (s)", AutonTimer.Get());
 		SmartDashboard::PutNumber("Auto Heading", autoHeading);

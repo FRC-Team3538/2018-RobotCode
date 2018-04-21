@@ -44,15 +44,25 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 
 	// Auto Program Chooser
-	DS.chooseAutoMode.AddDefault(DS.sAutoNone, DS.sAutoNone);
-	DS.chooseAutoMode.AddObject(DS.sAutoLine, DS.sAutoLine);
-	DS.chooseAutoMode.AddObject(DS.sAutoA, DS.sAutoA);
-	DS.chooseAutoMode.AddObject(DS.sAutoB, DS.sAutoB);
-	DS.chooseAutoMode.AddObject(DS.sAutoC, DS.sAutoC);
-	DS.chooseAutoMode.AddObject(DS.sAutoD, DS.sAutoD);
-	DS.chooseAutoMode.AddObject(DS.sAutoE, DS.sAutoE);
-	frc::SmartDashboard::PutData("Auto Mode", &DS.chooseAutoMode);
+	DS.chooseAutoProgram.AddDefault(DS.AutoSwitch, DS.AutoSwitch);
+	DS.chooseAutoProgram.AddObject(DS.AutoScale, DS.AutoScale);
+	DS.chooseAutoProgram.AddObject(DS.AutoLine, DS.AutoLine);
+	DS.chooseAutoProgram.AddObject(DS.AutoNone, DS.AutoNone);
+	DS.chooseAutoProgram.AddObject(DS.AutoNearSide, DS.AutoNearSide);
+	DS.chooseAutoProgram.AddObject(DS.AutoNscNswFsc, DS.AutoNscNswFsc);
+	frc::SmartDashboard::PutData("Auto OBJ", &DS.chooseAutoProgram);
 
+	// Auto Position Chooser
+	DS.chooseAutoPosStart.AddDefault(DS.sAutoCenter, DS.sAutoCenter);
+	DS.chooseAutoPosStart.AddObject(DS.sAutoLeft, DS.sAutoLeft);
+	DS.chooseAutoPosStart.AddObject(DS.sAutoRight, DS.sAutoRight);
+	frc::SmartDashboard::PutData("Auto Pos", &DS.chooseAutoPosStart);
+
+	// Auto Finisher Chooser
+	DS.chooseAutoFinisher.AddDefault(DS.sAuto2Cube, DS.sAuto2Cube);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoNo, DS.sAutoNo);
+	DS.chooseAutoFinisher.AddObject(DS.sAutoWallHug, DS.sAutoWallHug);
+	frc::SmartDashboard::PutData("Auto Finisher", &DS.chooseAutoFinisher);
 
 	// Auto Game Data Overide
 	DS.chooseAutoGameData.AddDefault(DS.sGameDataOff, DS.sGameDataOff);
