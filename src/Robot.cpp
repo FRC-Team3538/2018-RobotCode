@@ -38,10 +38,10 @@ class Robot: public frc::TimedRobot {
 	// Teleop Elevator Position
 	double WristTarget = 0.0;
 
-	//Sates config
+	//States config
 	//double m_WristOffset = 13 - 23;
 
-	//practic robot
+	//practice robot
 	double m_WristOffset = 13-23+33;
 	double WristScale = -1;
 
@@ -174,13 +174,13 @@ class Robot: public frc::TimedRobot {
 		bool HookTowerOut = IO.DS.DriveStick.GetXButton();
 
 		if (HookTowerIn) {
-			IO.DriveBase.HTower.Set(1.0); // Intake
+			IO.DriveBase.HTower.Set(1.0); // Hook Tower
 		} else {
 			IO.DriveBase.HTower.Set(0.0);
 		}
 
 		if (HookTowerOut) {
-			IO.DriveBase.HTower.Set(-1.0); // Intake
+			IO.DriveBase.HTower.Set(-1.0); // Hook Tower
 		} else {
 			IO.DriveBase.HTower.Set(0.0);
 		}
@@ -472,7 +472,7 @@ class Robot: public frc::TimedRobot {
 		autoHeading = 0.0;
 
 		// Low gear by default
-		IO.DriveBase.SolenoidShifter.Set(true);
+		IO.DriveBase.SolenoidShifter.Set(false);
 
 		// Default Wrist motor to not move
 		IO.DriveBase.Wrist1.Set(0.0);
@@ -650,7 +650,7 @@ class Robot: public frc::TimedRobot {
 
 		// Mirror path if starting on right
 		double rot = 1;
-		double CAoffset = 75;
+		double CAoffset = 75 + 6;
 		if (isGoRight) {
 			rot = -1;
 			CAoffset = 65;
