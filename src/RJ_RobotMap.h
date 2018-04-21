@@ -36,25 +36,6 @@ public:
 		const llvm::StringRef sAutoD = "D - Compatible Near Objectives, Left Start";
 		const llvm::StringRef sAutoE = "E - Compatible Near Objectives, Right Start";
 
-
-		SendableChooser<llvm::StringRef> chooseAutoPosStart;
-		const llvm::StringRef sAutoCenter = "Center";
-		const llvm::StringRef sAutoLeft = "Left";
-		const llvm::StringRef sAutoRight = "Right";
-
-		SendableChooser<llvm::StringRef> chooseAutoProgram;
-		//const llvm::StringRef AutoNone = "1 None";
-		//const llvm::StringRef AutoLine = "2 Line";
-		const llvm::StringRef AutoSwitch = "3 Switch";
-		const llvm::StringRef AutoScale = "4 Scale";
-		const llvm::StringRef AutoNearSide = "5 NSc NSw L";
-		const llvm::StringRef AutoNscNswFsc = "6 NSc NSw FSc";
-
-		SendableChooser<llvm::StringRef> chooseAutoFinisher;
-		const llvm::StringRef sAutoNo = "1 None";
-		const llvm::StringRef sAuto2Cube = "2 2Cube";
-		const llvm::StringRef sAutoWallHug = "3 Wall Hug";
-
 		SendableChooser<llvm::StringRef> chooseAutoEncoder;
 		const llvm::StringRef EncoderAuto = "Enc Auto";
 		const llvm::StringRef EncoderLeft = "Enc Left";
