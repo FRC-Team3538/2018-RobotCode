@@ -27,14 +27,24 @@ public:
 		const llvm::StringRef sAutoDelay3 = "3 Seconds";
 		const llvm::StringRef sAutoDelay5 = "5 Seconds";
 
+		SendableChooser<llvm::StringRef> chooseAutoMode;
+		const llvm::StringRef sAutoNone = "1 None";
+		const llvm::StringRef sAutoLine = "2 Line";
+		const llvm::StringRef sAutoA = "A - 2 Cube Switch, Center Start";
+		const llvm::StringRef sAutoB = "B - 1 Cube Scale, Left Start";
+		const llvm::StringRef sAutoC = "C - 2 Cube Near Scale 1 Far Scale, Left Start";
+		const llvm::StringRef sAutoD = "D - Compatible Near Objectives, Left Start";
+		const llvm::StringRef sAutoE = "E - Compatible Near Objectives, Right Start";
+
+
 		SendableChooser<llvm::StringRef> chooseAutoPosStart;
 		const llvm::StringRef sAutoCenter = "Center";
 		const llvm::StringRef sAutoLeft = "Left";
 		const llvm::StringRef sAutoRight = "Right";
 
 		SendableChooser<llvm::StringRef> chooseAutoProgram;
-		const llvm::StringRef AutoNone = "1 None";
-		const llvm::StringRef AutoLine = "2 Line";
+		//const llvm::StringRef AutoNone = "1 None";
+		//const llvm::StringRef AutoLine = "2 Line";
 		const llvm::StringRef AutoSwitch = "3 Switch";
 		const llvm::StringRef AutoScale = "4 Scale";
 		const llvm::StringRef AutoNearSide = "5 NSc NSw L";
