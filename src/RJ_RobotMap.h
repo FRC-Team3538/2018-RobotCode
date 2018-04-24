@@ -72,12 +72,12 @@ public:
 
 		// Shifting Solenoid
 		Solenoid SolenoidShifter { 0 };
-		Solenoid Zbar { 3 };
-		Solenoid Zbar1 { 4 };
+		Solenoid HookDeploy { 3 };
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;
 		AHRS ahrs { SPI::Port::kMXP, 200 };
+		//AHRS ahrs { I2C::Port::kMXP, 200 };
 
 		//Rest of the robot
 
