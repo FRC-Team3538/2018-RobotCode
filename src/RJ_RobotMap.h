@@ -35,6 +35,7 @@ public:
 		const llvm::StringRef sAutoC = "C - 2 Cube Near Scale 1 Far Scale, Left Start";
 		const llvm::StringRef sAutoD = "D - Compatible Near Objectives, Left Start";
 		const llvm::StringRef sAutoE = "E - Compatible Near Objectives, Right Start";
+		const llvm::StringRef sAutoF = "F - 3 Cube Near Scale 2 Far Scale, Left Start";
 		const llvm::StringRef sAutoTEST = "Z - TEST CASE AUTO";
 
 

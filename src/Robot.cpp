@@ -540,9 +540,6 @@ class Robot: public frc::TimedRobot {
 		 }
 		 */
 
-		if (autoMode == IO.DS.sAutoTEST) {
-			autoScaleNear3CUBE(false, false, false);
-		}
 
 		// Cross the Line Auto
 		if (autoMode == IO.DS.sAutoLine) {
@@ -617,6 +614,18 @@ class Robot: public frc::TimedRobot {
 				}
 			}
 		}
+
+		// F - 3 Cube Near Scale, 2 Far Scale, Left Start
+		if (autoMode == IO.DS.sAutoF) {
+
+				if (autoGameData[1] == 'L') {
+					autoScaleNear3CUBE(false, false, false);
+				}
+				if (autoGameData[1] == 'R') {
+					autoScaleFar(false, true);
+				}
+			}
+
 
 	}
 
