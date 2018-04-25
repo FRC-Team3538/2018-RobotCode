@@ -223,7 +223,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		default:
-			IO.DriveBase.HTower.Set(0.0);
+			IO.DriveBase.HTower.Set(0.05);
 			break;
 		}
 
@@ -360,24 +360,25 @@ class Robot: public frc::TimedRobot {
 		wristStick = deadband(wristStick, 0.15);
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
-		if (PotDisabled == IO.DS.DisabledPOT) {
-			IO.DriveBase.Wrist1.Set(wristStick);
+		//if (PotDisabled == IO.DS.DisabledPOT) {
+		IO.DriveBase.Wrist1.Set(wristStick);
+		/*
+		 } else {
 
-		} else {
+		 if (fabs(wristStick) > Control_Deadband) {
+		 /// Manual Control
+		 wristSpeed(wristStick);
+		 WristTarget = IO.DriveBase.WristPot.Get();
 
-			if (fabs(wristStick) > Control_Deadband) {
-				/// Manual Control
-				wristSpeed(wristStick);
-				WristTarget = IO.DriveBase.WristPot.Get();
+		 } else if (!SensorOverride) {
+		 // Hold Current Position
+		 wristPosition(WristTarget);
 
-			} else if (!SensorOverride) {
-				// Hold Current Position
-				wristPosition(WristTarget);
-
-			} else {
-				elevatorSpeed(0.0);
-			}
-		}
+		 } else {
+		 elevatorSpeed(0.0);
+		 }
+		 }
+		 */
 
 		// Wrist Presets
 		if (IO.DS.OperatorStick.GetAButton()) {
@@ -540,7 +541,6 @@ class Robot: public frc::TimedRobot {
 		 }
 		 */
 
-
 		// Cross the Line Auto
 		if (autoMode == IO.DS.sAutoLine) {
 			autoLine();
@@ -618,14 +618,13 @@ class Robot: public frc::TimedRobot {
 		// F - 3 Cube Near Scale, 2 Far Scale, Left Start
 		if (autoMode == IO.DS.sAutoF) {
 
-				if (autoGameData[1] == 'L') {
-					autoScaleNear3CUBE(false, false, false);
-				}
-				if (autoGameData[1] == 'R') {
-					autoScaleFar(false, true);
-				}
+			if (autoGameData[1] == 'L') {
+				autoScaleNear3CUBE(false, false, false);
 			}
-
+			if (autoGameData[1] == 'R') {
+				autoScaleFar(false, true);
+			}
+		}
 
 	}
 
@@ -1478,18 +1477,19 @@ class Robot: public frc::TimedRobot {
 
 			autoHeading = -45 - 10 + 3 + 3 - 3;
 
-			if (autoForward(-80 + 6 + 2) & elevatorPosition() & wristPosition()) {
-				autoNextState();
-			}
+				if (autoForward(-80 + 6 + 2 - 10) & elevatorPosition() & wristPosition()) {
+					autoNextState();
+				}
+
 			break;
 
 		case 12:
 			IO.DriveBase.ClawIntake.Set(1.0);
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open Claw
 
 			if (timedDrive(0.75, -0.45, -0.45)) {
 				autoNextState();
-				//autoModeState = 99;
+				autoModeState = 99;
 			}
 			break;
 
