@@ -39,11 +39,12 @@ class Robot: public frc::TimedRobot {
 	double WristTarget = 0.0;
 
 	//States config
-	//double m_WristOffset = 13 - 23;
+	double m_WristOffset = 13 - 23 + 11;
+	double WristScale = 1;
 
 	//practice robot
-	double m_WristOffset = 13 - 23 + 33;
-	double WristScale = -1;
+	//double m_WristOffset = 13 - 23 + 33;
+	//double WristScale = -1;
 
 	// This number needs to be changed until the wrist reads 0 at top dead center + is toward the front of the robot
 
