@@ -223,7 +223,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		default:
-			IO.DriveBase.HTower.Set(0.05);
+			IO.DriveBase.HTower.Set(0.08);
 			break;
 		}
 
@@ -514,6 +514,8 @@ class Robot: public frc::TimedRobot {
 
 	bool bAutoNoData = false;
 	void AutonomousPeriodic() {
+
+		IO.DriveBase.HTower.Set(0.08);
 
 		// Delay our auton program if required
 		if (autoDelay == IO.DS.sAutoDelay3 and autoTotalTime.Get() < 3)
@@ -838,7 +840,7 @@ class Robot: public frc::TimedRobot {
 				}
 			} else {
 				//Right
-				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-110 + 10 - 4)
+				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-108-8)
 						& wristNoPot(1.25, -0.65)) {
 					autoNextState();
 
