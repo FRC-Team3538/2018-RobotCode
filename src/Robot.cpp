@@ -428,11 +428,6 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(1.0); // Intake
 
-		} else if (DrLeftTrigger > 0.25) {
-			// Drop it like it's hot
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(0.0);
-
 		} else if (DrRightTrigger > 0.125) {
 			// Loose Intake [Driver]
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
