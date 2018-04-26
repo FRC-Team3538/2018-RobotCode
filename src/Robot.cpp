@@ -407,7 +407,7 @@ class Robot: public frc::TimedRobot {
 		double OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
 		OpIntakeCommand = deadband(OpIntakeCommand, Control_Deadband) * 0.7;
 
-		double DrIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		double DrIntakeCommand = (DrRightTrigger - DrLeftTrigger);
 		DrIntakeCommand = deadband(DrIntakeCommand, Control_Deadband) * 0.7;
 
 		//
