@@ -404,8 +404,11 @@ class Robot: public frc::TimedRobot {
 		double DrRightTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand);
 		double DrLeftTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
 
-		double intakeCommand = (OpRightTrigger - OpLeftTrigger);
-		intakeCommand = deadband(intakeCommand, Control_Deadband) * 0.7;
+		double OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		OpIntakeCommand = deadband(OpIntakeCommand, Control_Deadband) * 0.7;
+
+		double DrIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		DrIntakeCommand = deadband(DrIntakeCommand, Control_Deadband) * 0.7;
 
 		//
 		// Claw control
@@ -431,26 +434,16 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawIntake.Set(0.0);
 
 		} else if (DrRightTrigger > 0.125) {
-			// Allow Driver to shoot as well
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-
-			// 35% power for 75% controller input
-			double d1 = 0.5;
-			double d2 = 0.75;
-			double driveEjection = deadband(-DrRightTrigger, Control_Deadband);
-			if (abs(driveEjection) < d2) {
-				driveEjection = driveEjection * d1 / d2;
-			} else {
-				driveEjection = d1 + (driveEjection - d2) * d2 / d1;
-			}
-
-			IO.DriveBase.ClawIntake.Set(driveEjection * 0.75); // Eject
+			// Loose Intake [Driver]
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
+			IO.DriveBase.ClawIntake.Set(1.0);
 
 		} else {
 			// Default Hold Cube
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(intakeCommand);
+			IO.DriveBase.ClawIntake.Set(OpIntakeCommand + DrIntakeCommand);
 		}
+
 
 	}
 
@@ -1353,7 +1346,7 @@ class Robot: public frc::TimedRobot {
 				IO.DriveBase.ClawIntake.Set(1.0);
 			}
 
-			autoHeading = -7;
+			autoHeading = -7-5;
 
 			if (autoForward(-40 - 2) & elevatorPosition() & wristPosition()) {
 				autoNextState();
@@ -1650,8 +1643,6 @@ class Robot: public frc::TimedRobot {
 
 			if (true) {
 				autoNextState();
-
-				autoModeState = 20;
 			}
 			break;
 
