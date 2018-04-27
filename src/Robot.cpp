@@ -108,21 +108,22 @@ class Robot: public frc::TimedRobot {
 			SensorOverride = false;
 		if (IO.DS.OperatorStick.GetBackButton())
 			SensorOverride = true;
+		/*
+		 // Wrist Angle Reminder Rumble
+		 double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset) * WristScale;
 
-		// Wrist Angle Reminder Rumble
-		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset) * WristScale;
+		 if (wristAngle > 10 && DS.IsEnabled()) {
+		 IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0.25);
+		 } else {
+		 IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0);
+		 }
 
-		if (wristAngle > 10 && DS.IsEnabled()) {
-			IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0.25);
-		} else {
-			IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, 0);
-		}
-
-		if (wristAngle < -10 && DS.IsEnabled()) {
-			IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0.25);
-		} else {
-			IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0);
-		}
+		 if (wristAngle < -10 && DS.IsEnabled()) {
+		 IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0.25);
+		 } else {
+		 IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0);
+		 }
+		 */
 
 	}
 
@@ -342,16 +343,12 @@ class Robot: public frc::TimedRobot {
 			elevatorSpeed(0.0);
 		}
 
-		/*
+		// Controller Rumble if the elevator motor current is high
+		double elevCurrent_m1 = pdp->GetCurrent(3);
+		double elevCurrent_m2 = pdp->GetCurrent(11);
 
-		 // Controller Rumble if the elevator motor current is high
-		 double elevCurrent_m1 = pdp->GetCurrent(8);
-		 double elevCurrent_m2 = pdp->GetCurrent(9);
-
-		 IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, elevCurrent_m1 > 30.0);
-		 IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, elevCurrent_m2 > 30.0);
-
-		 */
+		IO.DS.OperatorStick.SetRumble(Joystick::kLeftRumble, elevCurrent_m1 > 30.0);
+		IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, elevCurrent_m2 > 30.0);
 
 		//
 		// Wrist control
@@ -520,6 +517,13 @@ class Robot: public frc::TimedRobot {
 		if (autoDelay == IO.DS.sAutoDelay5 and autoTotalTime.Get() < 5)
 			return;
 
+		if (autoMode == IO.DS.sAutoTEST) {
+			autoScaleNearCompat(false);
+		}
+
+		if (autoMode == IO.DS.sAutoTEST2) {
+			autoSwitchNearSide(false);
+		}
 		/*
 		 // If no game data is received, run a fail safe program
 		 if ((autoGameData.length() < 3) || bAutoNoData) {
@@ -540,6 +544,40 @@ class Robot: public frc::TimedRobot {
 		 }
 		 */
 
+		// Single cube compatible, left start
+		if (autoMode == IO.DS.sAutoG){
+			if (autoGameData[1] == 'L'){
+				autoScaleNearCompat(false);
+			}
+
+			else if (autoGameData[0] == 'L'){
+				autoSwitchNearSide(false);
+			}
+			else if ((autoGameData[0] == 'R') && (autoGameData[1] == 'R')){
+				autoLinePlatformZone(false);
+			}
+			else
+				autoLine();
+		}
+
+		// Single cube compatible, right start
+		if (autoMode == IO.DS.sAutoH){
+			if (autoGameData[1] == 'R'){
+				autoScaleNearCompat(true);
+			}
+
+			else if (autoGameData[0] == 'R'){
+				autoSwitchNearSide(true);
+			}
+			else if ((autoGameData[0] == 'L') && (autoGameData[1] == 'L')){
+				autoLinePlatformZone(true);
+			}
+			else
+				autoLine();
+		}
+
+
+
 		// Cross the Line Auto
 		if (autoMode == IO.DS.sAutoLine) {
 			autoLine();
@@ -550,7 +588,7 @@ class Robot: public frc::TimedRobot {
 			if (autoGameData[0] == 'L') {
 				autoCenter(false, true);
 			}
-			if (autoGameData[0] == 'R') {
+			else if (autoGameData[0] == 'R') {
 				autoCenter(true, true);
 			}
 		}
@@ -1301,6 +1339,8 @@ class Robot: public frc::TimedRobot {
 		double wristAngle = (IO.DriveBase.WristPot.Get() + m_WristOffset) * WristScale;
 		switch (autoModeState) {
 		case 1:
+			// Cube 1 (preload)
+			// Drive forward with slight turn toward scale.
 
 			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
 			IO.DriveBase.ClawIntake.Set(0.3);
@@ -1325,7 +1365,9 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 2:
+			// Cube 1 (preload)
 			// Eject!
+
 			IO.DriveBase.ClawIntake.Set(-0.6);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
@@ -1342,22 +1384,27 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
+			// No cube
+			// Disengage wrist, lower elevator, back up to get 2nd cube
 			wristPosition(110);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (wristAngle > -45) {
 				elevatorPosition(800);
 				IO.DriveBase.ClawIntake.Set(1.0);
+				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			}
 
 			autoHeading = -7 - 5;
-
+			//if (IO.DriveBase.EncoderElevator.Get() < 9000) {
 			if (autoForward(-40 - 2) & elevatorPosition() & wristPosition()) {
 				autoNextState();
 			}
+			//}
 			break;
 
 		case 4:
+			// Obtain 2nd cube
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
@@ -1367,6 +1414,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 5:
+			// 2nd Cube
+			// Drive forward and turn while raising elevator and wrist to score 2nd cube
 			IO.DriveBase.ClawIntake.Set(0.3);
 			elevatorPosition(scaleElevTarget);
 
@@ -1387,6 +1436,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
+			// 2nd Cube
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-0.6);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
@@ -1403,6 +1453,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 7:
+			// No cube
+			// raise wrist, lower elevator, turn back for the 3rd cube
 			wristPosition(100);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
@@ -1413,12 +1465,16 @@ class Robot: public frc::TimedRobot {
 
 			autoHeading = -30;
 
+			//if (IO.DriveBase.EncoderElevator.Get() < 9000) {
 			if (autoForward(-42 - 28 + 2) & elevatorPosition() & wristPosition()) {
 				autoNextState();
 			}
+			//}
 			break;
 
 		case 8:
+			// 3rd cube
+			// Obtain the 3rd cube
 			IO.DriveBase.ClawIntake.Set(1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
@@ -1428,6 +1484,8 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 9:
+			// 3rd cube
+			// Drive forward and turn while raising elevator and wrist.
 			IO.DriveBase.ClawIntake.Set(0.3);
 			elevatorPosition(scaleElevTarget);
 
@@ -1450,6 +1508,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 10:
+			// 3rd cube
 			// Eject!
 			IO.DriveBase.ClawIntake.Set(-0.2);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
@@ -1476,9 +1535,11 @@ class Robot: public frc::TimedRobot {
 
 			autoHeading = -45 - 10 + 3 + 3 - 3;
 
+			//if (IO.DriveBase.EncoderElevator.Get() < 9000) {
 			if (autoForward(-80 + 6 + 2 - 10) & elevatorPosition() & wristPosition()) {
 				autoNextState();
 			}
+			//}
 
 			break;
 
@@ -1557,8 +1618,8 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.SolenoidShifter.Set(false); // High gear
 			wristPosition(-25);
 
-			//232
-			if (autoForward(232, 1.0, 0.2)) {
+			//232 - match 73 value
+			if (autoForward(232 -10, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
@@ -1631,7 +1692,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(1.0);
 
-			autoHeading = 20-10;
+			autoHeading = 20 - 10;
 			wristPosition(110);
 
 			if (wristAngle > -45) {
@@ -1645,7 +1706,7 @@ class Robot: public frc::TimedRobot {
 
 		case 21:
 
-			if (true) {
+			if (timedDrive(0.75, -0.4, -0.4)) {
 				autoNextState();
 			}
 			break;
@@ -2069,6 +2130,8 @@ class Robot: public frc::TimedRobot {
 	double prevError_rotation = 0; // Derivative Calculation
 	double sumError_rotation = 0;  // Integral Calculation
 
+	double prevCmd = 0;
+
 	int autoForward(double targetDistance, double max_speed, double settle_time) {
 
 		double encoderDistance = getEncoderDistance();
@@ -2089,6 +2152,15 @@ class Robot: public frc::TimedRobot {
 
 		// PID Command
 		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError_linear + KD_LINEAR * dError;
+
+		/*
+		if (driveCommandLinear > 0) {
+			driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear + 0.05);
+		} else {
+			driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear - 0.05);
+		}
+		prevCmd = driveCommandLinear;
+		*/
 
 		// limit max drive speed
 		driveCommandLinear = absMax(driveCommandLinear, max_speed);

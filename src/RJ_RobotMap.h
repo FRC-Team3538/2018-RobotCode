@@ -36,8 +36,10 @@ public:
 		const llvm::StringRef sAutoD = "D - Compatible Near Objectives, Left Start";
 		const llvm::StringRef sAutoE = "E - Compatible Near Objectives, Right Start";
 		const llvm::StringRef sAutoF = "F - 3 Cube Near Scale 2 Far Scale, Left Start";
+		const llvm::StringRef sAutoG = "G - Single compatible cube (priority: scale, switch, platform zone, Left Start";
+		const llvm::StringRef sAutoH = "H - Single compatible cube (priority: scale, switch, platform zone, Right Start";
 		const llvm::StringRef sAutoTEST = "Z - TEST CASE AUTO";
-
+		const llvm::StringRef sAutoTEST2 = "Y - TEST CASE AUTO 2";
 
 		SendableChooser<llvm::StringRef> chooseAutoEncoder;
 		const llvm::StringRef EncoderAuto = "Enc Auto";

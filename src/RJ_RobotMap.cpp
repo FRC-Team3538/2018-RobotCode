@@ -52,7 +52,10 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoMode.AddObject(DS.sAutoD, DS.sAutoD);
 	DS.chooseAutoMode.AddObject(DS.sAutoE, DS.sAutoE);
 	DS.chooseAutoMode.AddObject(DS.sAutoF, DS.sAutoF);
+	DS.chooseAutoMode.AddObject(DS.sAutoG, DS.sAutoG);
+	DS.chooseAutoMode.AddObject(DS.sAutoH, DS.sAutoH);
 	DS.chooseAutoMode.AddObject(DS.sAutoTEST, DS.sAutoTEST);
+	DS.chooseAutoMode.AddObject(DS.sAutoTEST2, DS.sAutoTEST2);
 	frc::SmartDashboard::PutData("Auto Mode", &DS.chooseAutoMode);
 
 
