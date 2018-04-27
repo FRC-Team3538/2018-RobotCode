@@ -407,7 +407,7 @@ class Robot: public frc::TimedRobot {
 		double OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
 		OpIntakeCommand = deadband(OpIntakeCommand, Control_Deadband) * 0.7;
 
-		double DrIntakeCommand = (DrRightTrigger - DrLeftTrigger);
+		double DrIntakeCommand = (DrRightTrigger);
 		DrIntakeCommand = deadband(DrIntakeCommand, Control_Deadband) * 0.7;
 
 		//
@@ -428,17 +428,26 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(1.0); // Intake
 
-		} else if (DrRightTrigger > 0.125) {
+		} else if (DrRightTrigger > 0.75) {
 			// Loose Intake [Driver]
-			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(-0.7);
+
+		} else if (DrRightTrigger > 0.15) {
+			// Loose Intake [Driver]
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
+			IO.DriveBase.ClawIntake.Set(-0.3);
+
+		} else if (DrLeftTrigger > 0.25) {
+			// Drop it like it's hot
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
+			IO.DriveBase.ClawIntake.Set(0.0);
 
 		} else {
-			// Default Hold Cube
+			// Default Hold Cube, cube eject routes through here as well
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(OpIntakeCommand + DrIntakeCommand);
+			IO.DriveBase.ClawIntake.Set(OpIntakeCommand);
 		}
-
 
 	}
 
@@ -828,7 +837,7 @@ class Robot: public frc::TimedRobot {
 				}
 			} else {
 				//Right
-				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-108-8)
+				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-108 - 8)
 						& wristNoPot(1.25, -0.65)) {
 					autoNextState();
 
@@ -1341,7 +1350,7 @@ class Robot: public frc::TimedRobot {
 				IO.DriveBase.ClawIntake.Set(1.0);
 			}
 
-			autoHeading = -7-5;
+			autoHeading = -7 - 5;
 
 			if (autoForward(-40 - 2) & elevatorPosition() & wristPosition()) {
 				autoNextState();
@@ -1467,9 +1476,9 @@ class Robot: public frc::TimedRobot {
 
 			autoHeading = -45 - 10 + 3 + 3 - 3;
 
-				if (autoForward(-80 + 6 + 2 - 10) & elevatorPosition() & wristPosition()) {
-					autoNextState();
-				}
+			if (autoForward(-80 + 6 + 2 - 10) & elevatorPosition() & wristPosition()) {
+				autoNextState();
+			}
 
 			break;
 
@@ -1622,7 +1631,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(1.0);
 
-			autoHeading = 20;
+			autoHeading = 20-10;
 			wristPosition(110);
 
 			if (wristAngle > -45) {
