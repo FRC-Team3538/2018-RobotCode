@@ -522,7 +522,7 @@ class Robot: public frc::TimedRobot {
 		}
 
 		if (autoMode == IO.DS.sAutoTEST2) {
-			autoSwitchNearSide(false);
+			autoScaleNear3CUBE(true,false,false);
 		}
 		/*
 		 // If no game data is received, run a fail safe program
@@ -736,7 +736,7 @@ class Robot: public frc::TimedRobot {
 			wristPosition(-25);
 
 			//18
-			if (autoForward(22 + (6) + 4 + 4 + 4)) {
+			if (autoForward((22 + (6) + 4 + 4 + 4))) {
 				autoNextState();
 			}
 			break;
@@ -869,7 +869,7 @@ class Robot: public frc::TimedRobot {
 			//-110
 			if (!isGoRight) {
 				//Left
-				if (autoTurn((-45 - 5) * rot) & elevatorPosition(800) & wristPosition(-110 + 10 - 4)
+				if (autoTurn((-45 - 5) * rot) & elevatorPosition(800) & wristPosition(-108 - 8)
 						& wristNoPot(1.25, -0.65)) {
 					autoNextState();
 				}
@@ -1014,10 +1014,11 @@ class Robot: public frc::TimedRobot {
 			elevatorPosition(800);
 			wristPosition(10);
 
-			if (autoForward(275 + (12 + 6 + 18 - 3) + 8 - 8)) {
+			if (autoForward(275  + (12 + 6 + 18 - 3) + 8 - 8)) {
 				autoNextState();
 			}
-			break;
+
+		break;
 
 		case 2:
 			if (autoTurn(-80 * rot) & elevatorPosition(14500)) {
@@ -1026,7 +1027,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(10 + (12) - 6 - 2 - 6, 0.4, 0.0) & wristNoPot(0.6, -0.75)) {
+			if (autoForward(10 + (12) - 6 - 2 - 6-12, 0.4, 0.0) & wristNoPot(0.6, -0.75)) {
 				autoNextState();
 			}
 
@@ -1103,7 +1104,7 @@ class Robot: public frc::TimedRobot {
 			wristPosition(-25);
 
 			//252
-			if (autoForward(250, 1.0, 0.2)) {
+			if (autoForward(250, 1.0, 0.2)) { //250
 				autoNextState();
 			}
 			break;
@@ -1461,6 +1462,7 @@ class Robot: public frc::TimedRobot {
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
 				elevatorPosition(800);
 				IO.DriveBase.ClawIntake.Set(1.0);
+				//IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // compliant
 			}
 
 			autoHeading = -30;
@@ -1632,7 +1634,7 @@ class Robot: public frc::TimedRobot {
 
 		case 3:
 			//187 (RJ) ? 222 (BullDogs) 218
-			if (autoForward(230 - 10 - 4)) {
+			if (autoForward(230 - 10 - 4+3+3+4)) {
 				autoNextState();
 			}
 			break;
@@ -1708,6 +1710,7 @@ class Robot: public frc::TimedRobot {
 
 			if (timedDrive(0.75, -0.4, -0.4)) {
 				autoNextState();
+				IO.DriveBase.ClawIntake.Set(1.0);
 			}
 			break;
 
@@ -1741,6 +1744,7 @@ class Robot: public frc::TimedRobot {
 
 		case 25:
 			// Eject!
+			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(-0.5);
 
 			if (AutonTimer.Get() > 0.5) {
@@ -2134,7 +2138,7 @@ class Robot: public frc::TimedRobot {
 
 	int autoForward(double targetDistance, double max_speed, double settle_time) {
 
-		double encoderDistance = getEncoderDistance();
+		double encoderDistance = (getEncoderDistance());
 
 		// P Control
 		double error = targetDistance - encoderDistance;  // [Inches]
@@ -2151,7 +2155,7 @@ class Robot: public frc::TimedRobot {
 		prevError_linear = error;
 
 		// PID Command
-		double driveCommandLinear = error * KP_LINEAR + KI_LINEAR * sumError_linear + KD_LINEAR * dError;
+		double driveCommandLinear = (error * KP_LINEAR + KI_LINEAR * sumError_linear + KD_LINEAR * dError);
 
 		/*
 		if (driveCommandLinear > 0) {
