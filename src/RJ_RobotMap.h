@@ -3,7 +3,7 @@
 
 #include "WPILib.h"
 #include "AHRS.h"
-
+#include "ctre/phoenix.h"
 #include "math.h"
 
 class RJ_RobotMap {
@@ -58,16 +58,16 @@ public:
 	// Drive Base
 	struct structDriveBase {
 		// Left Motors
-		VictorSP L1 { 0 };
-		VictorSP L2 { 1 };
-		VictorSP L3 { 2 };
-		SpeedControllerGroup MotorsLeft { L1, L2, L3 };
+		VictorSPX L1 { 0 };
+		WPI_TalonSRX L2 { 1 };
+		VictorSPX L3 { 2 };
+		//SpeedControllerGroup MotorsLeft { L1, L2, L3 };
 
 		// Right Motors
-		VictorSP R1 { 3 };
-		VictorSP R2 { 4 };
-		VictorSP R3 { 5 };
-		SpeedControllerGroup MotorsRight { R1, R2, R3 };
+		VictorSPX R1 { 3 };
+		WPI_TalonSRX R2 { 4 };
+		VictorSPX R3 { 5 };
+		//SpeedControllerGroup MotorsRight { R1, R2, R3 };
 
 		// Drive Base Encoders
 		Encoder EncoderLeft { 0, 1 };
@@ -85,8 +85,8 @@ public:
 		//Rest of the robot
 
 		//Elevator
-		VictorSP Elevator1 { 6 };
-		VictorSP Elevator2 { 7 };
+		WPI_TalonSRX Elevator1 { 6 };
+		VictorSPX Elevator2 { 7 };
 
 		//Elevator Sensing Package
 		Encoder EncoderElevator { 4, 5, false, Encoder::k4X };
@@ -95,7 +95,7 @@ public:
 		AnalogInput PotentiometerElevator { 0 };
 
 		//Wrist
-		VictorSP Wrist1 { 8 };
+		VictorSPX Wrist1 { 8 };
 
 		// Wrist Sensing Package
 
@@ -110,18 +110,18 @@ public:
 		AnalogPotentiometer WristPot { &WristAI, 270, -270 / 2 };
 
 		//Claw
-		VictorSP ClawIntake1 { 9 };
-		VictorSP ClawIntake2 { 10 };
+		VictorSPX ClawIntake { 9 };
+		VictorSPX ClawIntake2 { 10 };
 		//DigitalInput IntakeSwitch1 { 6 };
 		//DigitalInput IntakeSwitch2 { 7 };
-		SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
+		//SpeedControllerGroup ClawIntake { ClawIntake1, ClawIntake2 };
 		DoubleSolenoid ClawClamp { 1, 2 };
 
-		VictorSP Winch1 { 11 };
-		VictorSP Winch2 { 12 };
-		SpeedControllerGroup Winches { Winch1, Winch2 };
+		//VictorSP Winch1 { 11 };
+		//VictorSP Winch2 { 12 };
+		//SpeedControllerGroup Winches { Winch1, Winch2 };
 
-		VictorSP HTower { 13 };
+		//VictorSP HTower { 13 };
 
 
 		//LED Control

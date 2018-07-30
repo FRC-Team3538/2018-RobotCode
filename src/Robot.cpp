@@ -19,7 +19,7 @@ class Robot: public frc::TimedRobot {
 	RJ_RobotMap IO;
 
 	// Built-In Drive code for teleop
-	DifferentialDrive Adrive { IO.DriveBase.MotorsLeft, IO.DriveBase.MotorsRight };
+	DifferentialDrive Adrive { IO.DriveBase.L2, IO.DriveBase.R2 };
 	bool gearState; // For power-breaking feature
 
 	// create pdp variable
@@ -192,27 +192,27 @@ class Robot: public frc::TimedRobot {
 
 		if (IO.DS.DriveStick.GetBButton()) {
 
-			IO.DriveBase.Winches.Set(1.0);
+			//IO.DriveBase.Winches.Set(1.0);
 
 		} else if (IO.DS.DriveStick.GetYButton()) {
 
-			IO.DriveBase.Winches.Set(-1.0);
+			//IO.DriveBase.Winches.Set(-1.0);
 
 		} else {
 
-			IO.DriveBase.Winches.Set(0.0);
+			//IO.DriveBase.Winches.Set(0.0);
 		}
 
 		// Winch Control [DPAD]
 		switch (IO.DS.DriveStick.GetPOV()) {
 		case 0:
 			// Dpad  Up
-			IO.DriveBase.HTower.Set(-1.0);
+			//IO.DriveBase.HTower.Set(-1.0);
 			break;
 
 		case 180:
 			// Dpad Down
-			IO.DriveBase.HTower.Set(1.0);
+			//IO.DriveBase.HTower.Set(1.0);
 			break;
 
 		case 90:
@@ -224,7 +224,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		default:
-			IO.DriveBase.HTower.Set(0.08);
+			//IO.DriveBase.HTower.Set(0.08);
 			break;
 		}
 
@@ -358,7 +358,7 @@ class Robot: public frc::TimedRobot {
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
 		//if (PotDisabled == IO.DS.DisabledPOT) {
-		IO.DriveBase.Wrist1.Set(wristStick);
+		IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, wristStick);
 		/*
 		 } else {
 
@@ -385,7 +385,7 @@ class Robot: public frc::TimedRobot {
 		} else if (IO.DS.OperatorStick.GetYButton()) {
 			wristPosition(-45);
 		} else {
-			IO.DriveBase.Wrist1.Set(wristStick);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, wristStick);
 		}
 
 		//
@@ -414,36 +414,36 @@ class Robot: public frc::TimedRobot {
 		if (OpRightBumper or (OpRightTrigger > 0.125)) {
 			// Loose Intake
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 
 		} else if (OpLeftBumper) {
 			// Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(0.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 
 		} else if (OpButtonB) {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(1.0); // Intake
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0); // Intake
 
 		} else if (DrRightTrigger > 0.75) {
 			// Loose Intake [Driver]
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(-0.7);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.7);
 
 		} else if (DrRightTrigger > 0.15) {
 			// Loose Intake [Driver]
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(-0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.3);
 
 		} else if (DrLeftTrigger > 0.25) {
 			// Drop it like it's hot
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(0.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 
 		} else {
 			// Default Hold Cube, cube eject routes through here as well
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(OpIntakeCommand);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, OpIntakeCommand);
 		}
 
 	}
@@ -466,8 +466,8 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.EncoderRight.Reset();
 
 		// Turn off drive motors
-		IO.DriveBase.MotorsLeft.Set(0);
-		IO.DriveBase.MotorsRight.Set(0);
+		IO.DriveBase.L2.Set(0);
+		IO.DriveBase.R2.Set(0);
 
 		// Reset the navX heading
 		IO.DriveBase.ahrs.ZeroYaw();
@@ -477,11 +477,11 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.SolenoidShifter.Set(false);
 
 		// Default Wrist motor to not move
-		IO.DriveBase.Wrist1.Set(0.0);
+		IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0.0);
 
 		// Shut the claw by default
 		IO.DriveBase.ClawClamp.Set(DoubleSolenoid::Value::kForward);
-		IO.DriveBase.ClawIntake.Set(0);
+		IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0);
 
 		// Reset the moving average filters for drive base
 		OutputY = 0;
@@ -502,14 +502,14 @@ class Robot: public frc::TimedRobot {
 		IO.DriveBase.EncoderRight.Reset();
 
 		stopMotors();
-		IO.DriveBase.Wrist1.Set(0.0);
-		IO.DriveBase.ClawIntake.Set(0.0);
+		IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0.0);
+		IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 	}
 
 	bool bAutoNoData = false;
 	void AutonomousPeriodic() {
 
-		IO.DriveBase.HTower.Set(0.08);
+		//IO.DriveBase.HTower.Set(0.08);
 
 		// Delay our auton program if required
 		if (autoDelay == IO.DS.sAutoDelay3 and autoTotalTime.Get() < 3)
@@ -787,12 +787,12 @@ class Robot: public frc::TimedRobot {
 
 		case 7:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			// keep pushing!
 			if (timedDrive(0.75, 0.2, 0.2)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -885,7 +885,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 42:
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			if (!isGoRight) {
 				//Left0
@@ -901,7 +901,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 43:
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.SolenoidShifter.Set(true);  // Low Gear
 			if (timedDrive(1.25 - .5, 0.25, 0.25)) {
 				IO.DriveBase.SolenoidShifter.Set(false); // High gear
@@ -927,7 +927,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 45:
-			IO.DriveBase.ClawIntake.Set(0.2);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.2);
 
 			if (autoTurn(0) & elevatorPosition(5000)) {
 				autoNextState();
@@ -959,12 +959,12 @@ class Robot: public frc::TimedRobot {
 
 		case 48:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			// keep pushing!
 			if (timedDrive(0.75, 0.2, 0.2)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1050,11 +1050,11 @@ class Robot: public frc::TimedRobot {
 
 		case 6:
 			// Eject!
-			//IO.DriveBase.ClawIntake.Set(-0.65);
+			//IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);				// Open
 
 			if (AutonTimer.Get() > 0.5) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1132,12 +1132,12 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.5);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.5);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 0.2) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1181,7 +1181,7 @@ class Robot: public frc::TimedRobot {
 		case 21:
 			// Turns intake on (wheels spinning, clamp compliant
 			// Moves the robot 50 inches backwards into the cube
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff);				// Compliant
 
 			if (autoForward(-57) & wristNoPot(3.0, 0.8)) {
@@ -1205,7 +1205,7 @@ class Robot: public frc::TimedRobot {
 			// Turns intake down to 0.7 so we are still pulling the cube in
 			// Waits 0.65 seconds for all that stuff to happen.
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward);				// Closed
-			IO.DriveBase.ClawIntake.Set(0.7);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.7);
 
 			if (timedDrive(0.5, -0.3, -0.3)) {
 				if (autoScaleNearSwitch == false) {
@@ -1221,7 +1221,7 @@ class Robot: public frc::TimedRobot {
 
 		case 24:
 			// Continue running intake slowly, drive forward 60 inches, and flip the wrist to 45 degrees.
-			IO.DriveBase.ClawIntake.Set(0.5);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.5);
 			wristPosition(-45);
 
 			if (autoForward(15, 0.6, 0.1)) {
@@ -1249,12 +1249,12 @@ class Robot: public frc::TimedRobot {
 
 		case 28:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 1.0) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1268,7 +1268,7 @@ class Robot: public frc::TimedRobot {
 
 			if (autoTurn(0) & wristPosition(0) & wristNoPot(2.0, 0.35)) {
 				autoNextState();
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				elevatorPosition(800);
 			}
 			break;
@@ -1276,7 +1276,7 @@ class Robot: public frc::TimedRobot {
 		case 40:
 			// Begin switch score sequence
 			// Back off the switch after grabbing cube
-			IO.DriveBase.ClawIntake.Set(0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0);
 
 			if (autoForward(12, 0.6, 0.1)) {
 				autoNextState();
@@ -1302,11 +1302,11 @@ class Robot: public frc::TimedRobot {
 
 		case 43:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);				// Open
 			// keep pushing!
 			if (timedDrive(0.75, 0.2, 0.2)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 				// Display auton Time
 				SmartDashboard::PutNumber("Auto Time [S]", autoTotalTime.Get());
@@ -1344,7 +1344,7 @@ class Robot: public frc::TimedRobot {
 			// Drive forward with slight turn toward scale.
 
 			IO.DriveBase.SolenoidShifter.Set(false); // High Gear
-			IO.DriveBase.ClawIntake.Set(0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.3);
 
 			if (getEncoderDistance() > 150) {
 				autoHeading = 20;
@@ -1369,12 +1369,12 @@ class Robot: public frc::TimedRobot {
 			// Cube 1 (preload)
 			// Eject!
 
-			IO.DriveBase.ClawIntake.Set(-0.6);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.6);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 0.2) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1392,7 +1392,7 @@ class Robot: public frc::TimedRobot {
 
 			if (wristAngle > -45) {
 				elevatorPosition(800);
-				IO.DriveBase.ClawIntake.Set(1.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			}
 
@@ -1406,7 +1406,7 @@ class Robot: public frc::TimedRobot {
 
 		case 4:
 			// Obtain 2nd cube
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
 			if (timedDrive(0.5 + 0.2, -0.4, -0.4)) {
@@ -1417,7 +1417,7 @@ class Robot: public frc::TimedRobot {
 		case 5:
 			// 2nd Cube
 			// Drive forward and turn while raising elevator and wrist to score 2nd cube
-			IO.DriveBase.ClawIntake.Set(0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.3);
 			elevatorPosition(scaleElevTarget);
 
 			if (IO.DriveBase.EncoderElevator.Get() > 13000) {
@@ -1439,12 +1439,12 @@ class Robot: public frc::TimedRobot {
 		case 6:
 			// 2nd Cube
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.6);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.6);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 0.2) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1461,7 +1461,7 @@ class Robot: public frc::TimedRobot {
 
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
 				elevatorPosition(800);
-				IO.DriveBase.ClawIntake.Set(1.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 				//IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // compliant
 			}
 
@@ -1477,7 +1477,7 @@ class Robot: public frc::TimedRobot {
 		case 8:
 			// 3rd cube
 			// Obtain the 3rd cube
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 
 			if (timedDrive(0.6, -0.35, -0.35)) {
@@ -1488,7 +1488,7 @@ class Robot: public frc::TimedRobot {
 		case 9:
 			// 3rd cube
 			// Drive forward and turn while raising elevator and wrist.
-			IO.DriveBase.ClawIntake.Set(0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.3);
 			elevatorPosition(scaleElevTarget);
 
 			if (IO.DriveBase.EncoderElevator.Get() > 13000) {
@@ -1512,12 +1512,12 @@ class Robot: public frc::TimedRobot {
 		case 10:
 			// 3rd cube
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.2);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.2);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 0.2) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1532,7 +1532,7 @@ class Robot: public frc::TimedRobot {
 
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
 				elevatorPosition(800);
-				IO.DriveBase.ClawIntake.Set(1.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			}
 
 			autoHeading = -45 - 10 + 3 + 3 - 3;
@@ -1546,7 +1546,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 12:
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open Claw
 
 			if (timedDrive(0.75, -0.45, -0.45)) {
@@ -1556,7 +1556,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 13:
-			IO.DriveBase.ClawIntake.Set(0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.3);
 			elevatorPosition(scaleElevTarget);
 
 			if (IO.DriveBase.EncoderElevator.Get() > 13000) {
@@ -1579,12 +1579,12 @@ class Robot: public frc::TimedRobot {
 
 		case 14:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.4);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.4);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (AutonTimer.Get() > 0.2) {
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1662,10 +1662,10 @@ class Robot: public frc::TimedRobot {
 
 		case 7:
 			// Eject!
-			IO.DriveBase.ClawIntake.Set(-0.65 + 0.15);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65 + 0.15);
 
 			if (AutonTimer.Get() > 0.5) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 				autoNextState();
 
@@ -1692,7 +1692,7 @@ class Robot: public frc::TimedRobot {
 			// 2Cube Start
 			//
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 
 			autoHeading = 20 - 10;
 			wristPosition(110);
@@ -1710,13 +1710,13 @@ class Robot: public frc::TimedRobot {
 
 			if (timedDrive(0.75, -0.4, -0.4)) {
 				autoNextState();
-				IO.DriveBase.ClawIntake.Set(1.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			}
 			break;
 
 		case 22:
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
-			IO.DriveBase.ClawIntake.Set(1.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 			if (timedDrive(0.75, -0.4, -0.4)) {
 				autoNextState();
 			}
@@ -1725,7 +1725,7 @@ class Robot: public frc::TimedRobot {
 		case 23:
 			elevatorPosition(15500);
 			wristPosition(-80);
-			IO.DriveBase.ClawIntake.Set(0.3);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.3);
 
 			if (getEncoderDistance() > 15) {
 				autoHeading = -15;
@@ -1745,10 +1745,10 @@ class Robot: public frc::TimedRobot {
 		case 25:
 			// Eject!
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(-0.5);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.5);
 
 			if (AutonTimer.Get() > 0.5) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1827,10 +1827,10 @@ class Robot: public frc::TimedRobot {
 
 		case 5:
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 
 			if (timedDrive(0.75, 0.2, 0.2)) {
-				IO.DriveBase.ClawIntake.Set(0.0);
+				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 				autoNextState();
 
 				// Display auton Time
@@ -1887,7 +1887,7 @@ class Robot: public frc::TimedRobot {
 
 		case 4:
 			ElevPosTarget = 7500;
-			IO.DriveBase.Wrist1.Set(-0.45);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, -0.45);
 
 			if (autoTurn((-90 - 25) * rotDir))
 				autoNextState();
@@ -1900,15 +1900,15 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 6:
-			IO.DriveBase.ClawIntake.Set(-0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 
 			if (timedDrive(1.5, 0.3, 0.3))
 				autoNextState();
 			break;
 
 		case 7:
-			IO.DriveBase.Wrist1.Set(0.0);
-			IO.DriveBase.ClawIntake.Set(0.0);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0.0);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 			autoNextState();
 
 			// Display auton Time
@@ -1947,16 +1947,16 @@ class Robot: public frc::TimedRobot {
 
 		// If a limit switch is pressed, only allow a reverse motion
 		if ((!ElevatorUpperLimit) and (elevMotor > 0) and (!SensorOverride)) {
-			IO.DriveBase.Elevator1.Set(0);
-			IO.DriveBase.Elevator2.Set(0);
+			IO.DriveBase.Elevator1.Set(ControlMode::PercentOutput, 0);
+			IO.DriveBase.Elevator2.Set(ControlMode::PercentOutput, 0);
 
 		} else if ((!ElevatorLowerLimit) and (elevMotor < 0) and (!SensorOverride)) {
-			IO.DriveBase.Elevator1.Set(0);
-			IO.DriveBase.Elevator2.Set(0);
+			IO.DriveBase.Elevator1.Set(ControlMode::PercentOutput, 0);
+			IO.DriveBase.Elevator2.Set(ControlMode::PercentOutput, 0);
 
 		} else {
-			IO.DriveBase.Elevator1.Set(elevMotor);
-			IO.DriveBase.Elevator2.Set(elevMotor);
+			IO.DriveBase.Elevator1.Set(ControlMode::PercentOutput, elevMotor);
+			IO.DriveBase.Elevator2.Set(ControlMode::PercentOutput, elevMotor);
 		}
 	}
 
@@ -2004,7 +2004,7 @@ class Robot: public frc::TimedRobot {
 
 		// Sensor Override Mode
 		if (SensorOverride) {
-			IO.DriveBase.Wrist1.Set(input);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, input);
 
 			return;
 		}
@@ -2025,13 +2025,13 @@ class Robot: public frc::TimedRobot {
 
 		// If a limit is reached, only allow motion away from it
 		if ((wristAngle > hardLimit) and (input > 0)) {
-			IO.DriveBase.Wrist1.Set(0);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0);
 
 		} else if ((wristAngle < -hardLimit) and (input < 0)) {
-			IO.DriveBase.Wrist1.Set(0);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0);
 
 		} else {
-			IO.DriveBase.Wrist1.Set(input);
+			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, input);
 
 		}
 	}
@@ -2080,9 +2080,9 @@ class Robot: public frc::TimedRobot {
 	bool wristNoPot(double time, double speed) {
 		if (PotDisabled == IO.DS.DisabledPOT) {
 			if (AutonTimer.Get() < time) {
-				IO.DriveBase.Wrist1.Set(speed);
+				IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, speed);
 			} else {
-				IO.DriveBase.Wrist1.Set(0.0);
+				IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, 0.0);
 				return true;
 			}
 		} else {
@@ -2100,14 +2100,14 @@ class Robot: public frc::TimedRobot {
 		OutputY = (cycles * OutputY) + (1.0 - cycles) * leftMotor;
 		OutputX = (cycles * OutputX) + (1.0 - cycles) * rightMotor;
 
-		IO.DriveBase.MotorsLeft.Set(-OutputY);
-		IO.DriveBase.MotorsRight.Set(OutputX);
+		IO.DriveBase.L2.Set(-OutputY);
+		IO.DriveBase.R2.Set(OutputX);
 	}
 
 	int stopMotors() {
 		//sets motor speeds to zero
-		IO.DriveBase.MotorsLeft.Set(0);
-		IO.DriveBase.MotorsRight.Set(0);
+		IO.DriveBase.L2.Set(0);
+		IO.DriveBase.R2.Set(0);
 		OutputY = 0;
 		OutputX = 0;
 		return 1;
@@ -2444,11 +2444,11 @@ class Robot: public frc::TimedRobot {
 	void SmartDashboardUpdate() {
 
 		// Motor Outputs
-		SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
-		SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
-		SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
-		SmartDashboard::PutNumber("Wrist PWM", IO.DriveBase.Wrist1.Get());
-		SmartDashboard::PutNumber("Inkate PWM", IO.DriveBase.ClawIntake.Get());
+		//SmartDashboard::PutNumber("Drive Left (PWM)", IO.DriveBase.MotorsLeft.Get());
+		//SmartDashboard::PutNumber("Drive Right (PWM)", IO.DriveBase.MotorsRight.Get());
+		//SmartDashboard::PutNumber("Elev PWM", IO.DriveBase.Elevator2.Get());
+		//SmartDashboard::PutNumber("Wrist PWM", IO.DriveBase.Wrist1.Get());
+		//SmartDashboard::PutNumber("Inkate PWM", IO.DriveBase.ClawIntake.Get());
 
 		// Drive Joystick Inputs
 		SmartDashboard::PutNumber("Speed Linear", IO.DS.DriveStick.GetY(GenericHID::kLeftHand));

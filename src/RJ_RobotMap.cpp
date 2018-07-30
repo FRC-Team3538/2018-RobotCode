@@ -5,12 +5,19 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 	// Drive Base
 	//
+	//Slave
+	DriveBase.L1.Follow(DriveBase.L2);
+	DriveBase.L3.Follow(DriveBase.L2);
 
+	DriveBase.R1.Follow(DriveBase.R2);
+	DriveBase.R3.Follow(DriveBase.R2);
+
+	DriveBase.ClawIntake2.Follow(DriveBase.ClawIntake);
 	// Set Motor directions
-	DriveBase.MotorsLeft.SetInverted(false);
-	DriveBase.MotorsRight.SetInverted(false);
+	DriveBase.L2.SetInverted(false);
+	DriveBase.L2.SetInverted(false);
 
-	DriveBase.ClawIntake1.SetInverted(false);
+	DriveBase.ClawIntake.SetInverted(false);
 	DriveBase.ClawIntake2.SetInverted(true);
 
 	//Set Elevator Motor directions & Scale
@@ -18,8 +25,8 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.Elevator2.SetInverted(false);
 	DriveBase.EncoderElevator.SetDistancePerPulse((47.5) / -10197); //move one inch and measure pulses
 
-	DriveBase.Winch1.SetInverted(true);
-	DriveBase.Winch2.SetInverted(false);
+	//DriveBase.Winch1.SetInverted(true);
+	//DriveBase.Winch2.SetInverted(false);
 
 	// Set Encoder Direction & Scale
 	DriveBase.EncoderLeft.SetReverseDirection(true);
@@ -58,12 +65,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.chooseAutoMode.AddObject(DS.sAutoTEST2, DS.sAutoTEST2);
 	frc::SmartDashboard::PutData("Auto Mode", &DS.chooseAutoMode);
 
-
 	// Auto Game Data Overide
 	DS.chooseAutoGameData.AddDefault(DS.sGameDataOff, DS.sGameDataOff);
 	DS.chooseAutoGameData.AddObject(DS.sGameDataLefts, DS.sGameDataLefts);
 	DS.chooseAutoGameData.AddObject(DS.sGameDataRights, DS.sGameDataRights);
-	frc::SmartDashboard::PutData("Auto Game Data", & DS.chooseAutoGameData);
+	frc::SmartDashboard::PutData("Auto Game Data", &DS.chooseAutoGameData);
 
 	// Auto Program Delay
 	DS.chooseAutoDelay.AddDefault(DS.sAutoDelayOff, DS.sAutoDelayOff);
