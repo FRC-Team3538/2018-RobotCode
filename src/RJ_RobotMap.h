@@ -1,4 +1,4 @@
-#ifndef _RJ_ROBOTMAP_H_
+#ifndef _RJ_ROBOTMAP_H_``
 #define _RJ_ROBOTMAP_H_
 
 #include "WPILib.h"
@@ -16,6 +16,10 @@ public:
 		XboxController DriveStick { 0 };
 		XboxController OperatorStick { 1 };
 		Joystick LaunchPad { 4 };
+
+		SendableChooser<llvm::StringRef> chooseController;
+		const llvm::StringRef PS = "PS4";
+		const llvm::StringRef xBox = "xBox";
 
 		SendableChooser<llvm::StringRef> chooseAutoGameData;
 		const llvm::StringRef sGameDataOff = "Off";
@@ -75,7 +79,7 @@ public:
 
 		// Shifting Solenoid
 		Solenoid SolenoidShifter { 0 };
-		Solenoid HookDeploy { 3 };
+		//Solenoid HookDeploy { 3 };
 
 		// NavX MXP board (Gryo)
 		//AHRS *ahrs;

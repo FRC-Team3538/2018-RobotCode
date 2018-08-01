@@ -51,7 +51,7 @@ class Robot: public frc::TimedRobot {
 	//Autonomous Variables
 	Timer AutonTimer, autoSettleTimer, autoTotalTime;
 	std::string autoGameData, autoDelay, autoMode, autoEncoder, autoPosition, autoFinisher, PotDisabled,
-			GameDataOveride;
+			GameDataOveride, controllerType;
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
@@ -82,6 +82,7 @@ class Robot: public frc::TimedRobot {
 		autoEncoder = IO.DS.chooseAutoEncoder.GetSelected();
 		PotDisabled = IO.DS.choosePotDisabled.GetSelected();
 		GameDataOveride = IO.DS.chooseAutoGameData.GetSelected();
+		controllerType = IO.DS.chooseController.GetSelected();
 
 		// Get the game-specific message (ex: RLL)
 		autoGameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
@@ -144,44 +145,50 @@ class Robot: public frc::TimedRobot {
 		gearState = true;
 
 		//Hook Tower in by default
-		IO.DriveBase.HookDeploy.Set(false);
+		//IO.DriveBase.HookDeploy.Set(false);
 	}
 
 	bool bTeleAutoMode = false;
 
 	void TeleopPeriodic() {
-
 		// Tele-Auto-Test
 		// Run auto in teleop for testing during practice matches
-		if (IO.DS.DriveStick.GetAButton()) {
-
-			// Force game data
-			if (GameDataOveride != IO.DS.sGameDataOff) {
-				autoGameData = GameDataOveride;
-			}
-
-			// Run Auto Init
-			if (!bTeleAutoMode) {
-				AutonomousInit();
-				bTeleAutoMode = true;
-			}
-
-			AutonomousPeriodic();
-			return;
-		} else {
-			if (bTeleAutoMode) {
-				TeleopInit();
-				bTeleAutoMode = false;
-			}
-		}
-
+//		if (IO.DS.DriveStick.GetAButton()) {
+//
+//			// Force game data
+//			if (GameDataOveride != IO.DS.sGameDataOff) {
+//				autoGameData = GameDataOveride;
+//			}
+//
+//			// Run Auto Init
+//			if (!bTeleAutoMode) {
+//				AutonomousInit();
+//				bTeleAutoMode = true;
+//			}
+//
+//			AutonomousPeriodic();
+//			return;
+//		} else {
+//			if (bTeleAutoMode) {
+//				TeleopInit();
+//				bTeleAutoMode = false;
+//			}
+//		}
+		double DrRightTrigger;
+		double DrLeftTrigger;
+		double SpeedLinear;
+		double SpeedRotate;
 		double Control_Deadband = 0.11; // input where the joystick actually starts to move
 		double Drive_Deadband = 0.11; // command at which the motors begin to move
 
 		// Drive Control Inputs
-		double SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
-		double SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
-
+		if (controllerType == IO.DS.xBox) {
+			SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
+			SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
+		} else {
+			SpeedLinear = IO.DS.DriveStick.GetRawAxis(1);
+			SpeedRotate = IO.DS.DriveStick.GetRawAxis(2) * -1;
+		}
 		// Power Brake
 		//bool bPowerBrake = (fabs(IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand)) > Drive_Deadband);
 
@@ -189,44 +196,6 @@ class Robot: public frc::TimedRobot {
 		// Bad joystick compensation. :)
 		SpeedLinear *= 1.05;
 		SpeedRotate *= 1.05;
-
-		if (IO.DS.DriveStick.GetBButton()) {
-
-			//IO.DriveBase.Winches.Set(1.0);
-
-		} else if (IO.DS.DriveStick.GetYButton()) {
-
-			//IO.DriveBase.Winches.Set(-1.0);
-
-		} else {
-
-			//IO.DriveBase.Winches.Set(0.0);
-		}
-
-		// Winch Control [DPAD]
-		switch (IO.DS.DriveStick.GetPOV()) {
-		case 0:
-			// Dpad  Up
-			//IO.DriveBase.HTower.Set(-1.0);
-			break;
-
-		case 180:
-			// Dpad Down
-			//IO.DriveBase.HTower.Set(1.0);
-			break;
-
-		case 90:
-			IO.DriveBase.HookDeploy.Set(true);
-			break;
-
-		case 270:
-			IO.DriveBase.HookDeploy.Set(false);
-			break;
-
-		default:
-			//IO.DriveBase.HTower.Set(0.08);
-			break;
-		}
 
 		//Swap Above ^^^^
 		// Set dead band for control inputs
@@ -250,12 +219,20 @@ class Robot: public frc::TimedRobot {
 			SpeedRotate = 0.0; // added for clarity
 
 		// Drive Shifter Controls
-		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
-			gearState = false; // High
+		if (controllerType == IO.DS.xBox) {
+			if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kRightHand))
+				gearState = false; // High
 
-		if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
-			gearState = true; // Low
-
+			if (IO.DS.DriveStick.GetBumper(frc::GenericHID::kLeftHand))
+				gearState = true; // Low
+		} else {
+			if (IO.DS.DriveStick.GetRawButton(5)) {
+				gearState = true;
+			}
+			if (IO.DS.DriveStick.GetRawButton(6)) {
+				gearState = false;
+			}
+		}
 		// Power Brake
 		/*
 		 if (bPowerBrake) {
@@ -301,7 +278,12 @@ class Robot: public frc::TimedRobot {
 		 */
 
 		// reversing controller input so up gives positive input
-		double ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
+		double ElevatorStick;
+		if (controllerType == IO.DS.xBox) {
+			ElevatorStick = IO.DS.OperatorStick.GetY(frc::XboxController::kLeftHand) * -1;
+		} else {
+			ElevatorStick = IO.DS.OperatorStick.GetRawAxis(1) * -1;
+		}
 		ElevatorStick = deadband(ElevatorStick, Control_Deadband);
 
 		// Elevator Preset Positions [DPAD]
@@ -335,12 +317,9 @@ class Robot: public frc::TimedRobot {
 			elevatorSpeed(ElevatorStick);
 			ElevPosTarget = IO.DriveBase.EncoderElevator.Get();
 
-		} else if (!SensorOverride) {
+		} else{
 			// Hold Current Position if Elevator Override = false
 			elevatorPosition(ElevPosTarget);
-		} else {
-			// Stop elevator movement when Elevator Override = true;
-			elevatorSpeed(0.0);
 		}
 
 		// Controller Rumble if the elevator motor current is high
@@ -353,7 +332,12 @@ class Robot: public frc::TimedRobot {
 		//
 		// Wrist control
 		//
-		double wristStick = IO.DS.OperatorStick.GetX(frc::GenericHID::kRightHand);
+		double wristStick;
+		if (controllerType == IO.DS.xBox) {
+			wristStick = IO.DS.OperatorStick.GetX(frc::GenericHID::kRightHand);
+		} else {
+			wristStick = IO.DS.OperatorStick.GetRawAxis(2);
+		}
 		wristStick = deadband(wristStick, 0.15);
 		wristStick = cubedControl(wristStick, Control_Deadband);
 
@@ -378,34 +362,68 @@ class Robot: public frc::TimedRobot {
 		 */
 
 		// Wrist Presets
-		if (IO.DS.OperatorStick.GetAButton()) {
-			wristPosition(0);
-		} else if (IO.DS.OperatorStick.GetXButton()) {
-			wristPosition(45);
-		} else if (IO.DS.OperatorStick.GetYButton()) {
-			wristPosition(-45);
+		if (controllerType == IO.DS.xBox) {
+			if (IO.DS.OperatorStick.GetAButton()) {
+				wristPosition(0);
+			} else if (IO.DS.OperatorStick.GetXButton()) {
+				wristPosition(45);
+			} else if (IO.DS.OperatorStick.GetYButton()) {
+				wristPosition(-45);
+			} else {
+				IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, wristStick);
+			}
 		} else {
-			IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, wristStick);
+			if (IO.DS.OperatorStick.GetRawButton(2)) {
+				wristPosition(0);
+			} else if (IO.DS.OperatorStick.GetRawButton(1)) {
+				wristPosition(45);
+			} else if (IO.DS.OperatorStick.GetRawButton(4)) {
+				wristPosition(-45);
+			} else {
+				IO.DriveBase.Wrist1.Set(ControlMode::PercentOutput, wristStick);
+			}
 		}
 
 		//
 		// Intake Control
 		//
-		double OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
-		double OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
-		bool OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
-		bool OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
-		bool OpButtonB = IO.DS.OperatorStick.GetBButton();
+		double OpRightTrigger;
+		double OpLeftTrigger;
+		bool OpRightBumper;
+		bool OpLeftBumper;
+		bool OpButtonB;
 
 		// Ricky request
-		double DrRightTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand);
-		double DrLeftTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
-
-		double OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		if (controllerType == IO.DS.xBox) {
+			DrRightTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+			DrLeftTrigger = IO.DS.DriveStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+			OpRightTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kRightHand);
+			OpLeftTrigger = IO.DS.OperatorStick.GetTriggerAxis(frc::GenericHID::kLeftHand);
+			OpRightBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kRightHand);
+			OpLeftBumper = IO.DS.OperatorStick.GetBumper(frc::GenericHID::kLeftHand);
+			OpButtonB = IO.DS.OperatorStick.GetBButton();
+		} else {
+			DrRightTrigger = IO.DS.DriveStick.GetRawAxis(4);
+			DrLeftTrigger = IO.DS.DriveStick.GetRawAxis(3);
+			OpRightTrigger = IO.DS.OperatorStick.GetRawAxis(4);
+			OpLeftTrigger = IO.DS.OperatorStick.GetRawAxis(3);
+//			DrRightTrigger = psScale(DrRightTrigger);
+//			DrLeftTrigger = psScale(DrLeftTrigger);
+//			OpRightTrigger = psScale(OpRightTrigger);
+//			OpLeftTrigger = psScale(OpLeftTrigger);
+			OpRightBumper = IO.DS.OperatorStick.GetRawButton(6);
+			OpLeftBumper = IO.DS.OperatorStick.GetRawButton(5);
+			OpButtonB = IO.DS.OperatorStick.GetRawButton(3);
+		}
+		double OpIntakeCommand;
+		if (controllerType == IO.DS.xBox) {
+			OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		} else {
+			OpRightTrigger = psScale(OpRightTrigger);
+			OpLeftTrigger = psScale(OpLeftTrigger);
+			OpIntakeCommand = (OpRightTrigger - OpLeftTrigger);
+		}
 		OpIntakeCommand = deadband(OpIntakeCommand, Control_Deadband) * 0.7;
-
-		double DrIntakeCommand = (DrRightTrigger);
-		DrIntakeCommand = deadband(DrIntakeCommand, Control_Deadband) * 0.7;
 
 		//
 		// Claw control
@@ -425,7 +443,8 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0); // Intake
 
-		} else if (DrRightTrigger > 0.75) {
+		}
+		else if (DrRightTrigger > 0.75) {
 			// Loose Intake [Driver]
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.7);
@@ -440,12 +459,14 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 0.0);
 
-		} else {
+		}
+		else {
 			// Default Hold Cube, cube eject routes through here as well
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kForward); // Closed
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, OpIntakeCommand);
 		}
-
+		SmartDashboard::PutNumber("PS4 Left", OpLeftTrigger);
+		SmartDashboard::PutNumber("PS4 Right", OpRightTrigger);
 	}
 
 	void AutonomousInit() {
@@ -522,7 +543,7 @@ class Robot: public frc::TimedRobot {
 		}
 
 		if (autoMode == IO.DS.sAutoTEST2) {
-			autoScaleNear3CUBE(true,false,false);
+			autoScaleNear3CUBE(true, false, false);
 		}
 		/*
 		 // If no game data is received, run a fail safe program
@@ -545,38 +566,32 @@ class Robot: public frc::TimedRobot {
 		 */
 
 		// Single cube compatible, left start
-		if (autoMode == IO.DS.sAutoG){
-			if (autoGameData[1] == 'L'){
+		if (autoMode == IO.DS.sAutoG) {
+			if (autoGameData[1] == 'L') {
 				autoScaleNearCompat(false);
 			}
 
-			else if (autoGameData[0] == 'L'){
+			else if (autoGameData[0] == 'L') {
 				autoSwitchNearSide(false);
-			}
-			else if ((autoGameData[0] == 'R') && (autoGameData[1] == 'R')){
+			} else if ((autoGameData[0] == 'R') && (autoGameData[1] == 'R')) {
 				autoLinePlatformZone(false);
-			}
-			else
+			} else
 				autoLine();
 		}
 
 		// Single cube compatible, right start
-		if (autoMode == IO.DS.sAutoH){
-			if (autoGameData[1] == 'R'){
+		if (autoMode == IO.DS.sAutoH) {
+			if (autoGameData[1] == 'R') {
 				autoScaleNearCompat(true);
 			}
 
-			else if (autoGameData[0] == 'R'){
+			else if (autoGameData[0] == 'R') {
 				autoSwitchNearSide(true);
-			}
-			else if ((autoGameData[0] == 'L') && (autoGameData[1] == 'L')){
+			} else if ((autoGameData[0] == 'L') && (autoGameData[1] == 'L')) {
 				autoLinePlatformZone(true);
-			}
-			else
+			} else
 				autoLine();
 		}
-
-
 
 		// Cross the Line Auto
 		if (autoMode == IO.DS.sAutoLine) {
@@ -587,8 +602,7 @@ class Robot: public frc::TimedRobot {
 		if (autoMode == IO.DS.sAutoA) {
 			if (autoGameData[0] == 'L') {
 				autoCenter(false, true);
-			}
-			else if (autoGameData[0] == 'R') {
+			} else if (autoGameData[0] == 'R') {
 				autoCenter(true, true);
 			}
 		}
@@ -1014,11 +1028,11 @@ class Robot: public frc::TimedRobot {
 			elevatorPosition(800);
 			wristPosition(10);
 
-			if (autoForward(275  + (12 + 6 + 18 - 3) + 8 - 8)) {
+			if (autoForward(275 + (12 + 6 + 18 - 3) + 8 - 8)) {
 				autoNextState();
 			}
 
-		break;
+			break;
 
 		case 2:
 			if (autoTurn(-80 * rot) & elevatorPosition(14500)) {
@@ -1027,7 +1041,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 3:
-			if (autoForward(10 + (12) - 6 - 2 - 6-12, 0.4, 0.0) & wristNoPot(0.6, -0.75)) {
+			if (autoForward(10 + (12) - 6 - 2 - 6 - 12, 0.4, 0.0) & wristNoPot(0.6, -0.75)) {
 				autoNextState();
 			}
 
@@ -1050,7 +1064,7 @@ class Robot: public frc::TimedRobot {
 
 		case 6:
 			// Eject!
-			//IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
+			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, -0.65);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse);				// Open
 
 			if (AutonTimer.Get() > 0.5) {
@@ -1621,7 +1635,7 @@ class Robot: public frc::TimedRobot {
 			wristPosition(-25);
 
 			//232 - match 73 value
-			if (autoForward(232 -10, 1.0, 0.2)) {
+			if (autoForward(232 - 10, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;
@@ -1634,7 +1648,7 @@ class Robot: public frc::TimedRobot {
 
 		case 3:
 			//187 (RJ) ? 222 (BullDogs) 218
-			if (autoForward(230 - 10 - 4+3+3+4)) {
+			if (autoForward(230 - 10 - 4 + 3 + 3 + 4)) {
 				autoNextState();
 			}
 			break;
@@ -2158,13 +2172,13 @@ class Robot: public frc::TimedRobot {
 		double driveCommandLinear = (error * KP_LINEAR + KI_LINEAR * sumError_linear + KD_LINEAR * dError);
 
 		/*
-		if (driveCommandLinear > 0) {
-			driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear + 0.05);
-		} else {
-			driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear - 0.05);
-		}
-		prevCmd = driveCommandLinear;
-		*/
+		 if (driveCommandLinear > 0) {
+		 driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear + 0.05);
+		 } else {
+		 driveCommandLinear = absMax(driveCommandLinear, driveCommandLinear - 0.05);
+		 }
+		 prevCmd = driveCommandLinear;
+		 */
 
 		// limit max drive speed
 		driveCommandLinear = absMax(driveCommandLinear, max_speed);
@@ -2440,7 +2454,11 @@ class Robot: public frc::TimedRobot {
 		// Seems good
 		return input;
 	}
-
+	double psScale(double input) {
+		double output = input + 1;
+		output = output / 2;
+		return output;
+	}
 	void SmartDashboardUpdate() {
 
 		// Motor Outputs
@@ -2495,6 +2513,9 @@ class Robot: public frc::TimedRobot {
 
 		// Sensor Override
 		SmartDashboard::PutBoolean("Sensor Override", SensorOverride);
+
+		//Controller Type
+		SmartDashboard::PutString("controllerType", IO.DS.chooseController.GetSelected());
 
 	}
 

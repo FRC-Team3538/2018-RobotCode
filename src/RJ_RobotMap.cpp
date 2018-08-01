@@ -20,9 +20,9 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.ClawIntake.SetInverted(false);
 	DriveBase.ClawIntake2.SetInverted(true);
 
-	//Set Elevator Motor directions & Scale
-	DriveBase.Elevator1.SetInverted(true);
-	DriveBase.Elevator2.SetInverted(false);
+	//Set Elevator Motor directions & Scale (Must Switch for Comp and Practice)
+	DriveBase.Elevator1.SetInverted(false);
+	DriveBase.Elevator2.SetInverted(true);
 	DriveBase.EncoderElevator.SetDistancePerPulse((47.5) / -10197); //move one inch and measure pulses
 
 	//DriveBase.Winch1.SetInverted(true);
@@ -89,6 +89,11 @@ RJ_RobotMap::RJ_RobotMap() {
 	DS.choosePotDisabled.AddDefault(DS.EnabledPOT, DS.EnabledPOT);
 	DS.choosePotDisabled.AddObject(DS.DisabledPOT, DS.DisabledPOT);
 	frc::SmartDashboard::PutData("POT Enabled?", &DS.choosePotDisabled);
+
+	// Controller
+	DS.chooseController.AddDefault(DS.xBox, DS.xBox);
+	DS.chooseController.AddObject(DS.PS, DS.PS);
+	frc::SmartDashboard::PutData("Controller Type", &DS.chooseController);
 
 	//
 	// Vision System
