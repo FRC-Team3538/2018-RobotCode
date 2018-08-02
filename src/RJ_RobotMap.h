@@ -1,4 +1,4 @@
-#ifndef _RJ_ROBOTMAP_H_``
+#ifndef _RJ_ROBOTMAP_H_
 #define _RJ_ROBOTMAP_H_
 
 #include "WPILib.h"
@@ -138,18 +138,18 @@ public:
 	structDriveBase DriveBase;
 
 	// Drive Base
-	/*
+
 	 struct structVision {
 	 cs::UsbCamera cam0 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 0", 0);
-	 cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
+	// cs::UsbCamera cam1 = CameraServer::GetInstance()->StartAutomaticCapture("Camera 1", 1);
 
 	 cs::VideoSink server = CameraServer::GetInstance()->GetServer();
 
 	 cs::CvSink sink0;
-	 cs::CvSink sink1;
+	// cs::CvSink sink1;
 	 };
 	 structVision Vision;
-	 */
+
 
 	// Default Constructor
 	RJ_RobotMap();

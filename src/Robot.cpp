@@ -186,7 +186,7 @@ class Robot: public frc::TimedRobot {
 			SpeedLinear = IO.DS.DriveStick.GetY(GenericHID::kLeftHand) * 1; // get Yaxis value (forward)
 			SpeedRotate = IO.DS.DriveStick.GetX(GenericHID::kRightHand) * -1; // get Xaxis value (turn)
 		} else {
-			SpeedLinear = IO.DS.DriveStick.GetRawAxis(1);
+			SpeedLinear = IO.DS.DriveStick.GetRawAxis(1) * 1;
 			SpeedRotate = IO.DS.DriveStick.GetRawAxis(2) * -1;
 		}
 		// Power Brake
@@ -1635,7 +1635,7 @@ class Robot: public frc::TimedRobot {
 			wristPosition(-25);
 
 			//232 - match 73 value
-			if (autoForward(232 - 10, 1.0, 0.2)) {
+			if (autoForward(232 - 10 + 10, 1.0, 0.2)) {
 				autoNextState();
 			}
 			break;

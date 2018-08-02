@@ -15,7 +15,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	DriveBase.ClawIntake2.Follow(DriveBase.ClawIntake);
 	// Set Motor directions
 	DriveBase.L2.SetInverted(false);
-	DriveBase.L2.SetInverted(false);
+	DriveBase.R2.SetInverted(false);
 
 	DriveBase.ClawIntake.SetInverted(false);
 	DriveBase.ClawIntake2.SetInverted(true);
@@ -98,17 +98,17 @@ RJ_RobotMap::RJ_RobotMap() {
 	//
 	// Vision System
 	//
-	/*
+
 	 Vision.cam0.SetFPS(30);
 	 Vision.cam0.SetResolution(160, 120);
 	 Vision.cam0.SetExposureAuto();
 	 Vision.cam0.SetWhiteBalanceAuto();
-
+/*
 	 Vision.cam1.SetFPS(30);
 	 Vision.cam1.SetResolution(160, 120);
 	 Vision.cam1.SetExposureAuto();
 	 Vision.cam1.SetWhiteBalanceAuto();
-	 */
+*/
 
 }
 
