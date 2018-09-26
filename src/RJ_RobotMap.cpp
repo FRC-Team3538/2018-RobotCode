@@ -23,7 +23,7 @@ RJ_RobotMap::RJ_RobotMap() {
 	//Set Elevator Motor directions & Scale (Must Switch for Comp and Practice)
 	DriveBase.Elevator1.SetInverted(false);
 	DriveBase.Elevator2.SetInverted(true);
-	DriveBase.EncoderElevator.SetDistancePerPulse((47.5) / -10197); //move one inch and measure pulses
+	DriveBase.EncoderElevator.SetDistancePerPulse((47.5) / 10197); //move one inch and measure pulses
 
 	//DriveBase.Winch1.SetInverted(true);
 	//DriveBase.Winch2.SetInverted(false);
