@@ -39,8 +39,8 @@ class Robot: public frc::TimedRobot {
 	double WristTarget = 0.0;
 
 	//States config
-	double m_WristOffset = 13 - 23 + 11 + 16 - 52;
-	double WristScale = 1;
+	double m_WristOffset = 27;
+	double WristScale = -1;
 
 	//practice robot
 	//double m_WristOffset = 13 - 23 + 33;
@@ -884,13 +884,13 @@ class Robot: public frc::TimedRobot {
 			//-110
 			if (!isGoRight) {
 				//Left
-				if (autoTurn((-45 - 5) * rot) & elevatorPosition(800) & wristPosition(-108 - 8)
+				if (autoTurn((-45 - 5) * rot) & elevatorPosition(800) & wristPosition(-103)
 						& wristNoPot(1.25, -0.65)) {
 					autoNextState();
 				}
 			} else {
 				//Right
-				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-108 - 8)
+				if (autoTurn((-45 - 10) * rot) & elevatorPosition(800) & wristPosition(-103)
 						& wristNoPot(1.25, -0.65)) {
 					autoNextState();
 
@@ -1402,7 +1402,7 @@ class Robot: public frc::TimedRobot {
 		case 3:
 			// No cube
 			// Disengage wrist, lower elevator, back up to get 2nd cube
-			wristPosition(110 + 3 - 13 - 2);
+			wristPosition(103);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (wristAngle > -45) {
@@ -1471,7 +1471,7 @@ class Robot: public frc::TimedRobot {
 		case 7:
 			// No cube
 			// raise wrist, lower elevator, turn back for the 3rd cube
-			wristPosition(100 + 10 - 10 - 2);
+			wristPosition(103);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
@@ -1542,7 +1542,7 @@ class Robot: public frc::TimedRobot {
 			break;
 
 		case 11:
-			wristPosition(110 - 10);
+			wristPosition(103);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
@@ -1710,13 +1710,13 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 
 			autoHeading = 20 - 10 + 5;
-			wristPosition(110 - 10 - 2);
+			wristPosition(103);
 
 			if (wristAngle > -45) {
 				elevatorPosition(800 + 100);
 			}
 
-			if (autoForward(-20) & wristPosition(110 - 12 + 5) & elevatorPosition()) {
+			if (autoForward(-20) & wristPosition(103) & elevatorPosition()) {
 				autoNextState();
 			}
 			break;
