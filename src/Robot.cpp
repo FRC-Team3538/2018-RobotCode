@@ -153,7 +153,7 @@ class Robot: public frc::TimedRobot {
 	void TeleopPeriodic() {
 		// Tele-Auto-Test
 		// Run auto in teleop for testing during practice matches
-//		if (IO.DS.DriveStick.GetAButton()) {
+//		if (IO.DS.DriveStick.GetRawButton(2)) {
 //
 //			// Force game data
 //			if (GameDataOveride != IO.DS.sGameDataOff) {
@@ -1406,7 +1406,7 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if (wristAngle > -45) {
-				elevatorPosition(800);
+				elevatorPosition(800 + 100);
 				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 				IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // Compliant
 			}
@@ -1471,11 +1471,11 @@ class Robot: public frc::TimedRobot {
 		case 7:
 			// No cube
 			// raise wrist, lower elevator, turn back for the 3rd cube
-			wristPosition(103);
+			wristPosition(105);
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 
 			if ((wristAngle > -45) || (getEncoderDistance() > 18)) {
-				elevatorPosition(800);
+				elevatorPosition(800 + 100);
 				IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 				//IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kOff); // compliant
 			}
@@ -1649,7 +1649,7 @@ class Robot: public frc::TimedRobot {
 
 		case 3:
 			//187 (RJ) ? 222 (BullDogs) 218
-			if (autoForward(230 - 10 - 4 + 3 + 3 + 4)) {
+			if (autoForward(230 - 10 - 4 + 3 + 3 + 4 - 5)) {
 				autoNextState();
 			}
 			break;
@@ -1670,7 +1670,7 @@ class Robot: public frc::TimedRobot {
 
 		case 6:
 			//90 but hit scale
-			if (wristPosition(-80 -10 + 5) & wristNoPot(1.0, -0.65)) {
+			if (wristPosition(-80 -10 + 5 - 5) & wristNoPot(1.0, -0.65)) {
 				autoNextState();
 			}
 			break;
@@ -1709,10 +1709,10 @@ class Robot: public frc::TimedRobot {
 			IO.DriveBase.ClawClamp.Set(frc::DoubleSolenoid::kReverse); // Open
 			IO.DriveBase.ClawIntake.Set(ControlMode::PercentOutput, 1.0);
 
-			autoHeading = 20 - 10 + 5;
+			autoHeading = 20 - 10 + 5 - 3;
 			wristPosition(103);
 
-			if (wristAngle > -45) {
+			if (wristAngle > -45 - 3) {
 				elevatorPosition(800 + 100);
 			}
 
