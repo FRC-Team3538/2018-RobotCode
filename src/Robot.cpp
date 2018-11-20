@@ -5,6 +5,7 @@
 #include <string>
 #include "math.h"
 #include <algorithm>
+#include <fstream>
 
 // And So It Begins...
 #include "RJ_RobotMap.h"
@@ -55,6 +56,9 @@ class Robot: public frc::TimedRobot {
 	int autoModeState;  // current step in auto sequence
 	double autoHeading; // current gyro heading to maintain
 
+	std::ofstream fLogFile;
+	Timer EncoderTimer;
+
 	void RobotInit() {
 		//disable drive watchdogs
 		Adrive.SetSafetyEnabled(false);
@@ -68,6 +72,20 @@ class Robot: public frc::TimedRobot {
 
 		// 20ms is the default, but lets enforce it.
 		this->SetPeriod(MAIN_LOOP_PERIOD);
+
+		fLogFile.open("/home/lvuser/fLogFile.csv", std::ios::trunc);
+		fLogFile << "Time" << "," << "Distance(Inch)" << ","
+					 << "pdp->GetTotalCurrent()" << ","
+					 << "pdp->GetCurrent(0(Right))" << ","
+					 << "pdp->GetCurrent(1)" << ","
+					 << "pdp->GetCurrent(3)" << ","
+					 << "pdp->GetCurrent(13(Left))" << ","
+					 << "pdp->GetCurrent(14)" << ","
+					 << "pdp->GetCurrent(15)" << ","
+					 << "pdp->GetVoltage()" << ","
+					 << "IO.DriveBase.ahrs.GetWorldLinearAccelX()" << ","
+					 << std::endl;
+
 	}
 
 	void RobotPeriodic() {
@@ -125,7 +143,24 @@ class Robot: public frc::TimedRobot {
 		 IO.DS.OperatorStick.SetRumble(Joystick::kRightRumble, 0);
 		 }
 		 */
-
+		double EncLPos = IO.DriveBase.EncoderLeft.Get();
+		if (DS.IsEnabled()) {
+			EncoderTimer.Start();
+			fLogFile << EncoderTimer.Get() << ","
+					 << EncLPos << ","
+					 << pdp->GetTotalCurrent() << ","
+					 << pdp->GetCurrent(0) << ","
+					 << pdp->GetCurrent(1) << ","
+					 << pdp->GetCurrent(3) << ","
+					 << pdp->GetCurrent(13) << ","
+					 << pdp->GetCurrent(14) << ","
+					 << pdp->GetCurrent(15) << ","
+					 << pdp->GetVoltage() << ","
+					 << IO.DriveBase.ahrs.GetWorldLinearAccelX() << ","
+					 << std::endl;
+		} else {
+			EncoderTimer.Reset();
+		}
 	}
 
 	void DisabledPeriodic() {
